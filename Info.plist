@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array/>
+	<key>CFBundleExecutable</key>
+	<string>XMeeting</string>
+	<key>CFBundleGetInfoString</key>
+	<string>© XMeeting project, 2005-2008</string>
+	<key>CFBundleHelpBookFolder</key>
+	<string>Manual</string>
+	<key>CFBundleHelpBookName</key>
+	<string>XMeeting Manual</string>
+	<key>CFBundleIconFile</key>
+	<string>XMeeting</string>
+	<key>CFBundleIdentifier</key>
+	<string>net.sourceforge.xmeeting.XMeeting</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>XMeeting</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.4</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>XMeeting URI</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>h323</string>
+				<string>callto</string>
+				<string>sip</string>
+				<string>xmeeting</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>0.4-preview1</string>
+	<key>NSAppleScriptEnabled</key>
+	<string>YES</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Call with XMeeting</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>handleServicesString</string>
+			<key>NSPortName</key>
+			<string>XMeeting</string>
+			<key>NSReturnTypes</key>
+			<array>
+				<string>NSStringPboardType</string>
+			</array>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSStringPboardType</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
