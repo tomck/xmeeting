@@ -501,7 +501,7 @@ NSString *XMKey_AudioTestDelay = @"XMeeting_AudioTestDelay";
     BOOL mirrorLocalVideo = [[XMPreferencesManager sharedInstance] showSelfViewMirrored];
     [localVideoView setLocalVideoMirrored:mirrorLocalVideo];
   } else {
-    [localVideoView setNoVideoImage:[NSImage imageNamed:@"no_video_screen.tif"]];
+    [localVideoView setNoVideoImage:[NSImage imageNamed:@"no_video_screen"]];
     [localVideoView startDisplayingNoVideo];
     
     [videoDevicesPopUp setEnabled:NO];

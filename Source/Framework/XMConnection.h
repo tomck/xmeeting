@@ -25,7 +25,7 @@ class XMConnection : public OpalLocalConnection
 	
 public:
   XMConnection(OpalCall & call, XMEndPoint & endPoint);
-  ~XMConnection();
+  virtual ~XMConnection();
 	
   // Overrides from OpalLocalConnection
   virtual void Release(OpalConnection::CallEndReason callEndReason);

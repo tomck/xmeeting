@@ -29,7 +29,7 @@ class XMEndPoint : public OpalLocalEndPoint
 
 public:
   XMEndPoint(XMOpalManager & manager);
-  ~XMEndPoint();
+  virtual ~XMEndPoint();
 	
   // Setup Methods
   bool GetEnableSilenceSuppression() const { return enableSilenceSuppression; }

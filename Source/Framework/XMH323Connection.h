@@ -31,7 +31,7 @@ public:
                    const H323TransportAddress & address,
                    unsigned options = 0,
                    OpalConnection::StringOptions * stringOptions = NULL);
-  ~XMH323Connection();
+  virtual ~XMH323Connection();
     
   virtual H323_RTPChannel * CreateRTPChannel(const H323Capability & capability,
                                              H323Channel::Directions dir,

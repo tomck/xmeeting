@@ -31,7 +31,7 @@ public:
                   unsigned int options = 0,
                   OpalConnection::StringOptions * stringOptions = NULL);
 	
-  ~XMSIPConnection();
+  virtual ~XMSIPConnection();
 	
   // Propagate opening/closing of media streams to the Obj-C world
   virtual bool OnOpenMediaStream(OpalMediaStream & stream);

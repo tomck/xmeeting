@@ -262,6 +262,7 @@ void _XMDynamicStoreCallback(SCDynamicStoreRef dynamicStore, CFArrayRef changedK
       NSString *address = [interfaceAddresses objectAtIndex:j];
       XMNetworkInterface *interface = [[XMNetworkInterface alloc] initWithIPAddress:address name:interfaceName];
       [interfaces addObject:interface];
+      [interface release];
     }
     
     [serviceDict release];

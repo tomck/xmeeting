@@ -85,7 +85,7 @@ public:
 				   unsigned numChannels,
 				   unsigned sampleRate,
 				   unsigned bitsPerSample);
-	~XMSoundChannel();
+	virtual ~XMSoundChannel();
 	
   /**
    * Returns just one device (XMSoundChannelDevice)

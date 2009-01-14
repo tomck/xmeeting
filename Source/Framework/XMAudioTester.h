@@ -21,6 +21,7 @@ class XMAudioTester : public PThread
 	
 public:
 	XMAudioTester(unsigned delay);
+  virtual ~XMAudioTester();
 	virtual void Main();
 	
 	static void Start(unsigned delay);

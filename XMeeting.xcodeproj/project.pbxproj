@@ -39,7 +39,6 @@
 		1A490FC30998EF1D0096261F /* no_pinp_large.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1A490FC10998EF1D0096261F /* no_pinp_large.tif */; };
 		1A5821C409A1DE7F00CBE017 /* locationPreferences.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1A5821C309A1DE7F00CBE017 /* locationPreferences.tif */; };
 		1A9E27BE09A5BF3600E9A7CE /* Ringer.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 1A9E27BD09A5BF3600E9A7CE /* Ringer.aiff */; };
-		1AC7C1EF098665E2008521B4 /* no_video_screen.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1AC7C1EE098665E2008521B4 /* no_video_screen.tif */; };
 		1AD42C390993BF1100F92546 /* pinp_off_large_down.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1AD42C350993BF1100F92546 /* pinp_off_large_down.tif */; };
 		1AD42C3A0993BF1100F92546 /* pinp_off_large.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1AD42C360993BF1100F92546 /* pinp_off_large.tif */; };
 		1AD42C3B0993BF1100F92546 /* pinp_on_large_down.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1AD42C370993BF1100F92546 /* pinp_on_large_down.tif */; };
@@ -471,6 +470,7 @@
 		D1E4CEB90F1D86B50001BE5B /* XMCodecDescriptions.plist in Resources */ = {isa = PBXBuildFile; fileRef = D1E4CEB70F1D86B50001BE5B /* XMCodecDescriptions.plist */; };
 		D1E4CEC00F1D86CC0001BE5B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D1E4CEBE0F1D86CC0001BE5B /* InfoPlist.strings */; };
 		D1E4CEC50F1D86DB0001BE5B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D1E4CEC30F1D86DB0001BE5B /* Localizable.strings */; };
+		D1E4D1140F1E04370001BE5B /* no_video_screen.png in Resources */ = {isa = PBXBuildFile; fileRef = D1E4D1130F1E04370001BE5B /* no_video_screen.png */; };
 		D1E912BE0A308DDA00AEABA5 /* XMSTUNServers.plist in Resources */ = {isa = PBXBuildFile; fileRef = D1E912BD0A308DDA00AEABA5 /* XMSTUNServers.plist */; };
 		D1EB18AD08437A26002CEF53 /* AddressBook.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D1EB18AC08437A26002CEF53 /* AddressBook.tiff */; };
 		D1EB18BA0843D6B6002CEF53 /* ZeroConf.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D1EB18B90843D6B6002CEF53 /* ZeroConf.tiff */; };
@@ -547,7 +547,6 @@
 		1A490FC10998EF1D0096261F /* no_pinp_large.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = no_pinp_large.tif; path = Resources/Images/no_pinp_large.tif; sourceTree = "<group>"; };
 		1A5821C309A1DE7F00CBE017 /* locationPreferences.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = locationPreferences.tif; path = Resources/Images/locationPreferences.tif; sourceTree = "<group>"; };
 		1A9E27BD09A5BF3600E9A7CE /* Ringer.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; name = Ringer.aiff; path = Resources/Sounds/Ringer.aiff; sourceTree = "<group>"; };
-		1AC7C1EE098665E2008521B4 /* no_video_screen.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = no_video_screen.tif; path = Resources/Images/no_video_screen.tif; sourceTree = "<group>"; };
 		1AD42B5C09938EF500F92546 /* XMInCallOSD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMInCallOSD.h; path = Source/GUI/XMInCallOSD.h; sourceTree = "<group>"; };
 		1AD42B5D09938EF500F92546 /* XMInCallOSD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XMInCallOSD.m; path = Source/GUI/XMInCallOSD.m; sourceTree = "<group>"; };
 		1AD42C350993BF1100F92546 /* pinp_off_large_down.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pinp_off_large_down.tif; path = Resources/Images/pinp_off_large_down.tif; sourceTree = "<group>"; };
@@ -1371,6 +1370,7 @@
 		D1E4CEBF0F1D86CC0001BE5B /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = Resources/English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D1E4CEC40F1D86DB0001BE5B /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = Resources/English.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D1E4CECA0F1D87CB0001BE5B /* XMeeting_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMeeting_Prefix.pch; sourceTree = "<group>"; };
+		D1E4D1130F1E04370001BE5B /* no_video_screen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = no_video_screen.png; path = Resources/Images/no_video_screen.png; sourceTree = "<group>"; };
 		D1E8B5CB0CABE92400083FFF /* XMApplicationController.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = XMApplicationController.m; path = Source/Application/XMApplicationController.m; sourceTree = "<group>"; };
 		D1E912BD0A308DDA00AEABA5 /* XMSTUNServers.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; name = XMSTUNServers.plist; path = Resources/XMSTUNServers.plist; sourceTree = "<group>"; };
 		D1E9137D0A4833F7005CDF27 /* config.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = config.cxx; sourceTree = "<group>"; };
@@ -2955,7 +2955,7 @@
 				1A490F7F0998EB850096261F /* mute_large_down.tif */,
 				1A490FC10998EF1D0096261F /* no_pinp_large.tif */,
 				1A490FC00998EF1D0096261F /* no_pinp_large_down.tif */,
-				1AC7C1EE098665E2008521B4 /* no_video_screen.tif */,
+				D1E4D1130F1E04370001BE5B /* no_video_screen.png */,
 				1A348FC50984E4680033FA95 /* pinp_large.tif */,
 				1A348FC40984E4680033FA95 /* pinp_large_down.tif */,
 				1AD42C360993BF1100F92546 /* pinp_off_large.tif */,
@@ -3241,7 +3241,6 @@
 				1A348FE30984E4680033FA95 /* pinpmode_sidebyside_large.tif in Resources */,
 				1A348FE70984E4680033FA95 /* windowed_large_down.tif in Resources */,
 				1A348FE80984E4680033FA95 /* windowed_large.tif in Resources */,
-				1AC7C1EF098665E2008521B4 /* no_video_screen.tif in Resources */,
 				1ADAFBD90990EBA700F6C5FF /* contacts_24_down.tif in Resources */,
 				1ADAFBDA0990EBA700F6C5FF /* contacts_24.tif in Resources */,
 				1ADAFBDB0990EBA700F6C5FF /* Call_24_down.tif in Resources */,
@@ -3334,6 +3333,7 @@
 				D1E4CEB90F1D86B50001BE5B /* XMCodecDescriptions.plist in Resources */,
 				D1E4CEC00F1D86CC0001BE5B /* InfoPlist.strings in Resources */,
 				D1E4CEC50F1D86DB0001BE5B /* Localizable.strings in Resources */,
+				D1E4D1140F1E04370001BE5B /* no_video_screen.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

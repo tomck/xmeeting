@@ -777,6 +777,8 @@ enum {
 
 - (void)_setupApplication
 {
+  NSAutoreleasePool *autoreleasePool = [[NSAutoreleasePool alloc] init];
+  
   // registering the call address providers
   [self _preferencesDidChange:nil];
   [[XMCallHistoryCallAddressProvider sharedInstance] setActiveCallAddressProvider:YES];
@@ -833,6 +835,8 @@ enum {
   [NSApp setServicesProvider:self];
   
   applicationDidLaunch = YES;
+  
+  [autoreleasePool release];
 }
 
 @end

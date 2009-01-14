@@ -48,7 +48,7 @@ class XMCircularBuffer
      * Creates a circular buffer with a capacity of len bytes
      **/
     explicit XMCircularBuffer(unsigned capacity);
-    ~XMCircularBuffer();
+    virtual ~XMCircularBuffer();
     
     /** 
      * Inserts up to len bytes into the circular buffer. Returns the amount of bytes 

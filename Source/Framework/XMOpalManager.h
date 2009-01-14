@@ -31,7 +31,7 @@ public:
   static void CloseOpal();
 	
   XMOpalManager(bool logCallStatistics);
-  ~XMOpalManager();
+  virtual ~XMOpalManager();
 	
   /* Getting access to the OPAL manager */
   static XMOpalManager * GetManager();

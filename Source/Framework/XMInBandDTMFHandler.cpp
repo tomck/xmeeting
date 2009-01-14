@@ -43,6 +43,11 @@ XMInBandDTMFHandler::XMInBandDTMFHandler()
   PTRACE(3, "InBandDTMF\tHandler created");
 }
 
+XMInBandDTMFHandler::~XMInBandDTMFHandler()
+{
+  delete tones;
+}
+
 bool XMInBandDTMFHandler::SendTone(char tone, unsigned duration)
 {
   PWaitAndSignal m(mutex);

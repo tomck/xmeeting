@@ -209,6 +209,8 @@ void XMOSDVideoViewPixelBufferReleaseCallback(void *releaseRefCon,
     [path closePath];
     
     [path fill];
+    
+    [path release];
   }
   
   if (osdDisplayMode == XMOSDDisplayMode_AlwaysVisible && doesShowOSD == NO) {
@@ -515,6 +517,8 @@ void XMOSDVideoViewPixelBufferReleaseCallback(void *releaseRefCon,
       [(XMInCallOSD *)osd setPinPMode:(XMPinPMode)mode];
     }
   }
+  
+  [scanner release];
 }
 
 #pragma mark -
@@ -1165,7 +1169,7 @@ void XMOSDVideoViewPixelBufferReleaseCallback(void *releaseRefCon,
 {
   CVReturn result;
   
-  NSString *path = [[NSBundle mainBundle] pathForResource:@"no_video_screen" ofType:@"tif"];
+  NSString *path = [[NSBundle mainBundle] pathForResource:@"no_video_screen" ofType:@"png"];
   NSData *data = [[NSData alloc] initWithContentsOfFile:path];
   NSBitmapImageRep *bitmapImageRep = [[NSBitmapImageRep alloc] initWithData:data];
   [data release];

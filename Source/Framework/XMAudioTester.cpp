@@ -25,6 +25,10 @@ circularBuffer((theDelay*8000*2)+320)
 	delay = theDelay;
 }
 
+XMAudioTester::~XMAudioTester()
+{
+}
+
 void XMAudioTester::Main()
 {
 	PSoundChannel *inputChannel = new PSoundChannel();

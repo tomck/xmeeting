@@ -33,7 +33,7 @@ public:
                 const OpalMediaFormat & mediaFormat,
                 unsigned sessionID,
                 bool isSource);
-  ~XMMediaStream();
+  virtual ~XMMediaStream();
 	
   virtual void OnPatchStart();
   virtual bool Close();

@@ -23,7 +23,7 @@ class XMReceiverMediaPatch : public OpalMediaPatch
 	
 public:
   XMReceiverMediaPatch(OpalMediaStream & source);
-  ~XMReceiverMediaPatch();
+  virtual ~XMReceiverMediaPatch();
 	
   virtual void Start();
   virtual void SetCommandNotifier(const PNotifier & notifier, bool fromSink);

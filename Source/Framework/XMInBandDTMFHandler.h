@@ -22,6 +22,7 @@ class XMInBandDTMFHandler : public PObject
 public:
 	
   XMInBandDTMFHandler();
+  virtual ~XMInBandDTMFHandler();
 	
   bool SendTone(char tone, unsigned duration);
 	

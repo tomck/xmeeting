@@ -29,7 +29,7 @@ public:
                           const PString & username,
                           const PString & authorizationUsername,
                           const PString & password);
-  ~XMSIPRegistrationRecord();
+  virtual ~XMSIPRegistrationRecord();
   
   enum Status {
     ToRegister,
