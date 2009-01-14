@@ -68,6 +68,7 @@ void _XMDynamicStoreCallback(SCDynamicStoreRef dynamicStore, CFArrayRef changedK
   CFRelease(runLoopSource);
   NSArray *notificationKeys = [[NSArray alloc] initWithObjects:XMString_DynamicStoreNotificationKey, nil];
   SCDynamicStoreSetNotificationKeys(dynamicStore, NULL, (CFArrayRef)notificationKeys);
+  [notificationKeys release];
   
   doesUpdateSTUNInformation = YES; // at startup, STUN is automatically updated
   doesUpdateCheckipInformation = NO;

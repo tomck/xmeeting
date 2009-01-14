@@ -40,56 +40,56 @@
     
     NSMutableDictionary* fullScreenButton = [super createButtonNamed:@"Fullscreen" 
                                                             tooltips:[NSArray arrayWithObjects:NSLocalizedString(@"XM_OSD_TOOLTIP_ENTER_FS", @""), NSLocalizedString(@"XM_OSD_TOOLTIP_EXIT_FS", @""), nil]
-                                                               icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"fullscreen_large.tif"], [NSImage imageNamed:@"windowed_large.tif"], nil] 
-                                                        pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"fullscreen_large_down.tif"], [NSImage imageNamed:@"windowed_large_down.tif"], nil] 
+                                                               icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"fullscreen_large"], [NSImage imageNamed:@"windowed_large"], nil] 
+                                                        pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"fullscreen_large_down"], [NSImage imageNamed:@"windowed_large_down"], nil] 
                                                            selectors:[NSArray arrayWithObjects:@"beginFullScreen", @"endFullScreen", nil] 
                                                              targets:[NSArray arrayWithObjects:self, self, nil] 
                                                    currentStateIndex:0];
     
     NSMutableDictionary* pinpButton = [super createButtonNamed:@"Picture-in-Picture" 
                                                       tooltips:[NSArray arrayWithObjects:NSLocalizedString(@"XM_OSD_TOOLTIP_ENABLE_PIP", @""), NSLocalizedString(@"XM_OSD_TOOLTIP_DISABLE_PIP", @""), nil]
-                                                         icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"pinp_on_large.tif"], [NSImage imageNamed:@"no_pinp_large.tif"], nil] 
-                                                  pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"pinp_on_large_down.tif"], [NSImage imageNamed:@"no_pinp_large_down.tif"], nil] 
+                                                         icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"pinp_on_large"], [NSImage imageNamed:@"no_pinp_large"], nil] 
+                                                  pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"pinp_on_large_down"], [NSImage imageNamed:@"no_pinp_large_down"], nil] 
                                                      selectors:[NSArray arrayWithObjects:@"enablePinP", @"disablePinP", nil] 
                                                        targets:[NSArray arrayWithObjects:self, self, nil] 
                                              currentStateIndex:0];
     
     NSMutableDictionary* pinpModeButton = [super createButtonNamed:@"Picture-in-Picture Mode" 
                                                           tooltips:[NSArray arrayWithObjects:NSLocalizedString(@"XM_OSD_TOOLTIP_CLASSIC_PIP", @""), NSLocalizedString(@"XM_OSD_TOOLTIP_3D_PIP", @""), NSLocalizedString(@"XM_OSD_TOOLTIP_SBS_PIP", @""), nil]
-                                                             icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"pinpmode_classic_large.tif"], [NSImage imageNamed:@"pinpmode_ichat_large.tif"], [NSImage imageNamed:@"pinpmode_sidebyside_large.tif"], nil] 
-                                                      pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"pinpmode_classic_large_down.tif"], [NSImage imageNamed:@"pinpmode_ichat_large_down.tif"], [NSImage imageNamed:@"pinpmode_sidebyside_large_down.tif"],nil] 
+                                                             icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"pinpmode_classic_large"], [NSImage imageNamed:@"pinpmode_ichat_large"], [NSImage imageNamed:@"pinpmode_sidebyside_large"], nil] 
+                                                      pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"pinpmode_classic_large_down"], [NSImage imageNamed:@"pinpmode_ichat_large_down"], [NSImage imageNamed:@"pinpmode_sidebyside_large_down"],nil] 
                                                          selectors:[NSArray arrayWithObjects:@"showNextPinPMode", @"showNextPinPMode", @"showNextPinPMode", nil] 
                                                            targets:[NSArray arrayWithObjects:self, self, self, nil] 
                                                  currentStateIndex:0];
     
     NSMutableDictionary* infoButton = [super createButtonNamed:@"Info Inspector" 
                                                       tooltips:[NSArray arrayWithObjects:NSLocalizedString(@"XM_OSD_TOOLTIP_INFO", @""), nil]
-                                                         icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"inspector_bw_large.tif"], nil] 
-                                                  pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"inspector_bw_large_down.tif"], nil] 
+                                                         icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"inspector_bw_large"], nil] 
+                                                  pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"inspector_bw_large_down"], nil] 
                                                      selectors:[NSArray arrayWithObjects:@"showInspector", nil] 
                                                        targets:[NSArray arrayWithObjects:self, nil] 
                                              currentStateIndex:0];
     
     NSMutableDictionary* toolsButton = [super createButtonNamed:@"Tools" 
                                                        tooltips:[NSArray arrayWithObjects:NSLocalizedString(@"XM_OSD_TOOLTIP_TOOLS", @""), nil]
-                                                          icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"tools_large.tif"], nil] 
-                                                   pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"tools_large_down.tif"], nil] 
+                                                          icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"tools_large"], nil] 
+                                                   pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"tools_large_down"], nil] 
                                                       selectors:[NSArray arrayWithObjects:@"showTools", nil] 
                                                         targets:[NSArray arrayWithObjects:self, nil] 
                                               currentStateIndex:0];
 
     NSMutableDictionary* hangupButton = [super createButtonNamed:@"Hangup" 
                                                         tooltips:[NSArray arrayWithObjects:NSLocalizedString(@"XM_OSD_TOOLTIP_HANGUP", @""), nil]
-                                                           icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"hangup_large.tif"], nil] 
-                                                    pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"hangup_large_down.tif"], nil] 
+                                                           icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"hangup_large"], nil] 
+                                                    pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"hangup_large_down"], nil] 
                                                        selectors:[NSArray arrayWithObjects:@"hangup", nil] 
                                                          targets:[NSArray arrayWithObjects:self, nil] 
                                                currentStateIndex:0];
     
     NSMutableDictionary* muteButton = [super createButtonNamed:@"Mute/Unmute" 
                                                       tooltips:[NSArray arrayWithObjects:NSLocalizedString(@"XM_OSD_TOOLTIP_MUTE", @""), NSLocalizedString(@"XM_OSD_TOOLTIP_UNMUTE", @""), nil]
-                                                         icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"mute_large.tif"], [NSImage imageNamed:@"unmute_large.tif"], nil] 
-                                                  pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"mute_large_down.tif"], [NSImage imageNamed:@"unmute_large_down.tif"], nil] 
+                                                         icons:[NSArray arrayWithObjects:[NSImage imageNamed:@"mute_large"], [NSImage imageNamed:@"unmute_large"], nil] 
+                                                  pressedIcons:[NSArray arrayWithObjects:[NSImage imageNamed:@"mute_large_down"], [NSImage imageNamed:@"unmute_large_down"], nil] 
                                                      selectors:[NSArray arrayWithObjects:@"mute", @"unmute", nil] 
                                                        targets:[NSArray arrayWithObjects:self, self, nil] 
                                              currentStateIndex:0];

@@ -384,7 +384,9 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
   unsigned count = [h323Accounts count]; 
   NSMutableArray *arr = [NSMutableArray arrayWithCapacity:count];
   for (unsigned i = 0; i < count; i++) {
-    [arr addObject:[[h323Accounts objectAtIndex:i] copy]];
+    XMH323Account *account = (XMH323Account *)[[h323Accounts objectAtIndex:i] copy];
+    [arr addObject:account];
+    [account release];
   }
   
   return arr;
@@ -407,7 +409,9 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
     
     if ([h323Account isKindOfClass:h323AccountClass]) {
       [h323Account savePassword];
-      [h323Accounts addObject:[h323Account copy]];
+      XMH323Account *copy = [h323Account copy];
+      [h323Accounts addObject:copy];
+      [copy release];
     }
   }
   [self _resetPasswords:XMPasswordObjectType_H323Account];
@@ -441,7 +445,9 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
   unsigned count = [sipAccounts count];
   NSMutableArray *arr = [NSMutableArray arrayWithCapacity:count];
   for (unsigned i = 0; i < count; i++) {
-    [arr addObject:[[sipAccounts objectAtIndex:i] copy]];
+    XMSIPAccount *account = (XMSIPAccount *)[[sipAccounts objectAtIndex:i] copy];
+    [arr addObject:account];
+    [account release];
   }
   
   return arr;
@@ -464,7 +470,9 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
     
     if ([sipAccount isKindOfClass:sipAccountClass]) {
       [sipAccount savePassword];
-      [sipAccounts addObject:[sipAccount copy]];
+      XMSIPAccount *copy = [sipAccount copy];
+      [sipAccounts addObject:copy];
+      [copy release];
     }
   }
   
@@ -476,7 +484,9 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
   unsigned count = [locations count]; 
   NSMutableArray *arr = [NSMutableArray arrayWithCapacity:count];
   for (unsigned i = 0; i < count; i++) {
-    [arr addObject:[[locations objectAtIndex:i] copy]];
+    XMLocation *location = (XMLocation *)[[locations objectAtIndex:i] copy];
+    [arr addObject:location];
+    [location release];
   }
   
   return arr;
@@ -497,7 +507,9 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
     XMLocation *location = (XMLocation *)[newLocations objectAtIndex:i];
     
     if ([location isKindOfClass:[XMLocation class]]) {
-      [locations addObject:[location copy]];
+      XMLocation *copy = [location copy];
+      [locations addObject:copy];
+      [copy release];
       if ([location tag] == currentTag) {
         activeLocation = i;
       }
