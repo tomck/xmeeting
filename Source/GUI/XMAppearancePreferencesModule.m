@@ -56,7 +56,7 @@
 
 - (NSImage *)toolbarImage
 {
-  return [NSImage imageNamed:@"appearancePreferences.tif"];
+  return [NSImage imageNamed:@"appearancePreferences"];
 }
 
 - (NSString *)toolTipText

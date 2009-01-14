@@ -228,7 +228,7 @@ NSString *XMKey_NetworkTabViewItemIdentifier = @"network";
 
 - (NSImage *)toolbarImage
 {
-  return [NSImage imageNamed:@"locationPreferences.tif"];
+  return [NSImage imageNamed:@"locationPreferences"];
 }
 
 - (NSString *)toolTipText

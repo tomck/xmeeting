@@ -92,7 +92,7 @@ NSString *XMKey_AccountPreferencesAuthorizationUsernameIdentifier = @"authorizat
 
 - (NSImage *)toolbarImage
 {
-  return [NSImage imageNamed:@"accountPreferences.tif"];
+  return [NSImage imageNamed:@"accountPreferences"];
 }
 
 - (NSString *)toolTipText

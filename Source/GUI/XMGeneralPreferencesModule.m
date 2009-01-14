@@ -56,7 +56,7 @@ NSString *XMKey_GeneralPreferencesModuleIdentifier = @"XMeeting_GeneralPreferenc
 
 - (NSImage *)toolbarImage
 {
-  return [NSImage imageNamed:@"generalPreferences.tif"];
+  return [NSImage imageNamed:@"generalPreferences"];
 }
 
 - (NSString *)toolTipText

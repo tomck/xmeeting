@@ -63,7 +63,7 @@ NSString *XMKey_DebugPreferencesModuleIdentifier = @"XMeeting_DebugPreferencesMo
 
 - (NSImage *)toolbarImage
 {
-  return [NSImage imageNamed:@"debugPreferences.tif"];
+  return [NSImage imageNamed:@"debugPreferences"];
 }
 
 - (NSString *)toolTipText

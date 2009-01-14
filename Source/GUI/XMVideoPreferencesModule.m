@@ -107,7 +107,7 @@ NSString *XMString_UseFirstAvailableDevice = @"";
 
 - (NSImage *)toolbarImage
 {
-  return [NSImage imageNamed:@"sourcesPreferences.tif"];
+  return [NSImage imageNamed:@"videoPreferences"];
 }
 
 - (NSString *)toolTipText
