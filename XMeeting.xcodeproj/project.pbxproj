@@ -60,7 +60,6 @@
 		1AF9E4A309A07E3600094163 /* tools_24_down.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1AF9E4A109A07E3600094163 /* tools_24_down.tif */; };
 		1AF9E4A409A07E3600094163 /* tools_24.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1AF9E4A209A07E3600094163 /* tools_24.tif */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
-		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		D104D9660A0E5973000898F2 /* dial_pad_0_down.tif in Resources */ = {isa = PBXBuildFile; fileRef = D104D94E0A0E5973000898F2 /* dial_pad_0_down.tif */; };
 		D104D9670A0E5973000898F2 /* dial_pad_0.tif in Resources */ = {isa = PBXBuildFile; fileRef = D104D94F0A0E5973000898F2 /* dial_pad_0.tif */; };
 		D104D9680A0E5973000898F2 /* dial_pad_1_down.tif in Resources */ = {isa = PBXBuildFile; fileRef = D104D9500A0E5973000898F2 /* dial_pad_1_down.tif */; };
@@ -106,22 +105,12 @@
 		D10975460BAE7565007E8087 /* rpe.c in Sources */ = {isa = PBXBuildFile; fileRef = D10975380BAE7565007E8087 /* rpe.c */; };
 		D10975470BAE7565007E8087 /* short_term.c in Sources */ = {isa = PBXBuildFile; fileRef = D10975390BAE7565007E8087 /* short_term.c */; };
 		D10975480BAE7565007E8087 /* table.c in Sources */ = {isa = PBXBuildFile; fileRef = D109753A0BAE7565007E8087 /* table.c */; };
-		D10B8E0A0A512F5D00003A33 /* ab_gatekeeper.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D10B8DF80A512E7500003A33 /* ab_gatekeeper.png */; };
-		D10B8E0B0A512F5D00003A33 /* locations.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D10B8DF90A512E7500003A33 /* locations.png */; };
-		D10B8E0C0A512F5D00003A33 /* logo.tiff in CopyFiles */ = {isa = PBXBuildFile; fileRef = D10B8DFA0A512E7500003A33 /* logo.tiff */; };
-		D10B8E0D0A512F5D00003A33 /* mainwindow.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D10B8DFB0A512E7500003A33 /* mainwindow.png */; };
-		D10B8E0E0A512F5D00003A33 /* osd.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D10B8DFC0A512E7500003A33 /* osd.png */; };
 		D10B91A00A51A10100003A33 /* Audio.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D10B919F0A51A10100003A33 /* Audio.tiff */; };
 		D10BD5470AC1D503004320A8 /* recording.gif in Resources */ = {isa = PBXBuildFile; fileRef = D10BD5460AC1D503004320A8 /* recording.gif */; };
 		D10E453F0AADEC11009EA376 /* CallRecorderModule.nib in Resources */ = {isa = PBXBuildFile; fileRef = D10E453D0AADEC11009EA376 /* CallRecorderModule.nib */; };
 		D11C5E650A49ED950030633D /* IncomingCallAlert.nib in Resources */ = {isa = PBXBuildFile; fileRef = D11C5E630A49ED950030633D /* IncomingCallAlert.nib */; };
-		D11C86EC0EEF2F95000F60B8 /* im.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D11C86E90EEF2F95000F60B8 /* im.h */; };
-		D11C86ED0EEF2F95000F60B8 /* msrp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D11C86EA0EEF2F95000F60B8 /* msrp.h */; };
-		D11C86EE0EEF2F95000F60B8 /* sipim.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D11C86EB0EEF2F95000F60B8 /* sipim.h */; };
 		D11C86F40EEF2FB3000F60B8 /* msrp.cxx in Sources */ = {isa = PBXBuildFile; fileRef = D11C86F10EEF2FB3000F60B8 /* msrp.cxx */; };
 		D11C86F50EEF2FB3000F60B8 /* sipim.cxx in Sources */ = {isa = PBXBuildFile; fileRef = D11C86F20EEF2FB3000F60B8 /* sipim.cxx */; };
-		D11C87B70EF2661C000F60B8 /* rfc4103.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D11C87B50EF2661C000F60B8 /* rfc4103.h */; };
-		D11C87B80EF2661C000F60B8 /* t140.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D11C87B60EF2661C000F60B8 /* t140.h */; };
 		D11C87BB0EF26627000F60B8 /* rfc4103.cxx in Sources */ = {isa = PBXBuildFile; fileRef = D11C87B90EF26627000F60B8 /* rfc4103.cxx */; };
 		D11C87BC0EF26627000F60B8 /* t140.cxx in Sources */ = {isa = PBXBuildFile; fileRef = D11C87BA0EF26627000F60B8 /* t140.cxx */; };
 		D1205AF909F986A000179B6C /* down_arrow_down.tif in Resources */ = {isa = PBXBuildFile; fileRef = D1205AF709F986A000179B6C /* down_arrow_down.tif */; };
@@ -160,7 +149,6 @@
 		D156AA050F04D78500FB527A /* status_green.tif in Resources */ = {isa = PBXBuildFile; fileRef = D156AA020F04D78500FB527A /* status_green.tif */; };
 		D156AA060F04D78500FB527A /* status_red.tif in Resources */ = {isa = PBXBuildFile; fileRef = D156AA030F04D78500FB527A /* status_red.tif */; };
 		D156AA070F04D78500FB527A /* status_yellow.tif in Resources */ = {isa = PBXBuildFile; fileRef = D156AA040F04D78500FB527A /* status_yellow.tif */; };
-		D15B1CE00EADBC6C0070B7B5 /* ratectl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D15B1CDF0EADBC6C0070B7B5 /* ratectl.h */; };
 		D15B1CE20EADBC840070B7B5 /* ratectl.cxx in Sources */ = {isa = PBXBuildFile; fileRef = D15B1CE10EADBC840070B7B5 /* ratectl.cxx */; };
 		D15F71C40E54B7300006CB43 /* g711a1_plc.cxx in Sources */ = {isa = PBXBuildFile; fileRef = D15F71C30E54B7300006CB43 /* g711a1_plc.cxx */; };
 		D162158409F0F91600647E48 /* CallHistory_H323.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D162158209F0F91600647E48 /* CallHistory_H323.tiff */; };
@@ -171,9 +159,7 @@
 		D1639417083E17A500F7FD83 /* DialPadModule.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1639415083E17A500F7FD83 /* DialPadModule.nib */; };
 		D163945F083E19E300F7FD83 /* StatisticsModule.nib in Resources */ = {isa = PBXBuildFile; fileRef = D163945D083E19E300F7FD83 /* StatisticsModule.nib */; };
 		D16394C3083E23D600F7FD83 /* CallHistoryModule.nib in Resources */ = {isa = PBXBuildFile; fileRef = D16394C1083E23D600F7FD83 /* CallHistoryModule.nib */; };
-		D1887E770A283DEA00C938BB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D1887E750A283DEA00C938BB /* Localizable.strings */; };
 		D18913920B81B48200B32CCD /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1E2DA1508F470F200BE224E /* QuickTime.framework */; };
-		D189803E082411AC007CD286 /* XMCodecDescriptions.plist in Resources */ = {isa = PBXBuildFile; fileRef = D189803D082411AC007CD286 /* XMCodecDescriptions.plist */; };
 		D19628150924B4C1004892D0 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D19628140924B4C1004892D0 /* Security.framework */; };
 		D1A02B26081E96D30018BD11 /* Preferences.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1A02B24081E96D30018BD11 /* Preferences.nib */; };
 		D1A562A10C6DA9460086E6F6 /* Add.png in Resources */ = {isa = PBXBuildFile; fileRef = D1A562A00C6DA9460086E6F6 /* Add.png */; };
@@ -187,12 +173,6 @@
 		D1B4CC9A082F594C00A444E1 /* MainWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1B4CC98082F594C00A444E1 /* MainWindow.nib */; };
 		D1B4D0070833937200A444E1 /* ZeroConfModule.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1B4D0050833937200A444E1 /* ZeroConfModule.nib */; };
 		D1BB917409BCDF99000897D9 /* accountPreferences.tif in Resources */ = {isa = PBXBuildFile; fileRef = D1BB917309BCDF99000897D9 /* accountPreferences.tif */; };
-		D1BD61DA0A9104E3007C8E46 /* manuel.html in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1BD61CF0A9104B2007C8E46 /* manuel.html */; };
-		D1BD61DB0A9104EC007C8E46 /* ab_gatekeeper.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1BD61CA0A9104B2007C8E46 /* ab_gatekeeper.png */; };
-		D1BD61DC0A9104EC007C8E46 /* locations.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1BD61CB0A9104B2007C8E46 /* locations.png */; };
-		D1BD61DD0A9104EC007C8E46 /* logo.tiff in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1BD61CC0A9104B2007C8E46 /* logo.tiff */; };
-		D1BD61DE0A9104EC007C8E46 /* mainwindow.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1BD61CD0A9104B2007C8E46 /* mainwindow.png */; };
-		D1BD61DF0A9104EC007C8E46 /* osd.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1BD61CE0A9104B2007C8E46 /* osd.png */; };
 		D1BD64420A951A2E007C8E46 /* uri.scriptSuite in Resources */ = {isa = PBXBuildFile; fileRef = D1BD64410A951A2E007C8E46 /* uri.scriptSuite */; };
 		D1C1E316099B8BEA00815263 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1C1E315099B8BEA00815263 /* SystemConfiguration.framework */; };
 		D1C8FCD30A4407E600EF1A8C /* StillImageSettings.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1C8FCD10A4407E600EF1A8C /* StillImageSettings.nib */; };
@@ -488,6 +468,9 @@
 		D1E315270B52AC1000385072 /* vbr.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E314760B529FA200385072 /* vbr.c */; };
 		D1E315280B52AC1900385072 /* vorbis_psy.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E314780B529FA200385072 /* vorbis_psy.c */; };
 		D1E315290B52AC1F00385072 /* vq.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E3147A0B529FA200385072 /* vq.c */; };
+		D1E4CEB90F1D86B50001BE5B /* XMCodecDescriptions.plist in Resources */ = {isa = PBXBuildFile; fileRef = D1E4CEB70F1D86B50001BE5B /* XMCodecDescriptions.plist */; };
+		D1E4CEC00F1D86CC0001BE5B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D1E4CEBE0F1D86CC0001BE5B /* InfoPlist.strings */; };
+		D1E4CEC50F1D86DB0001BE5B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D1E4CEC30F1D86DB0001BE5B /* Localizable.strings */; };
 		D1E912BE0A308DDA00AEABA5 /* XMSTUNServers.plist in Resources */ = {isa = PBXBuildFile; fileRef = D1E912BD0A308DDA00AEABA5 /* XMSTUNServers.plist */; };
 		D1EB18AD08437A26002CEF53 /* AddressBook.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D1EB18AC08437A26002CEF53 /* AddressBook.tiff */; };
 		D1EB18BA0843D6B6002CEF53 /* ZeroConf.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D1EB18B90843D6B6002CEF53 /* ZeroConf.tiff */; };
@@ -500,7 +483,6 @@
 		D1ECCD30083491EB008EBAE3 /* NoCallModule.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1ECCD2E083491EB008EBAE3 /* NoCallModule.nib */; };
 		D1EF07530918B212008A8974 /* SetupAssistant.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1EF07510918B212008A8974 /* SetupAssistant.nib */; };
 		D1F6067C08BBC5FC0005E9A0 /* LocalAudioVideoModule.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1F6067A08BBC5FC0005E9A0 /* LocalAudioVideoModule.nib */; };
-		D1F921A10EC2E00B008B4F86 /* XMDebugPreferencesModule.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1F9219F0EC2E00B008B4F86 /* XMDebugPreferencesModule.h */; };
 		D1F921A20EC2E00B008B4F86 /* XMDebugPreferencesModule.m in Sources */ = {isa = PBXBuildFile; fileRef = D1F921A00EC2E00B008B4F86 /* XMDebugPreferencesModule.m */; };
 		D1FBC2720F10CA86006ACD69 /* XMSetupAssistantModules.m in Sources */ = {isa = PBXBuildFile; fileRef = D1FBC2710F10CA86006ACD69 /* XMSetupAssistantModules.m */; };
 /* End PBXBuildFile section */
@@ -516,56 +498,7 @@
 		};
 /* End PBXBuildRule section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		D10B8E080A512F4A00003A33 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = English.lproj/Manual/images;
-			dstSubfolderSpec = 7;
-			files = (
-				D10B8E0A0A512F5D00003A33 /* ab_gatekeeper.png in CopyFiles */,
-				D10B8E0B0A512F5D00003A33 /* locations.png in CopyFiles */,
-				D10B8E0C0A512F5D00003A33 /* logo.tiff in CopyFiles */,
-				D10B8E0D0A512F5D00003A33 /* mainwindow.png in CopyFiles */,
-				D10B8E0E0A512F5D00003A33 /* osd.png in CopyFiles */,
-				D15B1CE00EADBC6C0070B7B5 /* ratectl.h in CopyFiles */,
-				D1F921A10EC2E00B008B4F86 /* XMDebugPreferencesModule.h in CopyFiles */,
-				D11C86EC0EEF2F95000F60B8 /* im.h in CopyFiles */,
-				D11C86ED0EEF2F95000F60B8 /* msrp.h in CopyFiles */,
-				D11C86EE0EEF2F95000F60B8 /* sipim.h in CopyFiles */,
-				D11C87B70EF2661C000F60B8 /* rfc4103.h in CopyFiles */,
-				D11C87B80EF2661C000F60B8 /* t140.h in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D1BD61C40A91042D007C8E46 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = French.lproj/Manual;
-			dstSubfolderSpec = 7;
-			files = (
-				D1BD61DA0A9104E3007C8E46 /* manuel.html in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D1BD61C60A910474007C8E46 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = French.lproj/Manual/images;
-			dstSubfolderSpec = 7;
-			files = (
-				D1BD61DB0A9104EC007C8E46 /* ab_gatekeeper.png in CopyFiles */,
-				D1BD61DC0A9104EC007C8E46 /* locations.png in CopyFiles */,
-				D1BD61DD0A9104EC007C8E46 /* logo.tiff in CopyFiles */,
-				D1BD61DE0A9104EC007C8E46 /* mainwindow.png in CopyFiles */,
-				D1BD61DF0A9104EC007C8E46 /* osd.png in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
-		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1A348F970984E4210033FA95 /* IGPopupView.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = IGPopupView.h; path = ../GUI/IGPopupView.h; sourceTree = "<group>"; };
 		1A348F980984E4210033FA95 /* IGPopupView.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = IGPopupView.m; path = ../GUI/IGPopupView.m; sourceTree = "<group>"; };
 		1A348F990984E4210033FA95 /* XMInfoModule.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = XMInfoModule.h; path = Source/GUI/XMInfoModule.h; sourceTree = "<group>"; };
@@ -640,7 +573,6 @@
 		29B97319FDCFA39411CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		32CA4F630368D1EE00C91783 /* XMeeting_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMeeting_Prefix.pch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* XMeeting.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = XMeeting.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1010AB30C71F6D20010523E /* XMURLParser.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = XMURLParser.cpp; path = Source/Framework/XMURLParser.cpp; sourceTree = "<group>"; };
@@ -704,35 +636,6 @@
 		D10AFE9507B3771F00BBC8EA /* XMCallManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XMCallManager.m; path = Source/Framework/XMCallManager.m; sourceTree = "<group>"; };
 		D10AFEB207B3781700BBC8EA /* XMUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMUtils.h; path = Source/Framework/XMUtils.h; sourceTree = "<group>"; };
 		D10AFEB307B3781700BBC8EA /* XMUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XMUtils.m; path = Source/Framework/XMUtils.m; sourceTree = "<group>"; };
-		D10B8A980A50044800003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/CallHistoryModule.nib; sourceTree = "<group>"; };
-		D10B8A990A50044800003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/DialPadModule.nib; sourceTree = "<group>"; };
-		D10B8A9A0A50044800003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/InCallModule.nib; sourceTree = "<group>"; };
-		D10B8A9B0A50044800003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/IncomingCallAlert.nib; sourceTree = "<group>"; };
-		D10B8A9C0A50044800003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/Info.nib; sourceTree = "<group>"; };
-		D10B8A9D0A50045400003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/LocalAudioVideoModule.nib; sourceTree = "<group>"; };
-		D10B8A9E0A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/MainMenu.nib; sourceTree = "<group>"; };
-		D10B8A9F0A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/MainWindow.nib; sourceTree = "<group>"; };
-		D10B8AA00A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/NoCallModule.nib; sourceTree = "<group>"; };
-		D10B8AA10A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/Preferences.nib; sourceTree = "<group>"; };
-		D10B8AA20A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/SequenceGrabberSettings.nib; sourceTree = "<group>"; };
-		D10B8AA30A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/SetupAssistant.nib; sourceTree = "<group>"; };
-		D10B8AA40A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/StatisticsModule.nib; sourceTree = "<group>"; };
-		D10B8AA50A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/StillImageSettings.nib; sourceTree = "<group>"; };
-		D10B8AA60A50046300003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/TextChatModule.nib; sourceTree = "<group>"; };
-		D10B8AA70A50047000003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/XMInspector.nib; sourceTree = "<group>"; };
-		D10B8AA80A50047000003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/ZeroConfModule.nib; sourceTree = "<group>"; };
-		D10B8AA90A50048B00003A33 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/IncomingCallAlert.nib; sourceTree = "<group>"; };
-		D10B8AAA0A5004A600003A33 /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/StillImageSettings.nib; sourceTree = "<group>"; };
-		D10B8AAB0A5004B500003A33 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/StillImageSettings.nib; sourceTree = "<group>"; };
-		D10B8AAC0A5004E400003A33 /* German */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = German; path = German.lproj/Localizable.strings; sourceTree = "<group>"; };
-		D10B8AAD0A5004F600003A33 /* German */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = German; path = German.lproj/XMCodecDescriptions.plist; sourceTree = "<group>"; };
-		D10B8AAE0A50050900003A33 /* German */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = German; path = German.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		D10B8DF80A512E7500003A33 /* ab_gatekeeper.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ab_gatekeeper.png; sourceTree = "<group>"; };
-		D10B8DF90A512E7500003A33 /* locations.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = locations.png; sourceTree = "<group>"; };
-		D10B8DFA0A512E7500003A33 /* logo.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = logo.tiff; sourceTree = "<group>"; };
-		D10B8DFB0A512E7500003A33 /* mainwindow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mainwindow.png; sourceTree = "<group>"; };
-		D10B8DFC0A512E7500003A33 /* osd.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = osd.png; sourceTree = "<group>"; };
-		D10B8DFD0A512E7500003A33 /* manual.html */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.html; path = manual.html; sourceTree = "<group>"; };
 		D10B914C0A519B1C00003A33 /* XMAudioPreferencesModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMAudioPreferencesModule.h; path = Source/GUI/XMAudioPreferencesModule.h; sourceTree = "<group>"; };
 		D10B914D0A519B1C00003A33 /* XMAudioPreferencesModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XMAudioPreferencesModule.m; path = Source/GUI/XMAudioPreferencesModule.m; sourceTree = "<group>"; };
 		D10B919F0A51A10100003A33 /* Audio.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = Audio.tiff; path = Resources/Images/Audio.tiff; sourceTree = "<group>"; };
@@ -759,7 +662,6 @@
 		D11C5E500A49EC730030633D /* XMIncomingCallAlert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMIncomingCallAlert.h; sourceTree = "<group>"; };
 		D11C5E510A49EC730030633D /* XMIncomingCallAlert.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XMIncomingCallAlert.m; sourceTree = "<group>"; };
 		D11C5E640A49ED950030633D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/IncomingCallAlert.nib; sourceTree = "<group>"; };
-		D11C5F230A49F9F90030633D /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/IncomingCallAlert.nib; sourceTree = "<group>"; };
 		D11C86E90EEF2F95000F60B8 /* im.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = im.h; sourceTree = "<group>"; };
 		D11C86EA0EEF2F95000F60B8 /* msrp.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = msrp.h; sourceTree = "<group>"; };
 		D11C86EB0EEF2F95000F60B8 /* sipim.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = sipim.h; sourceTree = "<group>"; };
@@ -866,9 +768,6 @@
 		D15F71C30E54B7300006CB43 /* g711a1_plc.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = g711a1_plc.cxx; sourceTree = "<group>"; };
 		D15F84430A24874400FB2EDB /* h4601.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = h4601.h; sourceTree = "<group>"; };
 		D15F844B0A24880000FB2EDB /* h235auth1.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = h235auth1.cxx; sourceTree = "<group>"; };
-		D1610DEE0ABD497D00B41229 /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/CallRecorderModule.nib; sourceTree = "<group>"; };
-		D1610DEF0ABD499600B41229 /* German */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = German; path = German.lproj/CallRecorderModule.nib; sourceTree = "<group>"; };
-		D1610DF00ABD49A400B41229 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/CallRecorderModule.nib; sourceTree = "<group>"; };
 		D162158209F0F91600647E48 /* CallHistory_H323.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = CallHistory_H323.tiff; path = Resources/Images/CallHistory_H323.tiff; sourceTree = "<group>"; };
 		D162158309F0F91600647E48 /* CallHistory_SIP.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = CallHistory_SIP.tiff; path = Resources/Images/CallHistory_SIP.tiff; sourceTree = "<group>"; };
 		D163336307A01BD5003FD9C0 /* XMApplicationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMApplicationController.h; path = Source/Application/XMApplicationController.h; sourceTree = "<group>"; };
@@ -910,8 +809,6 @@
 		D1887DEB0A27B67B00C938BB /* psasl.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = psasl.cxx; sourceTree = "<group>"; };
 		D1887E110A27BA2F00C938BB /* prop.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = prop.h; path = ../../XMeeting/Source/Framework/prop.h; sourceTree = "<group>"; };
 		D1887E120A27BA2F00C938BB /* sasl.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = sasl.h; path = ../../XMeeting/Source/Framework/sasl.h; sourceTree = "<group>"; };
-		D1887E760A283DEA00C938BB /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
-		D1897F7C0823EEF2007CD286 /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; name = English; path = English.lproj/XMCodecDescriptions.plist; sourceTree = "<group>"; };
 		D189805108241F11007CD286 /* XMBooleanCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMBooleanCell.h; sourceTree = "<group>"; };
 		D189805208241F11007CD286 /* XMBooleanCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XMBooleanCell.m; sourceTree = "<group>"; };
 		D18BF5F007AFA006000CF993 /* XMCallbackBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMCallbackBridge.h; path = Source/Framework/XMCallbackBridge.h; sourceTree = "<group>"; };
@@ -1187,36 +1084,12 @@
 		D1BB8E9509BB9BCD000897D9 /* XMAccountPreferencesModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMAccountPreferencesModule.h; path = Source/GUI/XMAccountPreferencesModule.h; sourceTree = "<group>"; };
 		D1BB8E9609BB9BCD000897D9 /* XMAccountPreferencesModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XMAccountPreferencesModule.m; path = Source/GUI/XMAccountPreferencesModule.m; sourceTree = "<group>"; };
 		D1BB917309BCDF99000897D9 /* accountPreferences.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = accountPreferences.tif; path = Resources/Images/accountPreferences.tif; sourceTree = "<group>"; };
-		D1BD61CA0A9104B2007C8E46 /* ab_gatekeeper.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ab_gatekeeper.png; sourceTree = "<group>"; };
-		D1BD61CB0A9104B2007C8E46 /* locations.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = locations.png; sourceTree = "<group>"; };
-		D1BD61CC0A9104B2007C8E46 /* logo.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = logo.tiff; sourceTree = "<group>"; };
-		D1BD61CD0A9104B2007C8E46 /* mainwindow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mainwindow.png; sourceTree = "<group>"; };
-		D1BD61CE0A9104B2007C8E46 /* osd.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = osd.png; sourceTree = "<group>"; };
-		D1BD61CF0A9104B2007C8E46 /* manuel.html */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.html; path = manuel.html; sourceTree = "<group>"; };
 		D1BD63A20A950B6B007C8E46 /* XMURICommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMURICommand.h; path = Source/Application/XMURICommand.h; sourceTree = "<group>"; };
 		D1BD63A30A950B6C007C8E46 /* XMURICommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XMURICommand.m; path = Source/Application/XMURICommand.m; sourceTree = "<group>"; };
 		D1BD64410A951A2E007C8E46 /* uri.scriptSuite */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; path = uri.scriptSuite; sourceTree = "<group>"; };
 		D1BFF0EE09E2BB8E00D3665A /* h224handler.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = h224handler.h; sourceTree = "<group>"; };
 		D1BFF0EF09E2BB8E00D3665A /* h281handler.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = h281handler.h; sourceTree = "<group>"; };
 		D1C1E315099B8BEA00815263 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
-		D1C8FC5E0A435ACC00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/CallHistoryModule.nib; sourceTree = "<group>"; };
-		D1C8FC5F0A435AE400EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/DialPadModule.nib; sourceTree = "<group>"; };
-		D1C8FC600A435AE400EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/InCallModule.nib; sourceTree = "<group>"; };
-		D1C8FC610A435AE400EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/Info.nib; sourceTree = "<group>"; };
-		D1C8FC620A435B1C00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/LocalAudioVideoModule.nib; sourceTree = "<group>"; };
-		D1C8FC630A435B2E00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/MainMenu.nib; sourceTree = "<group>"; };
-		D1C8FC640A435B2E00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/MainWindow.nib; sourceTree = "<group>"; };
-		D1C8FC650A435B2E00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/NoCallModule.nib; sourceTree = "<group>"; };
-		D1C8FC660A435B2E00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/Preferences.nib; sourceTree = "<group>"; };
-		D1C8FC670A435B2E00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/SequenceGrabberSettings.nib; sourceTree = "<group>"; };
-		D1C8FC680A435B2E00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/SetupAssistant.nib; sourceTree = "<group>"; };
-		D1C8FC690A435B2E00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/StatisticsModule.nib; sourceTree = "<group>"; };
-		D1C8FC6A0A435B2E00EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/TextChatModule.nib; sourceTree = "<group>"; };
-		D1C8FC6B0A435B4500EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/XMInspector.nib; sourceTree = "<group>"; };
-		D1C8FC6C0A435B4500EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = French; path = French.lproj/ZeroConfModule.nib; sourceTree = "<group>"; };
-		D1C8FC6E0A435B9D00EF1A8C /* French */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/Localizable.strings; sourceTree = "<group>"; };
-		D1C8FC6F0A435BC600EF1A8C /* French */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = French; path = French.lproj/XMCodecDescriptions.plist; sourceTree = "<group>"; };
-		D1C8FC700A435BE400EF1A8C /* French */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D1C8FCC60A44070D00EF1A8C /* XMStillImageVideoInputModule.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = XMStillImageVideoInputModule.h; path = Source/Framework/XMStillImageVideoInputModule.h; sourceTree = "<group>"; };
 		D1C8FCC70A44070D00EF1A8C /* XMStillImageVideoInputModule.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = XMStillImageVideoInputModule.m; path = Source/Framework/XMStillImageVideoInputModule.m; sourceTree = "<group>"; };
 		D1C8FCD20A4407E600EF1A8C /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/StillImageSettings.nib; sourceTree = "<group>"; };
@@ -1389,24 +1262,6 @@
 		D1D9A7220851DE8F00445833 /* XMStringConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMStringConstants.h; path = Source/Framework/XMStringConstants.h; sourceTree = "<group>"; };
 		D1DE52ED07C6474100343A8D /* XMH323EndPoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMH323EndPoint.h; path = Source/Framework/XMH323EndPoint.h; sourceTree = "<group>"; };
 		D1DE52EE07C6474100343A8D /* XMH323EndPoint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XMH323EndPoint.cpp; path = Source/Framework/XMH323EndPoint.cpp; sourceTree = "<group>"; };
-		D1E20B420A35FFC200861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/CallHistoryModule.nib; sourceTree = "<group>"; };
-		D1E20B430A35FFD400861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/DialPadModule.nib; sourceTree = "<group>"; };
-		D1E20B440A35FFD400861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/InCallModule.nib; sourceTree = "<group>"; };
-		D1E20B450A35FFD400861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/Info.nib; sourceTree = "<group>"; };
-		D1E20B460A35FFF700861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/LocalAudioVideoModule.nib; sourceTree = "<group>"; };
-		D1E20B470A36001300861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/MainMenu.nib; sourceTree = "<group>"; };
-		D1E20B480A36001300861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/MainWindow.nib; sourceTree = "<group>"; };
-		D1E20B490A36001300861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/NoCallModule.nib; sourceTree = "<group>"; };
-		D1E20B4A0A36001300861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/Preferences.nib; sourceTree = "<group>"; };
-		D1E20B4B0A36001300861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/SequenceGrabberSettings.nib; sourceTree = "<group>"; };
-		D1E20B4C0A36001400861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/SetupAssistant.nib; sourceTree = "<group>"; };
-		D1E20B4D0A36001400861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/StatisticsModule.nib; sourceTree = "<group>"; };
-		D1E20B4E0A36001400861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/TextChatModule.nib; sourceTree = "<group>"; };
-		D1E20B4F0A36002400861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/XMInspector.nib; sourceTree = "<group>"; };
-		D1E20B500A36003900861E00 /* Italian */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Italian; path = Italian.lproj/ZeroConfModule.nib; sourceTree = "<group>"; };
-		D1E20B510A36004A00861E00 /* Italian */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = Italian; path = Italian.lproj/Localizable.strings; sourceTree = "<group>"; };
-		D1E20B520A36007300861E00 /* Italian */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Italian; path = Italian.lproj/XMCodecDescriptions.plist; sourceTree = "<group>"; };
-		D1E20B530A3600A000861E00 /* Italian */ = {isa = PBXFileReference; explicitFileType = text.plist.strings; name = Italian; path = Italian.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D1E2DA0F08F470D700BE224E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		D1E2DA1508F470F200BE224E /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		D1E2DB8808F4720A00BE224E /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = /System/Library/Frameworks/QuartzCore.framework; sourceTree = "<absolute>"; };
@@ -1512,6 +1367,10 @@
 		D1E3147E0B529FA200385072 /* vq_sse.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = vq_sse.h; sourceTree = "<group>"; };
 		D1E314860B529FA200385072 /* speexcodec.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = speexcodec.cxx; sourceTree = "<group>"; };
 		D1E314C20B52AA6900385072 /* speex_pwplugin.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = speex_pwplugin.so; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1E4CEB80F1D86B50001BE5B /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = English; path = Resources/English.lproj/XMCodecDescriptions.plist; sourceTree = "<group>"; };
+		D1E4CEBF0F1D86CC0001BE5B /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = Resources/English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D1E4CEC40F1D86DB0001BE5B /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = Resources/English.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D1E4CECA0F1D87CB0001BE5B /* XMeeting_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMeeting_Prefix.pch; sourceTree = "<group>"; };
 		D1E8B5CB0CABE92400083FFF /* XMApplicationController.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = XMApplicationController.m; path = Source/Application/XMApplicationController.m; sourceTree = "<group>"; };
 		D1E912BD0A308DDA00AEABA5 /* XMSTUNServers.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; name = XMSTUNServers.plist; path = Resources/XMSTUNServers.plist; sourceTree = "<group>"; };
 		D1E9137D0A4833F7005CDF27 /* config.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = config.cxx; sourceTree = "<group>"; };
@@ -1747,7 +1606,7 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
-				32CA4F630368D1EE00C91783 /* XMeeting_Prefix.pch */,
+				D1E4CECA0F1D87CB0001BE5B /* XMeeting_Prefix.pch */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 			);
 			name = "Other Sources";
@@ -1873,28 +1732,6 @@
 				D109753A0BAE7565007E8087 /* table.c */,
 			);
 			name = src;
-			sourceTree = "<group>";
-		};
-		D10B8DF60A512E7500003A33 /* Manual (English) */ = {
-			isa = PBXGroup;
-			children = (
-				D10B8DF70A512E7500003A33 /* images */,
-				D10B8DFD0A512E7500003A33 /* manual.html */,
-			);
-			name = "Manual (English)";
-			path = Manual;
-			sourceTree = "<group>";
-		};
-		D10B8DF70A512E7500003A33 /* images */ = {
-			isa = PBXGroup;
-			children = (
-				D10B8DF80A512E7500003A33 /* ab_gatekeeper.png */,
-				D10B8DF90A512E7500003A33 /* locations.png */,
-				D10B8DFA0A512E7500003A33 /* logo.tiff */,
-				D10B8DFB0A512E7500003A33 /* mainwindow.png */,
-				D10B8DFC0A512E7500003A33 /* osd.png */,
-			);
-			path = images;
 			sourceTree = "<group>";
 		};
 		D10FD65B0A7D49E700935B10 /* speex */ = {
@@ -2562,28 +2399,6 @@
 			path = unix;
 			sourceTree = "<group>";
 		};
-		D1BD61C80A9104B2007C8E46 /* Manual (French) */ = {
-			isa = PBXGroup;
-			children = (
-				D1BD61C90A9104B2007C8E46 /* images */,
-				D1BD61CF0A9104B2007C8E46 /* manuel.html */,
-			);
-			name = "Manual (French)";
-			path = French.lproj/Manual;
-			sourceTree = "<group>";
-		};
-		D1BD61C90A9104B2007C8E46 /* images */ = {
-			isa = PBXGroup;
-			children = (
-				D1BD61CA0A9104B2007C8E46 /* ab_gatekeeper.png */,
-				D1BD61CB0A9104B2007C8E46 /* locations.png */,
-				D1BD61CC0A9104B2007C8E46 /* logo.tiff */,
-				D1BD61CD0A9104B2007C8E46 /* mainwindow.png */,
-				D1BD61CE0A9104B2007C8E46 /* osd.png */,
-			);
-			path = images;
-			sourceTree = "<group>";
-		};
 		D1BE22540E86D8F800552D60 /* Media */ = {
 			isa = PBXGroup;
 			children = (
@@ -3182,14 +2997,12 @@
 		D1EB189A084379CE002CEF53 /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				D1E4CEC30F1D86DB0001BE5B /* Localizable.strings */,
+				D1E4CEBE0F1D86CC0001BE5B /* InfoPlist.strings */,
+				D1E4CEB70F1D86B50001BE5B /* XMCodecDescriptions.plist */,
 				D1BD64410A951A2E007C8E46 /* uri.scriptSuite */,
-				D10B8DF60A512E7500003A33 /* Manual (English) */,
-				D1BD61C80A9104B2007C8E46 /* Manual (French) */,
 				D1E912BD0A308DDA00AEABA5 /* XMSTUNServers.plist */,
-				D1887E750A283DEA00C938BB /* Localizable.strings */,
-				D189803D082411AC007CD286 /* XMCodecDescriptions.plist */,
 				8D1107310486CEB800E47090 /* Info.plist */,
-				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -3274,9 +3087,6 @@
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				D1AD19370E630C2D00143295 /* ShellScript */,
-				D10B8E080A512F4A00003A33 /* CopyFiles */,
-				D1BD61C40A91042D007C8E46 /* CopyFiles */,
-				D1BD61C60A910474007C8E46 /* CopyFiles */,
 			);
 			buildRules = (
 				D163335407A01B47003FD9C0 /* PBXBuildRule */,
@@ -3390,9 +3200,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */,
-				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				D1A02B26081E96D30018BD11 /* Preferences.nib in Resources */,
-				D189803E082411AC007CD286 /* XMCodecDescriptions.plist in Resources */,
 				D1B4CC9A082F594C00A444E1 /* MainWindow.nib in Resources */,
 				D1B4D0070833937200A444E1 /* ZeroConfModule.nib in Resources */,
 				D1ECCBF30833DDAD008EBAE3 /* TextChatModule.nib in Resources */,
@@ -3507,7 +3315,6 @@
 				D104D9A20A0E60D6000898F2 /* zoom_out.tif in Resources */,
 				D104D9C10A0E9947000898F2 /* DefaultURL_H323.tif in Resources */,
 				D104D9C20A0E9947000898F2 /* DefaultURL_SIP.tif in Resources */,
-				D1887E770A283DEA00C938BB /* Localizable.strings in Resources */,
 				D1E912BE0A308DDA00AEABA5 /* XMSTUNServers.plist in Resources */,
 				D1AF64600A3947FC00CAF35F /* appearancePreferences.tif in Resources */,
 				D1C8FCD30A4407E600EF1A8C /* StillImageSettings.nib in Resources */,
@@ -3524,6 +3331,9 @@
 				D156AA050F04D78500FB527A /* status_green.tif in Resources */,
 				D156AA060F04D78500FB527A /* status_red.tif in Resources */,
 				D156AA070F04D78500FB527A /* status_yellow.tif in Resources */,
+				D1E4CEB90F1D86B50001BE5B /* XMCodecDescriptions.plist in Resources */,
+				D1E4CEC00F1D86CC0001BE5B /* InfoPlist.strings in Resources */,
+				D1E4CEC50F1D86DB0001BE5B /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3928,24 +3738,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				089C165DFE840E0CC02AAC07 /* English */,
-				D1E20B530A3600A000861E00 /* Italian */,
-				D1C8FC700A435BE400EF1A8C /* French */,
-				D10B8AAE0A50050900003A33 /* German */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
 		1A348FB30984E4520033FA95 /* Info.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				1A348FB40984E4520033FA95 /* English */,
-				D1E20B450A35FFD400861E00 /* Italian */,
-				D1C8FC610A435AE400EF1A8C /* French */,
-				D10B8A9C0A50044800003A33 /* German */,
 			);
 			name = Info.nib;
 			sourceTree = "<group>";
@@ -3954,9 +3750,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				1A348FB60984E4520033FA95 /* English */,
-				D1E20B4F0A36002400861E00 /* Italian */,
-				D1C8FC6B0A435B4500EF1A8C /* French */,
-				D10B8AA70A50047000003A33 /* German */,
 			);
 			name = XMInspector.nib;
 			sourceTree = "<group>";
@@ -3965,9 +3758,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				1AE62986099B7B4300793794 /* English */,
-				D1E20B4B0A36001300861E00 /* Italian */,
-				D1C8FC670A435B2E00EF1A8C /* French */,
-				D10B8AA20A50046300003A33 /* German */,
 			);
 			name = SequenceGrabberSettings.nib;
 			sourceTree = "<group>";
@@ -3976,9 +3766,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				29B97319FDCFA39411CA2CEA /* English */,
-				D1E20B470A36001300861E00 /* Italian */,
-				D1C8FC630A435B2E00EF1A8C /* French */,
-				D10B8A9E0A50046300003A33 /* German */,
 			);
 			name = MainMenu.nib;
 			sourceTree = "<group>";
@@ -3987,9 +3774,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D10E453E0AADEC11009EA376 /* English */,
-				D1610DEE0ABD497D00B41229 /* French */,
-				D1610DEF0ABD499600B41229 /* German */,
-				D1610DF00ABD49A400B41229 /* Italian */,
 			);
 			name = CallRecorderModule.nib;
 			sourceTree = "<group>";
@@ -3998,9 +3782,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D11C5E640A49ED950030633D /* English */,
-				D11C5F230A49F9F90030633D /* French */,
-				D10B8A9B0A50044800003A33 /* German */,
-				D10B8AA90A50048B00003A33 /* Italian */,
 			);
 			name = IncomingCallAlert.nib;
 			sourceTree = "<group>";
@@ -4017,9 +3798,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D1639416083E17A500F7FD83 /* English */,
-				D1E20B430A35FFD400861E00 /* Italian */,
-				D1C8FC5F0A435AE400EF1A8C /* French */,
-				D10B8A990A50044800003A33 /* German */,
 			);
 			name = DialPadModule.nib;
 			sourceTree = "<group>";
@@ -4028,9 +3806,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D163945E083E19E300F7FD83 /* English */,
-				D1E20B4D0A36001400861E00 /* Italian */,
-				D1C8FC690A435B2E00EF1A8C /* French */,
-				D10B8AA40A50046300003A33 /* German */,
 			);
 			name = StatisticsModule.nib;
 			sourceTree = "<group>";
@@ -4039,42 +3814,14 @@
 			isa = PBXVariantGroup;
 			children = (
 				D16394C2083E23D600F7FD83 /* English */,
-				D1E20B420A35FFC200861E00 /* Italian */,
-				D1C8FC5E0A435ACC00EF1A8C /* French */,
-				D10B8A980A50044800003A33 /* German */,
 			);
 			name = CallHistoryModule.nib;
-			sourceTree = "<group>";
-		};
-		D1887E750A283DEA00C938BB /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				D1887E760A283DEA00C938BB /* English */,
-				D1E20B510A36004A00861E00 /* Italian */,
-				D1C8FC6E0A435B9D00EF1A8C /* French */,
-				D10B8AAC0A5004E400003A33 /* German */,
-			);
-			name = Localizable.strings;
-			sourceTree = "<group>";
-		};
-		D189803D082411AC007CD286 /* XMCodecDescriptions.plist */ = {
-			isa = PBXVariantGroup;
-			children = (
-				D1897F7C0823EEF2007CD286 /* English */,
-				D1E20B520A36007300861E00 /* Italian */,
-				D1C8FC6F0A435BC600EF1A8C /* French */,
-				D10B8AAD0A5004F600003A33 /* German */,
-			);
-			name = XMCodecDescriptions.plist;
 			sourceTree = "<group>";
 		};
 		D1A02B24081E96D30018BD11 /* Preferences.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				D1A02B25081E96D30018BD11 /* English */,
-				D1E20B4A0A36001300861E00 /* Italian */,
-				D1C8FC660A435B2E00EF1A8C /* French */,
-				D10B8AA10A50046300003A33 /* German */,
 			);
 			name = Preferences.nib;
 			sourceTree = "<group>";
@@ -4083,9 +3830,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D1B4CC99082F594C00A444E1 /* English */,
-				D1E20B480A36001300861E00 /* Italian */,
-				D1C8FC640A435B2E00EF1A8C /* French */,
-				D10B8A9F0A50046300003A33 /* German */,
 			);
 			name = MainWindow.nib;
 			sourceTree = "<group>";
@@ -4094,9 +3838,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D1B4D0060833937200A444E1 /* English */,
-				D1E20B500A36003900861E00 /* Italian */,
-				D1C8FC6C0A435B4500EF1A8C /* French */,
-				D10B8AA80A50047000003A33 /* German */,
 			);
 			name = ZeroConfModule.nib;
 			sourceTree = "<group>";
@@ -4105,9 +3846,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D1C8FCD20A4407E600EF1A8C /* English */,
-				D10B8AA50A50046300003A33 /* German */,
-				D10B8AAA0A5004A600003A33 /* French */,
-				D10B8AAB0A5004B500003A33 /* Italian */,
 			);
 			name = StillImageSettings.nib;
 			sourceTree = "<group>";
@@ -4120,13 +3858,34 @@
 			name = AddressBook.nib;
 			sourceTree = "<group>";
 		};
+		D1E4CEB70F1D86B50001BE5B /* XMCodecDescriptions.plist */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D1E4CEB80F1D86B50001BE5B /* English */,
+			);
+			name = XMCodecDescriptions.plist;
+			sourceTree = "<group>";
+		};
+		D1E4CEBE0F1D86CC0001BE5B /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D1E4CEBF0F1D86CC0001BE5B /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		D1E4CEC30F1D86DB0001BE5B /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D1E4CEC40F1D86DB0001BE5B /* English */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
 		D1ECCBF10833DDAD008EBAE3 /* TextChatModule.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				D1ECCBF20833DDAD008EBAE3 /* English */,
-				D1E20B4E0A36001400861E00 /* Italian */,
-				D1C8FC6A0A435B2E00EF1A8C /* French */,
-				D10B8AA60A50046300003A33 /* German */,
 			);
 			name = TextChatModule.nib;
 			sourceTree = "<group>";
@@ -4135,9 +3894,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D1ECCD170834911C008EBAE3 /* English */,
-				D1E20B440A35FFD400861E00 /* Italian */,
-				D1C8FC600A435AE400EF1A8C /* French */,
-				D10B8A9A0A50044800003A33 /* German */,
 			);
 			name = InCallModule.nib;
 			sourceTree = "<group>";
@@ -4146,9 +3902,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D1ECCD2F083491EB008EBAE3 /* English */,
-				D1E20B490A36001300861E00 /* Italian */,
-				D1C8FC650A435B2E00EF1A8C /* French */,
-				D10B8AA00A50046300003A33 /* German */,
 			);
 			name = NoCallModule.nib;
 			sourceTree = "<group>";
@@ -4157,9 +3910,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D1EF07520918B212008A8974 /* English */,
-				D1E20B4C0A36001400861E00 /* Italian */,
-				D1C8FC680A435B2E00EF1A8C /* French */,
-				D10B8AA30A50046300003A33 /* German */,
 			);
 			name = SetupAssistant.nib;
 			sourceTree = "<group>";
@@ -4168,9 +3918,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				D1F6067B08BBC5FC0005E9A0 /* English */,
-				D1E20B460A35FFF700861E00 /* Italian */,
-				D1C8FC620A435B1C00EF1A8C /* French */,
-				D10B8A9D0A50045400003A33 /* German */,
 			);
 			name = LocalAudioVideoModule.nib;
 			sourceTree = "<group>";
