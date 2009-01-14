@@ -1,22 +1,46 @@
-{
-    IBClasses = (
-        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {
-            ACTIONS = {
-                enterFullScreen = id; 
-                showContacts = id; 
-                showInspector = id; 
-                showMainWindow = id; 
-                showPreferences = id; 
-                showTools = id; 
-                updateDeviceLists = id; 
-                updateNetworkInformation = id; 
-            }; 
-            CLASS = XMApplicationController; 
-            LANGUAGE = ObjC; 
-            SUPERCLASS = NSObject; 
-        }, 
-        {CLASS = XMLocalVideoView; LANGUAGE = ObjC; SUPERCLASS = NSQuickDrawView; }
-    ); 
-    IBVersion = 1; 
-}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IBClasses</key>
+	<array>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>enterFullScreen</key>
+				<string>id</string>
+				<key>showContacts</key>
+				<string>id</string>
+				<key>showInspector</key>
+				<string>id</string>
+				<key>showMainWindow</key>
+				<string>id</string>
+				<key>showPreferences</key>
+				<string>id</string>
+				<key>showTools</key>
+				<string>id</string>
+				<key>updateDeviceLists</key>
+				<string>id</string>
+				<key>updateNetworkInformation</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>XMApplicationController</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>FirstResponder</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+	</array>
+	<key>IBVersion</key>
+	<string>1</string>
+</dict>
+</plist>

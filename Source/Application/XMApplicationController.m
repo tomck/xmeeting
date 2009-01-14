@@ -44,6 +44,18 @@
 
 #import "XMIncomingCallAlert.h"
 
+// tags from the application menus
+enum {
+  ShowPreferencesTag          = 10,
+  UpdateDeviceListsTag        = 300,
+  UpdateNetworkInformationTag = 301,
+  MainWindowTag               = 410,
+  InspectorTag                = 411,
+  ToolsTag                    = 412,
+  ContactsTag                 = 413,
+  FullScreenTag               = 430,
+};
+
 @interface XMApplicationController (PrivateMethods)
 
 // preferences management
@@ -92,6 +104,8 @@
 - (id)init
 {
   self = [super init];
+  
+  applicationDidLaunch = NO;
   
   // Initialize the framework
   BOOL enablePTrace = [XMPreferencesManager enablePTrace];
@@ -733,11 +747,18 @@
   int tag = [menuItem tag];
   XMCallManager *callManager = [XMCallManager sharedInstance];
   
-  if (tag == 430) { // Full screen
+  if (tag == FullScreenTag) { 
     if ([callManager isInCall] && [[[XMPreferencesManager sharedInstance] activeLocation] enableVideo] == YES) {
       return YES;
     }
     
+    return NO;
+  }
+  
+  // disable menus until the application is completely launched (Setup Assistant done)
+  if (applicationDidLaunch == NO &&
+      (tag == ShowPreferencesTag || tag == UpdateDeviceListsTag || tag == UpdateNetworkInformationTag || 
+       tag == MainWindowTag ||  tag == InspectorTag || tag == ToolsTag || tag == ContactsTag)) {
     return NO;
   }
   
@@ -808,6 +829,8 @@
   
   // Enable the services menu
   [NSApp setServicesProvider:self];
+  
+  applicationDidLaunch = YES;
 }
 
 @end

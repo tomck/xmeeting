@@ -55,6 +55,8 @@
   XMIncomingCallAlertType alertType;
   
   NSString *calledAddress;
+  
+  BOOL applicationDidLaunch;
 }
 
 /**
