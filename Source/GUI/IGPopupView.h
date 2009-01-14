@@ -1,9 +1,11 @@
 /*
- * $Id: IGPopupView.h,v 1.4 2008/10/24 12:22:02 hfriederich Exp $
- *
- * Copyright (c) 2005 IGDocks
+ * Copyright (c) 2005-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2005-2008 Ivan Guajana, Hannes Friederich. All rights reserved.
+ * Copyright (c) 2005-2009 Ivan Guajana, Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 /* IGPopupView */

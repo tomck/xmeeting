@@ -1,9 +1,11 @@
 /*
- * $Id: XMAudioOnlyOSD.m,v 1.7 2007/08/17 11:36:43 hfriederich Exp $
- *
- * Copyright (c) 2006 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2006-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2006 Ivan Guajana. All rights reserved.
+ * Copyright (c) 2006-2009 Ivan Guajana, Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import "XMAudioOnlyOSD.h"

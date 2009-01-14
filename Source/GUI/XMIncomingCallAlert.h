@@ -1,9 +1,11 @@
 /*
- * $Id: XMIncomingCallAlert.h,v 1.2 2007/08/17 11:36:44 hfriederich Exp $
- *
- * Copyright (c) 2006 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2006-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2006 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2006-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #ifndef __XM_INCOMING_CALL_ALERT_H__

@@ -1,9 +1,11 @@
 /*
- * $Id: XMStillImageVideoInputModule.h,v 1.5 2008/10/24 12:22:02 hfriederich Exp $
- *
- * Copyright (c) 2006-2008 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2006-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2006-2008 Mark Fleming, Hannes Friederich. All rights reserved.
+ * Copyright (c) 2006-2009 Mark Fleming, Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 /*!

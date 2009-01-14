@@ -1,9 +1,11 @@
 /*
- * $Id: XMOpalDispatcher.h,v 1.32 2008/12/25 22:29:34 hfriederich Exp $
- *
- * Copyright (c) 2005-2008 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2005-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2005-2008 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2005-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #ifndef __XM_OPAL_DISPATCHER_H__

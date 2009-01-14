@@ -1,9 +1,11 @@
 /*
- * $Id: XMPreferencesManager.m,v 1.34 2009/01/11 17:19:22 hfriederich Exp $
- *
  * Copyright (c) 2005-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
  * Copyright (c) 2005-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import <Security/Security.h>

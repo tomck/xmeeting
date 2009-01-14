@@ -1,9 +1,11 @@
 /*
- * $Id: XMAreaSelectionView.h,v 1.3 2009/01/11 18:58:26 hfriederich Exp $
- *
  * Copyright (c) 2007-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
  * Copyright (c) 2007-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #ifndef __XM_AREA_SELECTION_VIEW_H__

@@ -1,9 +1,11 @@
 /*
- * $Id: XMInspectorController.h,v 1.6 2008/10/24 12:22:02 hfriederich Exp $
- *
- * Copyright (c) 2006-2008 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2006-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2006-2008 Ivan Guajana, Hannes Friederich. All rights reserved.
+ * Copyright (c) 2006-2009 Ivan Guajana, Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import <Cocoa/Cocoa.h>

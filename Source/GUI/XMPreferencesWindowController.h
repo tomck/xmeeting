@@ -1,9 +1,11 @@
 /*
- * $Id: XMPreferencesWindowController.h,v 1.10 2009/01/03 20:07:38 hfriederich Exp $
- *
- * Copyright (c) 2005-2008 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2005-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2005-2008 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2005-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #ifndef __XM_PREFERENCES_WINDOW_CONTROLLER_H__

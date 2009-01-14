@@ -1,10 +1,12 @@
-//
-//  main.m
-//  XMeeting
-//
-//  Created by Hannes on 20.1.2005.
-//  Copyright __MyCompanyName__ 2005. All rights reserved.
-//
+/*
+ * Copyright (c) 2005-2009 XMeeting Project ("http://xmeeting.sf.net").
+ * All rights reserved.
+ * Copyright (c) 2005-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
+ */
 
 #import <Cocoa/Cocoa.h>
 

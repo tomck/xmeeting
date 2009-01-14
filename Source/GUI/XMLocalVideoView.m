@@ -1,9 +1,11 @@
 /*
- * $Id: XMLocalVideoView.m,v 1.5 2008/11/03 21:34:03 hfriederich Exp $
- *
- * Copyright (c) 2006-2008 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2006-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2006-2008 Hannes Friederich, Ivan Guajana. All rights reserved.
+ * Copyright (c) 2006-2009 Ivan Guajana, Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import "XMLocalVideoView.h"

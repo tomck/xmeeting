@@ -1,9 +1,11 @@
 /*
- * $Id: XMDebugPreferencesModule.m,v 1.2 2008/12/27 08:04:38 hfriederich Exp $
- *
- * Copyright (c) 2008 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2008-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2008 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2008-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import "XMDebugPreferencesModule.h"

@@ -1,9 +1,11 @@
 /*
- * $Id: XMInCallOSD.m,v 1.9 2008/11/03 21:34:03 hfriederich Exp $
- *
- * Copyright (c) 2006-2008 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2006-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2006-2008 Ivan Guajana, Hannes Friederich. All rights reserved.
+ * Copyright (c) 2006-2009 Ivan Guajana, Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import "XMInCallOSD.h"

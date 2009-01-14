@@ -1,9 +1,11 @@
 /*
- * $Id: XMNetworkConfiguration.h,v 1.3 2007/09/14 13:03:06 hfriederich Exp $
- *
- * Copyright (c) 2007 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2007-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2007 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2007-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #ifndef __XM_NETWORK_CONFIGURATION_H__

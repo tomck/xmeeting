@@ -1,9 +1,11 @@
 /*
- * $Id: XMLocalAudioVideoModule.m,v 1.30 2008/11/04 23:12:35 hfriederich Exp $
- *
- * Copyright (c) 2005-2008 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2005-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2005-2008 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2005-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import "XMeeting.h"

@@ -1,9 +1,11 @@
 /*
- * $Id: XMInBandDTMFHandler.h,v 1.4 2008/09/24 06:52:42 hfriederich Exp $
- *
- * Copyright (c) 2006 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2006-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2006 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2006-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #ifndef __XM_IN_BAND_DTMF_HANDLER_H__

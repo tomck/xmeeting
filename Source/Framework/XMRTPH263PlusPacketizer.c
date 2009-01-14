@@ -1,9 +1,11 @@
 /*
- * $Id: XMRTPH263PlusPacketizer.c,v 1.4 2008/10/11 18:56:55 hfriederich Exp $
- *
- * Copyright (c) 2006 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2006-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2006 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2006-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 //////////////////////////////////////////////////////////////////////

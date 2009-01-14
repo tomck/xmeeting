@@ -1,9 +1,11 @@
 /*
- * $Id: XMURLParser.h,v 1.1 2007/08/16 15:41:08 hfriederich Exp $
- *
- * Copyright (c) 2007 XMeeting Project ("http://xmeeting.sf.net").
+ * Copyright (c) 2007-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
- * Copyright (c) 2007 Hannes Friederich. All rights reserved.
+ * Copyright (c) 2007-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #ifndef __XM_URL_PARSER_H__

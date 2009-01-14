@@ -1,9 +1,11 @@
 /*
- * $Id: XMH323URL.m,v 1.4 2009/01/11 18:58:26 hfriederich Exp $
- *
  * Copyright (c) 2007-2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
  * Copyright (c) 2007-2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import "XMH323URL.h"

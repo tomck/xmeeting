@@ -1,9 +1,11 @@
 /*
- * $Id: XMSetupAssistantModules.m,v 1.4 2009/01/11 17:20:41 hfriederich Exp $
- *
  * Copyright (c) 2009 XMeeting Project ("http://xmeeting.sf.net").
  * All rights reserved.
  * Copyright (c) 2009 Hannes Friederich. All rights reserved.
+ *
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
 #import "XMSetupAssistantModules.h"
