@@ -231,6 +231,7 @@ static void XMSGProcessDecompressedFrameProc(void *decompressionTrackingRefCon,
             // caching the index of this device
             XMSGDeviceNameIndex *deviceNameIndex = [[XMSGDeviceNameIndex alloc] _initWithDeviceIndex:i inputNameIndex:j];
             [indexArray addObject:deviceNameIndex];
+            [deviceNameIndex release];
           }
         }
       }
@@ -854,9 +855,7 @@ bail:
   }
 	
   NSNumber *number = nil;
-  NSMutableDictionary *pixelBufferAttributes = nil;
-	
-  pixelBufferAttributes = [[NSMutableDictionary alloc] initWithCapacity:3];
+  NSMutableDictionary *pixelBufferAttributes = [[NSMutableDictionary alloc] initWithCapacity:3];
 	
   // Setting the Width / Height for the buffer
   number = [[NSNumber alloc] initWithInt:(int)frameSize.width];
@@ -883,10 +882,11 @@ bail:
   if (err != noErr) {
     hintCode = 0x007002;
   }
+  
+  [pixelBufferAttributes release];
 	
 bail:
 	
-  [pixelBufferAttributes release];
   DisposeHandle((Handle)imageDesc);
 	
   if (err != noErr) {

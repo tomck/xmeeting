@@ -158,6 +158,7 @@
     [data release];
 		
     if (bitmapImageRep == nil) {
+      // creation of the image failed
       CVPixelBufferRef dummyPicture = [XMDummyVideoInputModule getDummyImageForVideoSize:videoSize];
       if (dummyPicture != NULL) {
         [inputManager handleGrabbedFrame:dummyPicture];
@@ -205,12 +206,12 @@
 		
     XMDisposeImageCopyContext(context);
 		
+    [bitmapImageRep release];
+    
     if (result == NO) {
       [inputManager handleErrorWithCode:2 hintCode:0];
       return NO;
     }
-		
-    [bitmapImageRep release];
   }
 	
   [inputManager handleGrabbedFrame:pixelBuffer];

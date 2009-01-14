@@ -252,10 +252,8 @@ void XMScreenModuleReconfigurationCallback(CGDirectDisplayID display,
     [updateLock lock];
 		
     if (imageBuffer != NULL) {
-      [updateLock lock];
       free(imageBuffer);
       imageBuffer = NULL;
-      [updateLock unlock];
     }
     if (imageCopyContext != NULL) {
       XMDisposeImageCopyContext(imageCopyContext);

@@ -561,6 +561,7 @@ BOOL _XMIsH263IFrame(UInt8* data);
       NSArray *inputDevices = [moduleWrapper _devices];
 			
       if (inputDevices == nil) {
+        [devices release];
         return;
       }
       [devices addObjectsFromArray:inputDevices];
