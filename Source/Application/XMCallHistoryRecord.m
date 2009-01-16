@@ -157,11 +157,7 @@ NSString *XMKey_CallHistoryRecordDisplayString = @"XMeeting_DisplayString";
   if (type == XMCallHistoryRecordType_AddressBookRecord) {
     return [NSImage imageNamed:@"AddressBook"];
   } else {
-    if ([self callProtocol] == XMCallProtocol_H323) {
-      return [NSImage imageNamed:@"CallHistory_H323"];
-    } else {
-      return [NSImage imageNamed:@"CallHistory_SIP"];
-    }
+    return [NSImage imageNamed:@"CallHistory"];
   }
 }
 

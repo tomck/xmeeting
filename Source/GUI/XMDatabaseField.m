@@ -39,6 +39,9 @@
   NSTextView *fieldEditor;
   NSImage *image;
   NSImageCell *imageCell;
+  NSString *prefix;
+  NSTextFieldCell *prefixCell;
+  NSDictionary *prefixAttributes;
   BOOL isDisclosureHighlighted;
   BOOL needsDrawing;
 }
@@ -48,8 +51,12 @@
 - (NSImage *)_image;
 - (void)_setImage:(NSImage *)image;
 
+- (NSString *)_prefix;
+- (void)_setPrefix:(NSString *)prefix;
+
 - (void)_setDisclosureHighlighted:(BOOL)flag;
 - (void)_setNeedsDrawing:(BOOL)flag;
+- (float)_leftOffset;
 
 @end
 
@@ -141,6 +148,7 @@
   representedObject = nil;
   
   defaultImage = nil;
+  defaultPrefix = nil;
   
   disclosureTrackingRect = 0;
   
@@ -189,6 +197,23 @@
   [self setNeedsDisplay:YES];
 }
 
+- (NSString *)defaultPrefix
+{
+  return defaultPrefix;
+}
+
+- (void)setDefaultPrefix:(NSString *)text
+{
+  NSString *old = defaultPrefix;
+  defaultPrefix = [text copy];
+  [old release];
+  
+  [[self cell] _setPrefix:defaultPrefix];
+  
+  [self setNeedsDisplay:YES];
+  [self selectText:self]; // needed for the cell to update its drawing rect (depends on prefix)
+}
+
 - (id)representedObject
 {
   return representedObject;
@@ -227,11 +252,18 @@
 
 - (void)controlTextDidChange:(NSControl *)control
 {
+  // clear the represented object
   if (representedObject != nil) {
     [representedObject release];
     representedObject = nil;
     [[self cell] _setImage:defaultImage];
+    [[self cell] _setPrefix:defaultPrefix];
     [self _setNeedsDisplay];
+    // also need to update the cell drawing rect by caling -selectText.
+    // store the current selection and restore afterwards
+    NSRange range = [[self currentEditor] selectedRange];
+    [self selectText:self];
+    [[self currentEditor] setSelectedRange:range];
   }
   
   if (dataSource != nil && shouldFetchCompletions == YES) {
@@ -426,7 +458,7 @@
         [self _displayWindow:PULLDOWN_OBJECTS_WINDOW];
       }
     }
-  } else if ([[self cell] _image] != nil && mouseLocation.x <= bounds.size.height + 2) {
+  } else if ([[self cell] _image] != nil && mouseLocation.x <= [[self cell] _leftOffset] + 2) {
     if (windowIsShown == YES) {
       if (pulldownMode == IMAGE_OPTIONS_WINDOW) {
         [self _hideWindow];
@@ -550,6 +582,7 @@
   XMDatabaseFieldCell *cell = (XMDatabaseFieldCell *)[self cell];
   NSText *currentEditor = [self currentEditor];
   NSImage *displayImage;
+  NSString *displayPrefix;
   NSString *displayString;
   
   if (representedObject != nil && dataSource != nil) {
@@ -557,14 +590,20 @@
     if (displayImage == nil) {
       displayImage = defaultImage;
     }
+    displayPrefix = [dataSource databaseField:self prefixForRepresentedObject:representedObject];
+    if (displayPrefix == nil) {
+      displayPrefix = defaultPrefix;
+    }
     displayString = [dataSource databaseField:self displayStringForRepresentedObject:representedObject];
   
   } else {
     displayImage = defaultImage;
+    displayPrefix = defaultPrefix;
     displayString = @"";
   }
   
   [cell _setImage:displayImage];
+  [cell _setPrefix:displayPrefix];
   
   if (currentEditor != nil) {
     [currentEditor setString:displayString];
@@ -572,6 +611,7 @@
     [cell setStringValue:displayString];
   }
   [self setNeedsDisplay:YES];
+  [self selectText:self]; // needed to cause the cell to update its drawing rect (depends on prefix)
 }
 
 - (void)_displayObjectAtIndex:(unsigned)indexOfObject
@@ -728,6 +768,14 @@
   [imageCell setImageFrameStyle:NSImageFrameNone];
   [imageCell setImageScaling:NSScaleProportionally];
   [imageCell setImageAlignment:NSImageAlignCenter];
+  prefix = nil;
+  prefixCell = [[NSTextFieldCell alloc] init];
+  [prefixCell setDrawsBackground:NO];
+  [prefixCell setBezeled:NO];
+  [prefixCell setBordered:NO];
+  [prefixCell setFont:[textFieldCell font]];
+  prefixAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSColor disabledControlTextColor], NSForegroundColorAttributeName,
+                      [textFieldCell font], NSFontAttributeName, nil];
   
   return self;
 }
@@ -737,6 +785,9 @@
   [fieldEditor release];
   [image release];
   [imageCell release];
+  [prefix release];
+  [prefixCell release];
+  [prefixAttributes release];
   
   [super dealloc];
 }
@@ -755,6 +806,23 @@
   [imageCell setImage:image];
 }
 
+- (NSString *)_prefix
+{
+  return prefix;
+}
+
+- (void)_setPrefix:(NSString *)thePrefix
+{
+  NSString *old = prefix;
+  prefix = [thePrefix retain];
+  [old release];
+  
+  if (prefix == nil) {
+    prefix = @"";
+  }
+  [prefixCell setStringValue:prefix];
+}
+
 - (void)_setDisclosureHighlighted:(BOOL)flag
 {
   isDisclosureHighlighted = flag;
@@ -763,6 +831,21 @@
 - (void)_setNeedsDrawing:(BOOL)flag
 {
   needsDrawing = flag;
+}
+
+- (float)_leftOffset
+{
+  float leftOffset = 0.0;
+  
+  if (image != nil) {
+    // TODO: replace with reasonable constants
+    leftOffset += 21;
+  }
+  if (prefix != nil) {
+    NSSize size = [prefixCell cellSize];
+    leftOffset += size.width-3;
+  }
+  return leftOffset;
 }
 
 #pragma mark Drawing Methods
@@ -775,14 +858,10 @@
 {  
   bounds = [super drawingRectForBounds:bounds];
   
-  // we only adjust the bounds if we have an image to draw
-  if (image != nil) {
-    // width is bounds height
-    float width = bounds.size.height;
-    
-    bounds.origin.x += width;
-    bounds.size.width -= width;
-  }
+  float leftOffset = [self _leftOffset];
+  
+  bounds.origin.x += leftOffset;
+  bounds.size.width -= leftOffset;
   
   // we implicitely assume an height of 24 pixels using 13pt font
   // Normal height for NSTextFields in this case is 22px.
@@ -855,10 +934,21 @@
   // using the superclass to draw text and borders
   [super drawWithFrame:frame inView:view];
   
-  if (needsDrawing == YES && image != nil) {
-    // drawing the image
-    float dimension = frame.size.height - 6;
-    [imageCell drawWithFrame:NSMakeRect(frame.origin.x + 3, frame.origin.y + 3, dimension, dimension) inView:view];
+  if (needsDrawing == YES) {
+    if (image != nil) {
+      // drawing the image
+      float dimension = frame.size.height - 6;
+      [imageCell drawWithFrame:NSMakeRect(frame.origin.x + 3, frame.origin.y + 3, dimension, dimension) inView:view];
+    }
+    if (prefix != nil) { // draw the prefix text
+      // for some reason, the prefix cell won't draw anything on screen.
+      // hence the cell is only used to determine the size and directly draw the string on screen
+      NSSize size = [prefixCell cellSize];
+      float dimension = frame.size.height - 6;
+      NSRect prefixRect = NSMakeRect(frame.origin.x + dimension + 3 + 2, frame.origin.y+5, size.width-3, size.height);
+      [[NSColor redColor] set];
+      [prefix drawWithRect:prefixRect options:NSStringDrawingUsesLineFragmentOrigin attributes:prefixAttributes];
+    }
   }
   
   // drawing the focus ring if needed

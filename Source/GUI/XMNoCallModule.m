@@ -134,6 +134,7 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
     initialCallProtocol = XMCallProtocol_H323;
   }
   [self _setCallProtocol:initialCallProtocol];
+  [callAddressField setDefaultImage:[NSImage imageNamed:@"DefaultURL"]];
   [self _preferencesDidChange:nil];
   
   // determining in which state we currently are
@@ -356,14 +357,15 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
 	  completionsForString:(NSString *)uncompletedString
 	   indexOfSelectedItem:(unsigned *)indexOfSelectedItem
 {	
-  // if the user either enters h323: or sip:, we set the
-  // call protocol accordingly and remove the prefix from
-  // the address
-  if ([uncompletedString hasPrefixCaseInsensitive:@"h323:"]) {
+  // if the user either enters h323: or sip:, set the
+  // call protocol accordingly (if allowed)
+  // and remove the prefix from the address
+  XMLocation *activeLocation = [[XMPreferencesManager sharedInstance] activeLocation];
+  if ([uncompletedString hasPrefixCaseInsensitive:@"h323:"] && [activeLocation enableH323]) {
     [self _setCallProtocol:XMCallProtocol_H323];
     [databaseField setStringValue:[uncompletedString substringFromIndex:5]];
     return [NSArray array];
-  } else if ([uncompletedString hasPrefixCaseInsensitive:@"sip:"]) {
+  } else if ([uncompletedString hasPrefixCaseInsensitive:@"sip:"] && [activeLocation enableSIP]) {
     [self _setCallProtocol:XMCallProtocol_SIP];
     [databaseField setStringValue:[uncompletedString substringFromIndex:4]];
     return [NSArray array];
@@ -432,6 +434,21 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
   return image;
 }
 
+- (NSString *)databaseField:(XMDatabaseField *)databaseField prefixForRepresentedObject:(id)representedObject
+{
+  // only show a prefix if multiple protocols are enabled
+  XMLocation *activeLocation = [[XMPreferencesManager sharedInstance] activeLocation];
+  if ([activeLocation enableH323] && [activeLocation enableSIP]) {
+    XMCallProtocol callProtocol = [[(id<XMCallAddress>)representedObject addressResource] callProtocol];
+    if (callProtocol == XMCallProtocol_H323) {
+      return @"h323:";
+    } else if (callProtocol == XMCallProtocol_SIP) {
+      return @"sip:";
+    }
+  }
+  return nil;
+}
+
 - (NSArray *)imageOptionsForDatabaseField:(XMDatabaseField *)databaseField selectedIndex:(unsigned *)selectedIndex;
 {
   id representedObject = [databaseField representedObject];
@@ -453,13 +470,16 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
         *selectedIndex = 1;
       }
       return [NSArray arrayWithObjects:@"H.323", @"SIP", nil];
-    } else if (enableH323) {
+    } else {
+      return [NSArray array];
+    }
+    /*if (enableH323) {
       *selectedIndex = 0;
       return [NSArray arrayWithObjects:@"H.323", nil];
     } else if (enableSIP) {
       *selectedIndex = 0;
       return [NSArray arrayWithObjects:@"SIP", nil];
-    }
+    }*/
   }
   
   return [NSArray array];
@@ -505,6 +525,9 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
     [self _setCallProtocol:XMCallProtocol_H323];
   } else if (!enableH323 && enableSIP) {
     [self _setCallProtocol:XMCallProtocol_SIP];
+  } else {
+    // set the call protocol again to ensure a correct GUI
+    [self _setCallProtocol:currentCallProtocol];
   }
   
   BOOL mirrorSelfView = [preferencesManager showSelfViewMirrored];
@@ -849,23 +872,33 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
 
 - (void)_setCallProtocol:(XMCallProtocol)callProtocol
 {
+  // only show a prefix if multiple protocols are enabled
+  XMLocation *activeLocation = [[XMPreferencesManager sharedInstance] activeLocation];
+  if ([activeLocation enableH323] && [activeLocation enableSIP]) {
+  
+    if (callProtocol == XMCallProtocol_H323) {
+      [callAddressField setDefaultPrefix:@"h323:"];
+    } else if (callProtocol == XMCallProtocol_SIP) {
+      [callAddressField setDefaultPrefix:@"sip:"];
+    }
+  } else {
+    [callAddressField setDefaultPrefix:nil];
+  }
+  
+  // bypass the code below if the protocol doesn't change
   if (currentCallProtocol == callProtocol) {
     return;
   }
   currentCallProtocol = callProtocol;
   
-  if (callProtocol == XMCallProtocol_H323) {
-    [callAddressField setDefaultImage:[NSImage imageNamed:@"DefaultURL_H323"]];
-  } else if (callProtocol == XMCallProtocol_SIP) {
-    [callAddressField setDefaultImage:[NSImage imageNamed:@"DefaultURL_SIP"]];
-  }
-  
   id<XMCallAddress> representedObject = (id<XMCallAddress>)[callAddressField representedObject];
   
   if ([representedObject isKindOfClass:[XMSimpleAddressResource class]]) {
+    // the protocol did change, update the address resource
     XMSimpleAddressResource *resource = (XMSimpleAddressResource *)representedObject;
     [resource setCallProtocol:callProtocol];
   } else if (representedObject != nil) {
+    // The protocol did change: convert the existing object into a simple address resource, with the changed protocol
     XMAddressResource *res = [representedObject addressResource];
     XMSimpleAddressResource *resource = [[XMSimpleAddressResource alloc] initWithAddress:[res address] callProtocol:callProtocol];
     [resource setDisplayString:[representedObject displayString]];

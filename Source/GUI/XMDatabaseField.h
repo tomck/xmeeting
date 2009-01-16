@@ -47,6 +47,7 @@
   id representedObject;
   
   NSImage *defaultImage;
+  NSString *defaultPrefix;
   
   NSTrackingRectTag disclosureTrackingRect;
 }
@@ -62,6 +63,12 @@
  **/
 - (NSImage *)defaultImage;
 - (void)setDefaultImage:(NSImage *)image;
+
+/**
+ * Gets / sets the default text prefix for this view
+ **/
+- (NSString *)defaultPrefix;
+- (void)setDefaultPrefix:(NSString *)prefix;
 
 /**
  * Gets / Sets the current represented object in
@@ -115,6 +122,11 @@
  * This method is required to implement.
  **/
 - (NSImage *)databaseField:(XMDatabaseField *)databaseField imageForRepresentedObject:(id)representedObject;
+
+/**
+ * Same as above, but for the text prefix
+ **/
+- (NSString *)databaseField:(XMDatabaseField *)databaseField prefixForRepresentedObject:(id)representedObject;
 
 /**
  * Asks the data source to return an array of NSString instances. These instances will be displayed
