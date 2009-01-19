@@ -155,11 +155,11 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
   
   NSNumber *number = [[NSNumber alloc] initWithBool:NO];
   [defaultsDict setObject:number forKey:XMKey_PreferencesManagerAutomaticallyAcceptIncomingCalls];
-  
   [defaultsDict setObject:number forKey:XMKey_PreferencesManagerEnablePTrace];
+  [number release];
   
+  number = [[NSNumber alloc] initWithBool:YES];
   [defaultsDict setObject:number forKey:XMKey_PreferencesManagerShowSelfViewMirrored];
-  
   [number release];
   
   number = [[NSNumber alloc] initWithBool:NO];
