@@ -602,8 +602,8 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
 - (void)_didStartCalling:(NSNotification *)notif
 {
   [callButton setEnabled:YES];
-  [callButton setImage:[NSImage imageNamed:@"hangup_24.tif"]];
-  [callButton setAlternateImage:[NSImage imageNamed:@"hangup_24_down.tif"]];
+  [callButton setImage:[NSImage imageNamed:@"hangup_24"]];
+  [callButton setAlternateImage:[NSImage imageNamed:@"hangup_24_down"]];
   [statusField setStringValue:NSLocalizedString(@"XM_NO_CALL_CALLING", @"")];
   
   isCalling = YES;
@@ -634,8 +634,8 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
 {
   [locationsPopUpButton setEnabled:YES];
   [callButton setEnabled:YES];
-  [callButton setImage:[NSImage imageNamed:@"Call_24.tif"]];
-  [callButton setAlternateImage:[NSImage imageNamed:@"Call_24_down.tif"]];
+  [callButton setImage:[NSImage imageNamed:@"Call_24"]];
+  [callButton setAlternateImage:[NSImage imageNamed:@"Call_24_down"]];
   
   // display the cause for the cleared call for some seconds
   XMCallInfo *callInfo = [[XMCallManager sharedInstance] recentCallAtIndex:0];
