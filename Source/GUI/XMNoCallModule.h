@@ -30,8 +30,8 @@
   
   NSSize contentViewMinSizeWithSelfViewHidden;
   NSSize contentViewMinSizeWithSelfViewShown;
-  NSSize contentViewSizeWithSelfViewHidden;
-  NSSize contentViewSizeWithSelfViewShown;
+  NSSize selfViewMinSize;
+  NSSize contentViewSize;
   
   // GUI Outlets
   IBOutlet XMLocalVideoView *selfView;

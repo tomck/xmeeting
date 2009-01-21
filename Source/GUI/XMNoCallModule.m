@@ -26,8 +26,7 @@
 
 NSString *XMKey_NoCallModuleSelfViewStatus = @"XMeeting_NoCallModuleSelfViewStatus";
 NSString *XMKey_NoCallModuleCallProtocol = @"XMeeting_NoCallModuleCallProtocol";
-NSString *XMKey_NoCallModuleSize_SelfViewShown = @"XMeeting_NoCallModuleSize_SelfViewShown";
-NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_SelfViewHidden";
+NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
 
 #define VIDEO_INSET 5
 
@@ -111,22 +110,16 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
 		
   contentViewMinSizeWithSelfViewHidden = [contentView frame].size;
   contentViewMinSizeWithSelfViewShown = contentViewMinSizeWithSelfViewHidden;
+  selfViewMinSize = [selfView frame].size;
   
   // substracting the space used by the self view
-  contentViewMinSizeWithSelfViewHidden.height -= (VIDEO_INSET + [selfView frame].size.height);
+  contentViewMinSizeWithSelfViewHidden.height -= (VIDEO_INSET + selfViewMinSize.height);
   
   // the initial size equals the min size, if not specified in preferences
-  NSString *selfViewHiddenSize = [[NSUserDefaults standardUserDefaults] stringForKey:XMKey_NoCallModuleSize_SelfViewHidden];
-  NSString *selfViewShownSize = [[NSUserDefaults standardUserDefaults] stringForKey:XMKey_NoCallModuleSize_SelfViewShown];
-  if (selfViewHiddenSize != nil) {
-    contentViewSizeWithSelfViewHidden = NSSizeFromString(selfViewHiddenSize);
-  } else {
-    contentViewSizeWithSelfViewHidden = contentViewMinSizeWithSelfViewHidden;
-  }
-  if (selfViewShownSize != nil) {
-    contentViewSizeWithSelfViewShown = NSSizeFromString(selfViewShownSize);
-  } else {
-    contentViewSizeWithSelfViewShown = contentViewMinSizeWithSelfViewShown;
+  contentViewSize = contentViewMinSizeWithSelfViewHidden;
+  NSString *selfViewSize = [[NSUserDefaults standardUserDefaults] stringForKey:XMKey_NoCallModuleSize];
+  if (selfViewSize != nil) {
+    contentViewSize.width = NSSizeFromString(selfViewSize).width;
   }
   
   XMCallProtocol initialCallProtocol = (XMCallProtocol)[[NSUserDefaults standardUserDefaults] integerForKey:XMKey_NoCallModuleCallProtocol];
@@ -172,11 +165,7 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
   // if not already done, this triggers the loading of the nib file
   [self contentView];
   
-  if (doesShowSelfView) {
-    return contentViewSizeWithSelfViewShown;
-  } else {
-    return contentViewSizeWithSelfViewHidden;
-  }
+  return contentViewSize;
 }
 
 - (NSSize)contentViewMinSize
@@ -207,13 +196,14 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
 {
   if (doesShowSelfView == NO) {
     // also update the preferences
-    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize([contentView bounds].size) forKey:XMKey_NoCallModuleSize_SelfViewHidden];
+    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize([contentView bounds].size) forKey:XMKey_NoCallModuleSize];
     return resizeDifference;
   }
   
   NSSize size = [contentView bounds].size;
-  
-  unsigned usedHeight = contentViewSizeWithSelfViewHidden.height + VIDEO_INSET;
+
+  // height always used (all except video)
+  unsigned usedHeight = contentViewMinSizeWithSelfViewHidden.height + VIDEO_INSET;
   
   int minimumVideoHeight = contentViewMinSizeWithSelfViewShown.height - usedHeight;
   int currentVideoHeight = (int)size.height - usedHeight;
@@ -240,7 +230,7 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
   }
   
   // also update the preferences
-  [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize([contentView bounds].size) forKey:XMKey_NoCallModuleSize_SelfViewShown];
+  [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize([contentView bounds].size) forKey:XMKey_NoCallModuleSize];
   
   return resizeDifference;
 }
@@ -252,13 +242,8 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
 
 - (void)becomeInactiveModule
 {
-  if (doesShowSelfView) {
-    contentViewSizeWithSelfViewShown = [contentView bounds].size;
-    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSizeWithSelfViewShown) forKey:XMKey_NoCallModuleSize_SelfViewShown];
-  } else {
-    contentViewSizeWithSelfViewHidden = [contentView bounds].size;
-    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSizeWithSelfViewHidden) forKey:XMKey_NoCallModuleSize_SelfViewHidden];
-  }
+  contentViewSize = [contentView bounds].size;
+  [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSize) forKey:XMKey_NoCallModuleSize];
 }
 
 - (void)beginFullScreen
@@ -275,9 +260,15 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
 - (IBAction)toggleShowSelfView:(id)sender
 {
   if (doesShowSelfView == NO) {
-    contentViewSizeWithSelfViewHidden = [contentView bounds].size;
-    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSizeWithSelfViewHidden) forKey:XMKey_NoCallModuleSize_SelfViewHidden];
-    
+    contentViewSize = [contentView bounds].size;
+    // determine width difference
+    int widthDifference = contentViewSize.width - contentViewMinSizeWithSelfViewShown.width;
+    int videoWidth = selfViewMinSize.width + widthDifference;
+    int videoHeight = (int)XMGetVideoHeightForWidth(videoWidth, XMVideoSize_CIF);
+    int heightDifference = videoHeight - selfViewMinSize.height;
+    contentViewSize.height = contentViewMinSizeWithSelfViewShown.height;
+    contentViewSize.height += heightDifference;
+    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSize) forKey:XMKey_NoCallModuleSize];
     doesShowSelfView = YES;
     [[XMMainWindowController sharedInstance] noteSizeValuesDidChangeOfModule:self];
     
@@ -292,9 +283,11 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
     [selfView stopDisplayingNoVideo];
     [selfView setDrawsBorder:NO];
     
-    contentViewSizeWithSelfViewShown = [contentView bounds].size;
-    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSizeWithSelfViewShown) forKey:XMKey_NoCallModuleSize_SelfViewShown];
+    contentViewSize = [contentView bounds].size;
+    contentViewSize.height = contentViewMinSizeWithSelfViewHidden.height;
     
+    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSize) forKey:XMKey_NoCallModuleSize];
+
     doesShowSelfView = NO;
     [[XMMainWindowController sharedInstance] noteSizeValuesDidChangeOfModule:self];
   }
@@ -484,13 +477,6 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
     } else {
       return [NSArray array];
     }
-    /*if (enableH323) {
-      *selectedIndex = 0;
-      return [NSArray arrayWithObjects:@"H.323", nil];
-    } else if (enableSIP) {
-      *selectedIndex = 0;
-      return [NSArray arrayWithObjects:@"SIP", nil];
-    }*/
   }
   
   return [NSArray array];
