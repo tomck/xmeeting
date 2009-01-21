@@ -545,14 +545,20 @@ NSString *XMAddressBookProperty_HumanReadableCallAddress_0_1 = @"XMeeting_HumanR
 - (NSArray *)recordsForPersonWithRecord:(XMAddressBookRecord *)record indexOfRecord:(unsigned *)indexOfRecord
 {
   ABPerson *person = [record _person];
+  BOOL searchPhoneNumbers = [[XMPreferencesManager sharedInstance] enableAddressBookPhoneNumbers];
   
   unsigned index = [record _index];
+  unsigned callAddressCount = 0;
+  unsigned phoneNumberCount = 0;
   
   ABMultiValue *callAddressMultiValue = [person valueForProperty:XMAddressBookProperty_HumanReadableCallAddress];
-  ABMultiValue *phoneNumberMultiValue = [person valueForProperty:kABPhoneProperty];
   
-  unsigned callAddressCount = [callAddressMultiValue count];
-  unsigned phoneNumberCount = [phoneNumberMultiValue count];
+  callAddressCount = [callAddressMultiValue count];
+  
+  if (searchPhoneNumbers) {
+    ABMultiValue *phoneNumberMultiValue = [person valueForProperty:kABPhoneProperty];
+    phoneNumberCount = [phoneNumberMultiValue count];
+  }
  
   NSMutableArray *array = [NSMutableArray arrayWithCapacity:(callAddressCount + phoneNumberCount)];
   for (unsigned i = 0; i < callAddressCount; i++) {
