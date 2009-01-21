@@ -82,6 +82,8 @@
 - (void)showStatisticsInspector;
 - (void)showCallHistoryInspector;
 
+- (void)noteCannotCallAddress:(NSString *)address reason:(XMCallStartFailReason)reason;
+
 @end
 
 #endif // __XM_APPLICATION_CONTROLLER_H__

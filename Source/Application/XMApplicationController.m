@@ -84,6 +84,7 @@ enum {
   // displaying dialogs
 - (void)_displayIncomingCallAlert;
 - (void)_displayCallStartFailedAlert:(NSString *)address;
+- (void)_displayCallStartFailedAlert:(NSString *)address failReason:(XMCallStartFailReason)failReason;
 - (void)_displayEnablingH323FailedAlert;
 - (void)_displayGatekeeperRegistrationFailedAlert;
 - (void)_displayEnablingSIPFailedAlert;
@@ -263,6 +264,11 @@ enum {
 - (void)showCallHistoryInspector
 {
   [[XMInspectorController inspectorWithTag:XMInspectorControllerTag_Inspector] showModule:callHistoryModule];
+}
+
+- (void)noteCannotCallAddress:(NSString *)address reason:(XMCallStartFailReason)reason
+{
+  [self _displayCallStartFailedAlert:address failReason:reason];
 }
 
 #pragma mark -
@@ -490,14 +496,18 @@ enum {
 
 - (void)_displayCallStartFailedAlert:(NSString *)address
 {
+  XMCallStartFailReason failReason = [[XMCallManager sharedInstance] callStartFailReason];
+  [self _displayCallStartFailedAlert:address failReason:failReason];
+}
+
+- (void)_displayCallStartFailedAlert:(NSString *)address failReason:(XMCallStartFailReason)failReason
+{
   NSAlert *alert = [[NSAlert alloc] init];
   
   [alert setMessageText:NSLocalizedString(@"XM_CALL_FAILED_MESSAGE", @"")];
   
   NSString *informativeTextFormat = NSLocalizedString(@"XM_CALL_FAILED_INFO_TEXT", @"");
   NSString *failReasonText;
-  
-  XMCallStartFailReason failReason = [[XMCallManager sharedInstance] callStartFailReason];
   
   switch (failReason) {
     case XMCallStartFailReason_H323NotEnabled:
@@ -524,7 +534,7 @@ enum {
     default:
       failReasonText = [NSString stringWithFormat:NSLocalizedString(@"XM_UNKNOWN_REASON", @""), failReason];
       break;
-  }
+  }  
   
   NSString *informativeText = [[NSString alloc] initWithFormat:informativeTextFormat, address, failReasonText];
   [alert setInformativeText:informativeText];
