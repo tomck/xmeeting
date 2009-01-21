@@ -157,7 +157,7 @@ int processFile(NSString *templateFile, NSString *outputFile, NSString *dataFile
   [outputString replaceOccurrencesOfString:@"__XM_OPAL_MINOR__" withString:OPALVersionMinor options:NSLiteralSearch range:NSMakeRange(0, [outputString length])];
   [outputString replaceOccurrencesOfString:@"__XM_OPAL_BUILD__" withString:OPALVersionBuild options:NSLiteralSearch range:NSMakeRange(0, [outputString length])];
   
-  if (![outputString writeToFile:outputFile atomically:YES encoding:NSASCIIStringEncoding error:&error]) {
+  if (![outputString writeToFile:outputFile atomically:YES encoding:NSUTF8StringEncoding error:&error]) {
     NSLog(@"Could not write '%@' (%@)", outputFile, [error localizedDescription]);
     return 4;
   }
