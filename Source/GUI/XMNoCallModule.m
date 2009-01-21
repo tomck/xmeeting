@@ -341,6 +341,9 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
   XMCallProtocol protocolUsed = [[callAddress addressResource] callProtocol];
   [self _setCallProtocol:protocolUsed];
   
+  // the call address might have changed
+  callAddress = (id<XMCallAddress>)[callAddressField representedObject];
+  
   [[XMCallAddressManager sharedInstance] makeCallToAddress:callAddress];
 }
 
@@ -385,7 +388,15 @@ NSString *XMKey_NoCallModuleSize_SelfViewHidden = @"XMeeting_NoCallModuleSize_Se
   
   if (matchedAddresses == nil) {
     // do a fresh search on the database
-    originalMatchedAddresses = [[callAddressManager addressesMatchingString:uncompletedString] retain];
+    XMCallProtocol allowedProtocols = XMCallProtocol_UnknownProtocol;
+    if ([activeLocation enableH323]) {
+      allowedProtocols |= XMCallProtocol_H323;
+    }
+    if ([activeLocation enableSIP]) {
+      allowedProtocols |= XMCallProtocol_SIP;
+    }
+    originalMatchedAddresses = [[callAddressManager addressesMatchingString:uncompletedString 
+                                                           allowedProtocols:allowedProtocols] retain];
   } else {
     originalMatchedAddresses = matchedAddresses;
   }

@@ -9,6 +9,9 @@
  */
 
 #import "XMCallAddressManager.h"
+#import "XMApplicationController.h"
+#import "XMPreferencesManager.h"
+#import "XMLocation.h"
 
 @interface XMCallAddressManager (PrivateMethods)
 
@@ -97,6 +100,25 @@
   return matches;
 }
 
+- (NSArray *)addressesMatchingString:(NSString *)searchString allowedProtocols:(XMCallProtocol)allowedProtocols
+{
+  unsigned count = [callAddressProviders count];
+  NSMutableArray *matches = [NSMutableArray arrayWithCapacity:10];
+  for (unsigned i = 0; i < count; i++) {
+    id<XMCallAddressProvider> provider = (id<XMCallAddressProvider>)[callAddressProviders objectAtIndex:i];
+    NSArray *providerMatches = [provider addressesMatchingString:searchString];
+    unsigned numMatches = [providerMatches count];
+    for (unsigned j = 0; j < numMatches; j++) {
+      id<XMCallAddress> callAddress = (id<XMCallAddress>)[providerMatches objectAtIndex:j];
+      XMCallProtocol protocol = [[callAddress addressResource] callProtocol];
+      if ((protocol & allowedProtocols) != 0) {
+        [matches addObject:callAddress];
+      }
+    }
+  }
+  return matches;
+}
+
 - (NSString *)completionStringForAddress:(id<XMCallAddress>)address uncompletedString:(NSString *)uncompletedString
 {
   id<XMCallAddressProvider> provider = [address provider];
@@ -177,9 +199,19 @@
     return;
   }
   
-  if (callAddress == nil ||
-     [[[callAddress addressResource] address] isEqualToString:@""]) {
+  if (callAddress == nil || [[[callAddress addressResource] address] isEqualToString:@""]) {
     NSLog(@"nil or EMPTY ADDRESS!");
+    return;
+  }
+  
+  // check that protocol really is enabled
+  XMCallProtocol callProtocol = [[callAddress addressResource] callProtocol];
+  XMLocation *activeLocation = [[XMPreferencesManager sharedInstance] activeLocation];
+  if (callProtocol == XMCallProtocol_H323 && ![activeLocation enableH323]) {
+    [[NSApp delegate] noteCannotCallAddress:[[callAddress addressResource] address] reason:XMCallStartFailReason_H323NotEnabled];
+    return;
+  } else if (callProtocol == XMCallProtocol_SIP && ![activeLocation enableSIP]) {
+    [[NSApp delegate] noteCannotCallAddress:[[callAddress addressResource] address] reason:XMCallStartFailReason_SIPNotEnabled];
     return;
   }
   

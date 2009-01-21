@@ -55,6 +55,7 @@ typedef enum XMProviderPriority {
  * These queries are forwarded to the appropriate call address providers
  **/
 - (NSArray *)addressesMatchingString:(NSString *)searchString;
+- (NSArray *)addressesMatchingString:(NSString *)searchString allowedProtocols:(XMCallProtocol)callProtocols;
 - (NSString *)completionStringForAddress:(id<XMCallAddress>)address uncompletedString:(NSString *)uncompletedString;
 
 /**

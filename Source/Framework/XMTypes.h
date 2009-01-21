@@ -42,9 +42,8 @@ typedef enum XMNATType
 typedef enum XMCallProtocol
 {
   XMCallProtocol_UnknownProtocol = 0,
-  XMCallProtocol_H323,
-  XMCallProtocol_SIP,
-  XMCallProtocolCount
+  XMCallProtocol_H323            = 1,
+  XMCallProtocol_SIP             = 2,
 } XMCallProtocol;
 
 /**

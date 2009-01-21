@@ -1606,7 +1606,7 @@
 				1A42B4D009A9DEAF007773DA /* XMeeting.icns */,
 				1A9E27BB09A5BF1C00E9A7CE /* Sounds */,
 				D1EB1897084379C5002CEF53 /* Images */,
-				D1EB1894084379B5002CEF53 /* Resources */,
+				D1EB1894084379B5002CEF53 /* Nibs */,
 				D1EB189A084379CE002CEF53 /* Other */,
 			);
 			name = Resources;
@@ -2840,7 +2840,7 @@
 			path = libspeex;
 			sourceTree = "<group>";
 		};
-		D1EB1894084379B5002CEF53 /* Resources */ = {
+		D1EB1894084379B5002CEF53 /* Nibs */ = {
 			isa = PBXGroup;
 			children = (
 				D1CE4B67083CDF3900B66B5D /* AddressBook.nib */,
@@ -2864,6 +2864,7 @@
 				D11C5E630A49ED950030633D /* IncomingCallAlert.nib */,
 				D10E453D0AADEC11009EA376 /* CallRecorderModule.nib */,
 			);
+			name = Nibs;
 			path = Resources;
 			sourceTree = "<group>";
 		};
