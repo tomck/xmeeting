@@ -54,6 +54,8 @@
 			<string>ObjC</string>
 			<key>OUTLETS</key>
 			<dict>
+				<key>bottomRowBox</key>
+				<string>NSBox</string>
 				<key>busyIndicator</key>
 				<string>NSProgressIndicator</string>
 				<key>callAddressField</key>
@@ -70,6 +72,8 @@
 				<string>NSButton</string>
 				<key>statusField</key>
 				<string>NSTextField</string>
+				<key>topRowBox</key>
+				<string>NSBox</string>
 			</dict>
 			<key>SUPERCLASS</key>
 			<string>NSObject</string>

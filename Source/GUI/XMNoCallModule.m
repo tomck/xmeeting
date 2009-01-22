@@ -30,6 +30,7 @@ NSString *XMKey_NoCallModuleCallProtocol = @"XMeeting_NoCallModuleCallProtocol";
 NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
 
 #define VIDEO_INSET 5
+#define LOCATIONS_POPUP_HEIGHT 18+8
 
 @interface XMNoCallModule (PrivateMethods)
 
@@ -60,6 +61,7 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
 - (void)_windowDidDeminiaturize:(NSNotification *)notif;
 
 - (void)_updateWindowSize;
+- (void)_resizeLocationsPopup;
 
 @end
 
@@ -139,6 +141,16 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
     [self _didEndSubsystemSetup:nil];
   } else {
     [self _didStartSubsystemSetup:nil];
+  }
+  
+  // move the positions if no locations popup is shown
+  if ([[XMPreferencesManager sharedInstance] locationCount] <= 1) {
+    NSRect frame = [selfView frame];
+    frame.origin.y -= LOCATIONS_POPUP_HEIGHT;
+    [selfView setFrame:frame];
+    frame = [topRowBox frame];
+    frame.origin.y -= LOCATIONS_POPUP_HEIGHT;
+    [topRowBox setFrame:frame];
   }
   
   BOOL showSelfView = [[NSUserDefaults standardUserDefaults] boolForKey:XMKey_NoCallModuleSelfViewStatus];
@@ -520,10 +532,6 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
 {
   XMPreferencesManager *preferencesManager = [XMPreferencesManager sharedInstance];
   
-  [locationsPopUpButton removeAllItems];
-  [locationsPopUpButton addItemsWithTitles:[preferencesManager locationNames]];
-  [locationsPopUpButton selectItemAtIndex:[preferencesManager indexOfActiveLocation]];
-  
   XMLocation *activeLocation = [preferencesManager activeLocation];
   BOOL enableH323 = [activeLocation enableH323];
   BOOL enableSIP = [activeLocation enableSIP];
@@ -539,6 +547,38 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
   
   BOOL mirrorSelfView = [preferencesManager showSelfViewMirrored];
   [selfView setLocalVideoMirrored:mirrorSelfView];
+  
+  // only do live resizing if the window is on screen
+  if ([preferencesManager locationCount] <= 1) {
+    if ([locationsPopUpButton isHidden] == NO) {
+      [locationsPopUpButton setHidden:YES];
+      if (notif != nil) { // if the window is visible, the actual content view size might have changed
+        contentViewSize = [contentView bounds].size;
+      }
+      contentViewSize.height -= LOCATIONS_POPUP_HEIGHT;
+      contentViewMinSizeWithSelfViewHidden.height -= LOCATIONS_POPUP_HEIGHT;
+      contentViewMinSizeWithSelfViewShown.height -= LOCATIONS_POPUP_HEIGHT;
+      if (notif != nil) { // only do live resizing if the window is already visible
+        [self _resizeLocationsPopup];
+      }
+    }
+  } else {
+    [locationsPopUpButton removeAllItems];
+    [locationsPopUpButton addItemsWithTitles:[preferencesManager locationNames]];
+    [locationsPopUpButton selectItemAtIndex:[preferencesManager indexOfActiveLocation]];
+    if ([locationsPopUpButton isHidden] == YES) {
+      [locationsPopUpButton setHidden:NO];
+      if (notif != nil) { // if the window is visible, the actual content view size might have changed
+        contentViewSize = [contentView bounds].size;
+      }
+      contentViewSize.height += LOCATIONS_POPUP_HEIGHT;
+      contentViewMinSizeWithSelfViewHidden.height += LOCATIONS_POPUP_HEIGHT;
+      contentViewMinSizeWithSelfViewShown.height += LOCATIONS_POPUP_HEIGHT;
+      if (notif != nil) { // only do live resizing if the window is already visible
+        [self _resizeLocationsPopup];
+      }
+    }
+  }
 }
 
 - (void)_didChangeActiveLocation:(NSNotification *)notif
@@ -965,6 +1005,25 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
   
   // also update the preferences
   [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSize) forKey:XMKey_NoCallModuleSize];
+}
+
+- (void)_resizeLocationsPopup
+{
+  // store autoresizing masks
+  int selfViewMask = [selfView autoresizingMask];
+  int topRowMask = [topRowBox autoresizingMask];
+  int bottomRowMask = [bottomRowBox autoresizingMask];
+  
+  // resize
+  [selfView setAutoresizingMask:NSViewMinYMargin];
+  [topRowBox setAutoresizingMask:NSViewMinYMargin];
+  [bottomRowBox setAutoresizingMask:NSViewMaxYMargin];
+  [[XMMainWindowController sharedInstance] noteSizeValuesDidChangeOfModule:self];
+
+  // restore the autoresizing masks
+  [selfView setAutoresizingMask:selfViewMask];
+  [topRowBox setAutoresizingMask:topRowMask];
+  [bottomRowBox setAutoresizingMask:bottomRowMask];
 }
 
 @end

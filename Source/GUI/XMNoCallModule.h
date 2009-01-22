@@ -43,6 +43,8 @@ extern NSString *XMKey_NoCallModuleSize;
   IBOutlet NSPopUpButton *locationsPopUpButton;
   IBOutlet XMDatabaseField *callAddressField;
   IBOutlet NSButton *callButton;
+  IBOutlet NSBox *topRowBox;
+  IBOutlet NSBox *bottomRowBox;
   
   // timer to clear the call end reason
   NSTimer *callEndReasonTimer;
