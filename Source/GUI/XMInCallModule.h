@@ -14,6 +14,8 @@
 #import <Cocoa/Cocoa.h>
 #import "XMMainWindowModule.h"
 
+extern NSString *XMKey_InCallModuleSize;
+
 @class XMOSDVideoView;
 
 @interface XMInCallModule : NSObject <XMMainWindowModule> {
@@ -21,8 +23,9 @@
 @private
   IBOutlet NSView *contentView;
   NSSize contentViewMinSize;
+  NSSize noVideoContentViewMinSize;
+  NSSize videoViewMinSize;
   NSSize contentViewSize;
-  NSSize noVideoContentViewSize;
   
   IBOutlet XMOSDVideoView *videoView;
   
@@ -31,6 +34,8 @@
   BOOL isFullScreen;
   
   BOOL didClearCall;
+  
+  BOOL isActive;
 }
 
 - (IBAction)clearCall:(id)sender;

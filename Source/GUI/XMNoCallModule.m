@@ -23,6 +23,7 @@
 #import "XMApplicationFunctions.h"
 #import "XMMainWindowController.h"
 #import "XMLocalVideoView.h"
+#import "XMInCallModule.h"
 
 NSString *XMKey_NoCallModuleSelfViewStatus = @"XMeeting_NoCallModuleSelfViewStatus";
 NSString *XMKey_NoCallModuleCallProtocol = @"XMeeting_NoCallModuleCallProtocol";
@@ -58,6 +59,8 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
 - (void)_windowWillMiniaturize:(NSNotification *)notif;
 - (void)_windowDidDeminiaturize:(NSNotification *)notif;
 
+- (void)_updateWindowSize;
+
 @end
 
 @implementation XMNoCallModule
@@ -70,6 +73,7 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
   
   doesShowSelfView = NO;
   isCalling = NO;
+  didBecomeInactive = NO;
   
   return self;
 }
@@ -165,6 +169,10 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
   // if not already done, this triggers the loading of the nib file
   [self contentView];
   
+  if (didBecomeInactive == YES) {
+    [self _updateWindowSize];
+  }
+  
   return contentViewSize;
 }
 
@@ -238,12 +246,14 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
 - (void)becomeActiveModule
 {
   [[contentView window] makeFirstResponder:callAddressField];
+  didBecomeInactive = NO;
 }
 
 - (void)becomeInactiveModule
 {
   contentViewSize = [contentView bounds].size;
   [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSize) forKey:XMKey_NoCallModuleSize];
+  didBecomeInactive = YES;
 }
 
 - (void)beginFullScreen
@@ -927,6 +937,34 @@ NSString *XMKey_NoCallModuleSize = @"XMeeting_NoCallModuleSize";
       [busyIndicator setHidden:NO];
     }
   }
+}
+
+- (void)_updateWindowSize
+{
+  // another module was active. Ensure the width is smaller than the in call module width
+  NSSize inCallSize = NSMakeSize(5000, 5000);
+  NSString *inCallSizeString = [[NSUserDefaults standardUserDefaults] stringForKey:XMKey_InCallModuleSize];
+  if (inCallSizeString != nil) {
+    inCallSize = NSSizeFromString(inCallSizeString);
+  }
+  if (contentViewSize.width > inCallSize.width) {
+    contentViewSize.width = inCallSize.width;
+  }
+  // calculate the corresponding height
+  if (doesShowSelfView == YES) {
+    // determine width difference
+    int widthDifference = contentViewSize.width - contentViewMinSizeWithSelfViewShown.width;
+    int videoWidth = selfViewMinSize.width + widthDifference;
+    int videoHeight = (int)XMGetVideoHeightForWidth(videoWidth, XMVideoSize_CIF);
+    int heightDifference = videoHeight - selfViewMinSize.height;
+    contentViewSize.height = contentViewMinSizeWithSelfViewShown.height;
+    contentViewSize.height += heightDifference;
+  } else {
+    contentViewSize.height = contentViewMinSizeWithSelfViewHidden.height;
+  }
+  
+  // also update the preferences
+  [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSize) forKey:XMKey_NoCallModuleSize];
 }
 
 @end

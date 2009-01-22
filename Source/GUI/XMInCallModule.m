@@ -14,6 +14,7 @@
 #import "XMMainWindowController.h"
 #import "XMPreferencesManager.h"
 #import "XMOSDVideoView.h"
+#import "XMNoCallModule.h";
 
 #define VIDEO_INSET_TOP 27.0
 #define VIDEO_INSET_LEFT 5.0
@@ -24,11 +25,13 @@
 #define NO_VIDEO_HEIGHT 65
 
 NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
+NSString *XMKey_InCallModuleSize = @"XMeeting_InCallModuleSize";
 
 @interface XMInCallModule (PrivateMethods)
 
 - (void)_didEstablishCall:(NSNotification *)notif;
 - (void)_didClearCall:(NSNotification *)notif;
+- (void)_updateWindowSize;
 
 @end
 
@@ -47,6 +50,8 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
   [notificationCenter addObserver:self selector:@selector(_didClearCall:)
                              name:XMNotification_CallManagerDidClearCall object:nil];
   
+  isActive = NO;
+  
   return self;
 }
 
@@ -58,12 +63,18 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
 - (void)awakeFromNib
 {
   contentViewMinSize = [contentView bounds].size;
+  videoViewMinSize = [videoView frame].size;
+  
+  // adjust no video size, fix the height
+  noVideoContentViewMinSize.width = NO_VIDEO_WIDTH;
+  noVideoContentViewMinSize.height = (contentViewMinSize.height + NO_VIDEO_HEIGHT - videoViewMinSize.height);
+  
+  // the initial size equals the min size, if not specified in preferences
   contentViewSize = contentViewMinSize;
-  
-  float videoHeight = [videoView frame].size.height;
-  
-  noVideoContentViewSize.width = NO_VIDEO_WIDTH;
-  noVideoContentViewSize.height = (contentViewSize.height + NO_VIDEO_HEIGHT - videoHeight);
+  NSString *contentViewSizeString = [[NSUserDefaults standardUserDefaults] stringForKey:XMKey_InCallModuleSize];
+  if (contentViewSizeString != nil) {
+    contentViewSize.width = NSSizeFromString(contentViewSizeString).width;
+  }
 }
 
 - (NSString *)name
@@ -88,11 +99,11 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
 {
   [self contentView];
   
-  if ([[[XMPreferencesManager sharedInstance] activeLocation] enableVideo] == YES) {
-    return contentViewSize;
-  } else {
-    return noVideoContentViewSize;
+  if (isActive == NO) {
+    [self _updateWindowSize];
   }
+  
+  return contentViewSize;
 }
 
 - (NSSize)contentViewMinSize
@@ -102,7 +113,7 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
   if ([[[XMPreferencesManager sharedInstance] activeLocation] enableVideo] == YES) {
     return contentViewMinSize;
   } else {
-    return noVideoContentViewSize;
+    return noVideoContentViewMinSize;
   }
 }
 
@@ -113,12 +124,18 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
   if ([[[XMPreferencesManager sharedInstance] activeLocation] enableVideo] == YES) {
     return NSMakeSize(5000, 5000);
   } else {
-    return noVideoContentViewSize;
+    return NSMakeSize(5000, noVideoContentViewMinSize.height);
   }
 }
 
 - (NSSize)adjustResizeDifference:(NSSize)resizeDifference minimumHeight:(unsigned)minimumHeight
 {
+  if ([[[XMPreferencesManager sharedInstance] activeLocation] enableVideo] == NO) {
+    // also update the preferences
+    [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize([contentView bounds].size) forKey:XMKey_InCallModuleSize];
+    return resizeDifference;
+  }
+  
   NSSize size = [contentView bounds].size;
   
   // minimum height is height minus height of minimum picture
@@ -150,6 +167,9 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
     }
   }
   
+  // also update the preferences
+  [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize([contentView bounds].size) forKey:XMKey_InCallModuleSize];
+  
   return resizeDifference;
 }
 
@@ -178,7 +198,6 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
     
     [videoView startDisplayingVideo];
   } else {
-    //[videoView setNoVideoImage:[NSImage imageNamed:@"no_video_screen"]];
     [videoView setNoVideoImage:nil];
     [videoView startDisplayingNoVideo];
   }
@@ -196,6 +215,9 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
   if (isFullScreen == YES && enableVideo == YES) {
     [[videoView window] makeFirstResponder:videoView];
   }
+  
+  [self _updateWindowSize];
+  isActive = YES;
 }
 
 - (void)becomeInactiveModule
@@ -207,9 +229,9 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
   NSString *settings = [videoView settings];
   [[NSUserDefaults standardUserDefaults] setObject:settings forKey:XMKey_VideoViewSettings];
   
-  if ([[[XMPreferencesManager sharedInstance] activeLocation] enableVideo] == YES) {
-    contentViewSize = [contentView bounds].size;
-  }
+  contentViewSize = [contentView bounds].size;
+  [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSize) forKey:XMKey_InCallModuleSize];
+  isActive = NO;
 }
 
 - (void)beginFullScreen
@@ -268,6 +290,33 @@ NSString *XMKey_VideoViewSettings = @"XMeeting_VideoViewSettings";
   [remotePartyField setStringValue:@""];
   
   [videoView releaseOSD];
+}
+
+- (void)_updateWindowSize
+{
+  // ensure the window width is >= the width of the no call module
+  NSString *noCallSizeString = [[NSUserDefaults standardUserDefaults] stringForKey:XMKey_NoCallModuleSize];
+  NSSize noCallSize = NSMakeSize(0, 0);
+  if (noCallSizeString != nil) {
+    noCallSize = NSSizeFromString(noCallSizeString);
+  }
+  if (contentViewSize.width < noCallSize.width) {
+    contentViewSize.width = noCallSize.width;
+  }
+  // calculate the corresponding height
+  if ([[[XMPreferencesManager sharedInstance] activeLocation] enableVideo]) {
+    int widthDifference = contentViewSize.width - contentViewMinSize.width;
+    int videoWidth = videoViewMinSize.width + widthDifference;
+    int videoHeight = (int)XMGetVideoHeightForWidth(videoWidth, XMVideoSize_CIF);
+    int heightDifference = videoHeight - videoViewMinSize.height;
+    contentViewSize.height = contentViewMinSize.height;
+    contentViewSize.height += heightDifference;
+  } else {
+    contentViewSize.height = noVideoContentViewMinSize.height;
+  }
+  
+  // also update the preferences
+  [[NSUserDefaults standardUserDefaults] setObject:NSStringFromSize(contentViewSize) forKey:XMKey_InCallModuleSize];
 }
 
 @end

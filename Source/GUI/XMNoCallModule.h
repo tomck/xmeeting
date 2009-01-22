@@ -16,6 +16,8 @@
 #import "XMMainWindowModule.h"
 #import "XMDatabaseField.h"
 
+extern NSString *XMKey_NoCallModuleSize;
+
 @class XMLocalVideoView;
 
 /**
@@ -53,6 +55,7 @@
   XMCallProtocol currentCallProtocol;
   BOOL doesShowSelfView;
   BOOL isCalling;
+  BOOL didBecomeInactive;
 }
 
 - (IBAction)call:(id)sender;
