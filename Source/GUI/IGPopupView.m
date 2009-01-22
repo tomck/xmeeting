@@ -160,7 +160,7 @@
   
   //create paths
   //...oval
-  [oval appendBezierPathWithArcWithCenter:NSMakePoint(frameRect.size.height/2.0+2.0,frameRect.size.height/2.0) radius:frameRect.size.height/2.0-2 startAngle:270.0 endAngle:90.0 clockwise:YES];
+  [oval appendBezierPathWithArcWithCenter:NSMakePoint(frameRect.size.height/2.0,frameRect.size.height/2.0) radius:frameRect.size.height/2.0-2 startAngle:270.0 endAngle:90.0 clockwise:YES];
   [oval appendBezierPathWithArcWithCenter:NSMakePoint(frameRect.size.width-frameRect.size.height/2.0,frameRect.size.height/2.0) radius:frameRect.size.height/2.0-2 startAngle:90.0 endAngle:270.0 clockwise:YES];
   [oval lineToPoint:NSMakePoint(frameRect.size.height/2.0,2.0)];
   
