@@ -55,7 +55,7 @@
 /* Call end reason */
 "XM_CALL_END_USER_CLEARED" = "User cleared call";
 "XM_CALL_END_REMOTE_CLEARED" = "Remote party cleared call";
-"XM_CALL_END_REMOTE_NO_ANSWER" = "Remote pary did not answer call";
+"XM_CALL_END_REMOTE_NO_ANSWER" = "Remote party did not answer call";
 "XM_CALL_END_REMOTE_ABORT" = "Remote party stopped calling";
 "XM_CALL_END_INTERNAL_FAILURE" = "Internal transport/connect failure";
 "XM_CALL_END_GK_CLEARED" = "Gatekeeper cleared call";
