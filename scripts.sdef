@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+
+<dictionary title="XMeeting Scripts">
+  <suite name="URI Suite" code="xuri" description="URI specific classes.">
+    <!-- Commands -->
+    <command name="GetURL" code="GURLGURL" description="Open an URL.">
+      <cocoa class="XMURICommand"/>
+      <direct-parameter type="text" description="The URL to load"/>
+    </command>
+    <command name="OpenURL" code="WWW!OURL" description="Open an URL.">
+      <cocoa class="XMURICommand"/>
+      <direct-parameter type="text" description="The URL to load"/>
+    </command> 
+  </suite>
+</dictionary>
