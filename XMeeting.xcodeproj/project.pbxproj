@@ -85,6 +85,12 @@
 		D1C5CC210F291B8900C524E6 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1CE4B75083CE0FC00B66B5D /* AddressBook.framework */; };
 		D1C5CC990F291F0E00C524E6 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1E2DA0F08F470D700BE224E /* Cocoa.framework */; };
 		D1C8FCD30A4407E600EF1A8C /* StillImageSettings.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1C8FCD10A4407E600EF1A8C /* StillImageSettings.nib */; };
+		D1CA15C80F2B83D700C7DE24 /* XMeetingABPlugin.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1C5CC170F291B2D00C524E6 /* XMeetingABPlugin.bundle */; };
+		D1CA162A0F2B895200C7DE24 /* XMPluginManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D1CA16290F2B895200C7DE24 /* XMPluginManager.m */; };
+		D1CA16A30F2CD37100C7DE24 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D1CA15F80F2B853F00C7DE24 /* main.m */; };
+		D1CA16AD0F2CD3A000C7DE24 /* ABPluginManager in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1CA169B0F2CD33C00C7DE24 /* ABPluginManager */; };
+		D1CA18660F2D45A900C7DE24 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D19628140924B4C1004892D0 /* Security.framework */; };
+		D1CA18A00F2D45B000C7DE24 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
 		D1CE4B69083CDF3900B66B5D /* AddressBook.nib in Resources */ = {isa = PBXBuildFile; fileRef = D1CE4B67083CDF3900B66B5D /* AddressBook.nib */; };
 		D1CE4B76083CE0FC00B66B5D /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1CE4B75083CE0FC00B66B5D /* AddressBook.framework */; };
 		D1D434BC0DC8B8C30065FD1C /* collect.cxx in Sources */ = {isa = PBXBuildFile; fileRef = D1B6079008F8F86B0034B47F /* collect.cxx */; };
@@ -492,6 +498,38 @@
 			);
 		};
 /* End PBXBuildRule section */
+
+/* Begin PBXContainerItemProxy section */
+		D1CA15BE0F2B82F800C7DE24 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1C5CC160F291B2D00C524E6;
+			remoteInfo = XMeetingABPlugin;
+		};
+		D1CA16A50F2CD38E00C7DE24 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1CA169A0F2CD33C00C7DE24 /* ABPluginManager */;
+			remoteInfo = ABPluginManager;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D1CA15C70F2B83BA00C7DE24 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			comments = "Copies the Address Book plugin & utilities into the application bundle";
+			dstPath = AddressBookPlugin;
+			dstSubfolderSpec = 13;
+			files = (
+				D1CA16AD0F2CD3A000C7DE24 /* ABPluginManager in CopyFiles */,
+				D1CA15C80F2B83D700C7DE24 /* XMeetingABPlugin.bundle in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1A348F970984E4210033FA95 /* IGPopupView.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = IGPopupView.h; path = ../GUI/IGPopupView.h; sourceTree = "<group>"; };
@@ -998,6 +1036,10 @@
 		D1C8FCC60A44070D00EF1A8C /* XMStillImageVideoInputModule.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = XMStillImageVideoInputModule.h; path = Source/Framework/XMStillImageVideoInputModule.h; sourceTree = "<group>"; };
 		D1C8FCC70A44070D00EF1A8C /* XMStillImageVideoInputModule.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = XMStillImageVideoInputModule.m; path = Source/Framework/XMStillImageVideoInputModule.m; sourceTree = "<group>"; };
 		D1C8FCD20A4407E600EF1A8C /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/StillImageSettings.nib; sourceTree = "<group>"; };
+		D1CA15F80F2B853F00C7DE24 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		D1CA16280F2B895200C7DE24 /* XMPluginManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMPluginManager.h; path = Source/Application/XMPluginManager.h; sourceTree = "<group>"; };
+		D1CA16290F2B895200C7DE24 /* XMPluginManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XMPluginManager.m; path = Source/Application/XMPluginManager.m; sourceTree = "<group>"; };
+		D1CA169B0F2CD33C00C7DE24 /* ABPluginManager */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ABPluginManager; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1CE4B60083CDED900B66B5D /* XMAddressBookModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMAddressBookModule.h; path = Source/GUI/XMAddressBookModule.h; sourceTree = "<group>"; };
 		D1CE4B61083CDED900B66B5D /* XMAddressBookModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = XMAddressBookModule.m; path = Source/GUI/XMAddressBookModule.m; sourceTree = "<group>"; };
 		D1CE4B68083CDF3900B66B5D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/AddressBook.nib; sourceTree = "<group>"; };
@@ -1473,6 +1515,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1CA16990F2CD33C00C7DE24 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D1CA18A00F2D45B000C7DE24 /* Foundation.framework in Frameworks */,
+				D1CA18660F2D45A900C7DE24 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D1E314C00B52AA6900385072 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1493,7 +1544,6 @@
 				D1A02A6C081E40360018BD11 /* Preferences Window */,
 				D1EF07470918B15A008A8974 /* Setup Assistant */,
 				D163333C07A01A8B003FD9C0 /* Framework */,
-				D15436160C01FBC7002A027E /* AddressBookPlugin */,
 			);
 			name = "Code Source";
 			sourceTree = "<group>";
@@ -1538,6 +1588,7 @@
 				D10975240BAE73F4007E8087 /* gsm_pwplugin.so */,
 				D1216B9A0ECB94F700DC292F /* BuildConfigurationTool */,
 				D1C5CC170F291B2D00C524E6 /* XMeetingABPlugin.bundle */,
+				D1CA169B0F2CD33C00C7DE24 /* ABPluginManager */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1585,6 +1636,7 @@
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				D1216B960ECB94B900DC292F /* BuildConfiguration */,
+				D15436160C01FBC7002A027E /* AddressBookPlugin */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				D1B6057D08F8F7A90034B47F /* ptlib */,
 				D1CEE10608F901DB007E4ABE /* opal */,
@@ -1836,6 +1888,7 @@
 				D1C5CC180F291B2D00C524E6 /* Info.plist */,
 				D1C1856E0F292BCE00F36392 /* InfoPlist.strings */,
 				D1C1859D0F292E7100F36392 /* Localizable.strings */,
+				D1CA15F80F2B853F00C7DE24 /* main.m */,
 			);
 			path = AddressBookPlugin;
 			sourceTree = "<group>";
@@ -2038,6 +2091,8 @@
 				D1E8B5CB0CABE92400083FFF /* XMApplicationController.m */,
 				D15D5A2708C0BD0A00C7D89C /* XMApplicationFunctions.h */,
 				D15D5A2808C0BD0A00C7D89C /* XMApplicationFunctions.m */,
+				D1CA16280F2B895200C7DE24 /* XMPluginManager.h */,
+				D1CA16290F2B895200C7DE24 /* XMPluginManager.m */,
 				D1AD29170E680E0C00143295 /* Preferences */,
 				D15B26640EB1E10A0070B7B5 /* Call Addresses */,
 			);
@@ -3074,12 +3129,15 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				D1CA15C70F2B83BA00C7DE24 /* CopyFiles */,
 				D1AD19370E630C2D00143295 /* ShellScript */,
 			);
 			buildRules = (
 				D163335407A01B47003FD9C0 /* PBXBuildRule */,
 			);
 			dependencies = (
+				D1CA15BF0F2B82F800C7DE24 /* PBXTargetDependency */,
+				D1CA16A60F2CD38E00C7DE24 /* PBXTargetDependency */,
 			);
 			name = XMeeting;
 			productInstallPath = "$(HOME)/Applications";
@@ -3137,6 +3195,22 @@
 			productReference = D1C5CC170F291B2D00C524E6 /* XMeetingABPlugin.bundle */;
 			productType = "com.apple.product-type.bundle";
 		};
+		D1CA169A0F2CD33C00C7DE24 /* ABPluginManager */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1CA16B50F2CD3BE00C7DE24 /* Build configuration list for PBXNativeTarget "ABPluginManager" */;
+			buildPhases = (
+				D1CA16980F2CD33C00C7DE24 /* Sources */,
+				D1CA16990F2CD33C00C7DE24 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ABPluginManager;
+			productName = ABPluginManager;
+			productReference = D1CA169B0F2CD33C00C7DE24 /* ABPluginManager */;
+			productType = "com.apple.product-type.tool";
+		};
 		D1E314C10B52AA6900385072 /* speex */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D1E314C30B52AA8900385072 /* Build configuration list for PBXNativeTarget "speex" */;
@@ -3174,10 +3248,11 @@
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* XMeeting */,
+				D1216B990ECB94F700DC292F /* BuildConfigurationTool */,
 				D1E314C10B52AA6900385072 /* speex */,
 				D10974F30BAE73F4007E8087 /* gsm */,
 				D1C5CC160F291B2D00C524E6 /* XMeetingABPlugin */,
-				D1216B990ECB94F700DC292F /* BuildConfigurationTool */,
+				D1CA169A0F2CD33C00C7DE24 /* ABPluginManager */,
 			);
 		};
 /* End PBXProject section */
@@ -3630,6 +3705,7 @@
 				D11C87BB0EF26627000F60B8 /* rfc4103.cxx in Sources */,
 				D11C87BC0EF26627000F60B8 /* t140.cxx in Sources */,
 				D1FBC2720F10CA86006ACD69 /* XMSetupAssistantModules.m in Sources */,
+				D1CA162A0F2B895200C7DE24 /* XMPluginManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3668,6 +3744,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1C5CC1E0F291B6400C524E6 /* XMAddressBookPlugin.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1CA16980F2CD33C00C7DE24 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D1CA16A30F2CD37100C7DE24 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3719,6 +3803,19 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D1CA15BF0F2B82F800C7DE24 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1C5CC160F291B2D00C524E6 /* XMeetingABPlugin */;
+			targetProxy = D1CA15BE0F2B82F800C7DE24 /* PBXContainerItemProxy */;
+		};
+		D1CA16A60F2CD38E00C7DE24 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1CA169A0F2CD33C00C7DE24 /* ABPluginManager */;
+			targetProxy = D1CA16A50F2CD38E00C7DE24 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		1A348FB30984E4520033FA95 /* Info.nib */ = {
@@ -4302,6 +4399,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -4317,6 +4415,7 @@
 		D1216BA40ECB952900DC292F /* Development_i386 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = "$(HOME)/bin";
@@ -4329,6 +4428,7 @@
 		D1216BA50ECB952900DC292F /* Development_PPC */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = "$(HOME)/bin";
@@ -4342,6 +4442,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
@@ -4449,6 +4550,95 @@
 				PRODUCT_NAME = XMeetingABPlugin;
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				WRAPPER_EXTENSION = bundle;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		D1CA169D0F2CD33C00C7DE24 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ABPluginManager;
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		D1CA169E0F2CD33C00C7DE24 /* Development_i386 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ABPluginManager;
+				ZERO_LINK = YES;
+			};
+			name = Development_i386;
+		};
+		D1CA169F0F2CD33C00C7DE24 /* Development_PPC */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ABPluginManager;
+				ZERO_LINK = YES;
+			};
+			name = Development_PPC;
+		};
+		D1CA16A00F2CD33C00C7DE24 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ABPluginManager;
 				ZERO_LINK = NO;
 			};
 			name = Deployment;
@@ -4572,6 +4762,17 @@
 				D1C5CC1A0F291B2E00C524E6 /* Development_i386 */,
 				D1C5CC1B0F291B2E00C524E6 /* Development_PPC */,
 				D1C5CC1C0F291B2E00C524E6 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		D1CA16B50F2CD3BE00C7DE24 /* Build configuration list for PBXNativeTarget "ABPluginManager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1CA169D0F2CD33C00C7DE24 /* Development */,
+				D1CA169E0F2CD33C00C7DE24 /* Development_i386 */,
+				D1CA169F0F2CD33C00C7DE24 /* Development_PPC */,
+				D1CA16A00F2CD33C00C7DE24 /* Deployment */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Development;
