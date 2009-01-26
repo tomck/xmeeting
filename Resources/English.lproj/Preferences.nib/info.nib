@@ -3,14 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>IBFramework Version</key>
-	<string>629</string>
+	<string>677</string>
 	<key>IBLastKnownRelativeProjectPath</key>
 	<string>../../XMeeting.xcodeproj</string>
 	<key>IBOldestOS</key>
-	<integer>5</integer>
+	<integer>4</integer>
 	<key>IBOpenObjects</key>
 	<array>
 		<integer>9</integer>
+		<integer>559</integer>
 	</array>
 	<key>IBSystem Version</key>
 	<string>9G55</string>

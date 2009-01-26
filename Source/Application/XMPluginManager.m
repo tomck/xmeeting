@@ -47,6 +47,8 @@ NSString *abManagerPath = @"AddressBookPlugin/ABPluginManager";
     unsigned version = [self _getBundleVersion:globalPath];
     if (version > currentABPluginVersion) {
       installStatus |= XMInstallStatus_NewerVersionInstalled;
+    } else if (version < currentABPluginVersion) {
+      installStatus |= XMInstallStatus_OlderVersionInstalled;
     }
   }
   
@@ -74,6 +76,29 @@ NSString *abManagerPath = @"AddressBookPlugin/ABPluginManager";
     return;
   }
   
+  BOOL requiresAuthorization = NO;
+  
+  if ((status & XMInstallStatus_InstalledForAllUsers) != 0) {
+    // global install
+    if ((currentStatus & XMInstallStatus_InstalledForAllUsers) != 0 &&
+        (currentStatus & XMInstallStatus_OlderVersionInstalled) == 0) {
+      // no need to change anything
+      return;
+    }
+    // global install requires authorization
+    requiresAuthorization = YES;
+  } else if ((status & XMInstallStatus_InstalledForCurrentUser) != 0) {
+    // local install
+    if ((currentStatus & XMInstallStatus_InstalledForAllUsers) != 0) {
+      requiresAuthorization = YES;
+    }
+    // always do a local install
+  } else if (status == XMInstallStatus_NotInstalled &&
+             (currentStatus & XMInstallStatus_InstalledForAllUsers) != 0) {
+    // need to remove the global installation
+    requiresAuthorization = YES;
+  }
+  
   NSBundle *mainBundle = [NSBundle mainBundle];
   NSString *pluginsPath = [mainBundle builtInPlugInsPath];
   NSString *executablePath = [pluginsPath stringByAppendingPathComponent:abManagerPath];
@@ -82,21 +107,12 @@ NSString *abManagerPath = @"AddressBookPlugin/ABPluginManager";
   NSData *authorizationData = nil;
   AuthorizationRef authRef;
   
-  BOOL requiresAuthorization = NO;
   if (status == XMInstallStatus_InstalledForAllUsers) {
     argument = @"globalInstall";
-    requiresAuthorization = YES;
   } else if (status == XMInstallStatus_InstalledForCurrentUser) {
     argument = @"localInstall";
-    // authorization required to remove installation for all users
-    if ((currentStatus & XMInstallStatus_InstalledForAllUsers) != 0) {
-      requiresAuthorization = YES;
-    }
   } else {
     argument = @"notInstalled";
-    if ((currentStatus & XMInstallStatus_InstalledForAllUsers) != 0) {
-      requiresAuthorization = YES;
-    }
   }
   
   int returnCode = -1;
@@ -108,7 +124,7 @@ NSString *abManagerPath = @"AddressBookPlugin/ABPluginManager";
     result = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment,
                                  kAuthorizationFlagDefaults, &authRef);
     if (result != errAuthorizationSuccess) {
-      NSLog(@"Error in AUthorizationCreate: %d", result);
+      NSLog(@"Error in AuthorizationCreate: %d", result);
       return;
     }
     
@@ -128,7 +144,9 @@ NSString *abManagerPath = @"AddressBookPlugin/ABPluginManager";
     
     result = AuthorizationCopyRights(authRef, &authRights, kAuthorizationEmptyEnvironment, authFlags, NULL);
     if (result != errAuthorizationSuccess) {
-      NSLog(@"Error in AuthCopyRights %d", result);
+      if (result != errAuthorizationCanceled && result != errAuthorizationDenied) {
+        NSLog(@"Error in AuthCopyRights %d", result);
+      }
       AuthorizationFree(authRef, kAuthorizationFlagDestroyRights);
       return;
     }
@@ -141,6 +159,7 @@ NSString *abManagerPath = @"AddressBookPlugin/ABPluginManager";
       AuthorizationFree(authRef, kAuthorizationFlagDestroyRights);
       return;
     }
+    // cause the helper tool to authorize
     authorizationArgument = @"authorize";
     authorizationData = [NSData dataWithBytes:authExternalForm.bytes length:kAuthorizationExternalFormLength];
   }

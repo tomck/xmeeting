@@ -26,11 +26,14 @@
   IBOutlet NSButton *enableABDatabaseSearchSwitch;
   IBOutlet NSButton *enableABPhoneNumbersSwitch;
   IBOutlet NSMatrix *phoneNumberProtocolMatrix;
+  IBOutlet NSButton *installABPluginSwitch;
+  IBOutlet NSButton *installABPluginGloballySwitch;
 	
 }
 
 - (IBAction)defaultAction:(id)sender;
 - (IBAction)toggleEnableABPhoneNumbers:(id)sender;
+- (IBAction)toggleInstallABPlugin:(id)sender;
 
 @end
 

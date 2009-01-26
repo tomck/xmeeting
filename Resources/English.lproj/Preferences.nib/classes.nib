@@ -169,6 +169,8 @@
 				<string>id</string>
 				<key>toggleEnableABPhoneNumbers</key>
 				<string>id</string>
+				<key>toggleInstallABPlugin</key>
+				<string>id</string>
 			</dict>
 			<key>CLASS</key>
 			<string>XMAddressBookPreferencesModule</string>
@@ -181,6 +183,10 @@
 				<key>enableABDatabaseSearchSwitch</key>
 				<string>NSButton</string>
 				<key>enableABPhoneNumbersSwitch</key>
+				<string>NSButton</string>
+				<key>installABPluginGloballySwitch</key>
+				<string>NSButton</string>
+				<key>installABPluginSwitch</key>
 				<string>NSButton</string>
 				<key>phoneNumberProtocolMatrix</key>
 				<string>NSMatrix</string>

@@ -16,10 +16,11 @@
 #import <Cocoa/Cocoa.h>
 
 typedef enum XMInstallStatus {
-  XMInstallStatus_NotInstalled            = 0,
-  XMInstallStatus_NewerVersionInstalled   = 1,
-  XMInstallStatus_InstalledForAllUsers    = 2,
-  XMInstallStatus_InstalledForCurrentUser = 4,
+  XMInstallStatus_NotInstalled            = 0x00,
+  XMInstallStatus_NewerVersionInstalled   = 0x01,
+  XMInstallStatus_OlderVersionInstalled   = 0x02,
+  XMInstallStatus_InstalledForAllUsers    = 0x04,
+  XMInstallStatus_InstalledForCurrentUser = 0x08,
 } XMInstallStatus;
 
 @interface XMPluginManager : NSObject {
