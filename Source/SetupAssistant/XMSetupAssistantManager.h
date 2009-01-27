@@ -13,6 +13,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "XMeeting.h"
+#import "XMPluginManager.h"
 
 @class XMLocation;
 @class XMH323Account;
@@ -71,6 +72,9 @@ extern NSString *XMAttribute_UseSIPRegistration;
 - (NSString *)sipRegPassword;
 - (void)setSIPRegPassword:(NSString *)password;
 
+- (XMInstallStatus)addressBookPluginInstallStatus;
+- (void)setAddressBookPluginInstallStatus:(XMInstallStatus)installStatus;
+
 @end
 
 @protocol XMSetupAssistantModule <NSObject>
@@ -122,6 +126,9 @@ extern NSString *XMAttribute_UseSIPRegistration;
   NSString *sipRegAuthorizationUsername;
   NSString *sipRegPassword;
   
+  XMInstallStatus addressBookPluginInstallStatus;
+  BOOL didFetchAddressBookPluginInstallStatus;
+  
   id<XMSetupAssistantController> controller;
   id<XMSetupAssistantModule> currentModule;
   
@@ -150,6 +157,7 @@ extern NSString *XMAttribute_UseSIPRegistration;
   IBOutlet id<XMSetupAssistantModule> sipModule;
   IBOutlet id<XMSetupAssistantModule> registrationModule;
   IBOutlet id<XMSetupAssistantModule> videoModule;
+  IBOutlet id<XMSetupAssistantModule> pluginsModule;
   
   IBOutlet id<XMSetupAssistantModule> editIntroductionModule;
   IBOutlet id<XMSetupAssistantModule> editDoneModule;

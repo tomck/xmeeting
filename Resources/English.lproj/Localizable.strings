@@ -255,6 +255,7 @@
 "XM_SETUP_ASSISTANT_LOC_IMPORT_FAILURE" = "Location import failed";
 "XM_SETUP_ASSISTANT_INVALID_FILE" = "File does not contain valid data";
 "XM_SETUP_ASSISTANT_IMPORT" = "Import";
+"XM_SETUP_ASSISTANT_PLUGINS" = "Plug-Ins";
 "XM_SETUP_ASSISTANT_COMPLETED" = "Setup Completed";
 
 /* External Address */

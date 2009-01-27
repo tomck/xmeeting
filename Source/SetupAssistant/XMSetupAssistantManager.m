@@ -147,6 +147,8 @@ static XMSetupAssistantManager *sharedInstance = nil;
   [sipRegPassword release];
   sipRegPassword = nil;
   
+  didFetchAddressBookPluginInstallStatus = NO;
+  
   [controller release];
   controller = nil;
   
@@ -280,6 +282,10 @@ static XMSetupAssistantManager *sharedInstance = nil;
     [prefManager setLocations:locations];
   }
   [prefManager synchronizeAndNotify];
+  
+  if (didFetchAddressBookPluginInstallStatus == YES) {
+    [[XMPluginManager sharedInstance] setAddressBookPluginInstallStatus:addressBookPluginInstallStatus];
+  }
   
   [[self window] close];
   [delegate performSelector:didEndSelector];
@@ -784,6 +790,21 @@ static XMSetupAssistantManager *sharedInstance = nil;
   [old release];
 }
 
+- (XMInstallStatus)addressBookPluginInstallStatus
+{
+  if (didFetchAddressBookPluginInstallStatus == NO) {
+    addressBookPluginInstallStatus = [[XMPluginManager sharedInstance] addressBookPluginInstallStatus];
+    didFetchAddressBookPluginInstallStatus = YES;
+  }
+  return addressBookPluginInstallStatus;
+}
+
+- (void)setAddressBookPluginInstallStatus:(XMInstallStatus)installStatus
+{
+  addressBookPluginInstallStatus = installStatus;
+  didFetchAddressBookPluginInstallStatus = YES;
+}
+
 #pragma mark -
 #pragma mark Action Methods
 
@@ -1177,6 +1198,7 @@ static XMSetupAssistantManager *sharedInstance = nil;
              setupAssistant->sipModule, 
              setupAssistant->registrationModule,
              setupAssistant->videoModule, 
+             setupAssistant->pluginsModule,
              setupAssistant->firstLaunchDoneModule, nil];
   
   [setupAssistant setEditKeys:[NSArray array]];

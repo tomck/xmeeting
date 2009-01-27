@@ -733,6 +733,91 @@
 
 @end
 
+@implementation XMSAPluginsModule 
+
+- (NSArray *)editKeys
+{
+  return [NSArray array];
+}
+
+- (BOOL)isActiveForData:(id<XMSetupAssistantData>)data
+{
+  return YES;
+}
+
+- (NSString *)titleForData:(id<XMSetupAssistantData>)data
+{
+  return NSLocalizedString(@"XM_SETUP_ASSISTANT_PLUGINS", @"");
+}
+
+- (BOOL)showCornerImage
+{
+  return YES;
+}
+
+- (NSView *)contentView
+{
+  return contentView;
+}
+
+- (BOOL)canContinue
+{
+  return YES;
+}
+
+- (void)loadData:(id<XMSetupAssistantData>)data
+{
+  XMInstallStatus pluginInstallStatus = [data addressBookPluginInstallStatus];
+  if (pluginInstallStatus == XMInstallStatus_NotInstalled) {
+    [installABPluginSwitch setState:NSOffState];
+    [installABPluginGloballySwitch setState:NSOffState];
+  } else {
+    if ((pluginInstallStatus & XMInstallStatus_InstalledForAllUsers) != 0) {
+      [installABPluginSwitch setState:NSOnState];
+      [installABPluginGloballySwitch setState:NSOnState];
+    } else {
+      [installABPluginGloballySwitch setState:NSOffState];
+    }
+    // disable GUI if a newer version is installed
+    if ((pluginInstallStatus & XMInstallStatus_NewerVersionInstalled) != 0) {
+      [installABPluginSwitch setEnabled:NO];
+    } else {
+      [installABPluginSwitch setEnabled:YES];
+    }
+  }
+  [self toggleInstallABPlugin:self];
+}
+
+- (void)saveData:(id<XMSetupAssistantData>)data
+{
+  if ([installABPluginSwitch isEnabled]) {
+    XMInstallStatus pluginInstallStatus = XMInstallStatus_NotInstalled;
+    if ([installABPluginSwitch state] == NSOnState) {
+      if ([installABPluginGloballySwitch state] == NSOnState) {
+        pluginInstallStatus = XMInstallStatus_InstalledForAllUsers;
+      } else {
+        pluginInstallStatus = XMInstallStatus_InstalledForCurrentUser;
+      }
+    }
+    [data setAddressBookPluginInstallStatus:pluginInstallStatus];
+  }
+}
+
+- (void)editData:(NSArray *)editKeys
+{
+}
+
+- (IBAction)toggleInstallABPlugin:(id)sender
+{
+  if ([installABPluginSwitch state] == NSOnState && [installABPluginSwitch isEnabled]) {
+    [installABPluginGloballySwitch setEnabled:YES]; 
+  } else {
+    [installABPluginGloballySwitch setEnabled:NO];
+  } 
+}
+
+@end
+
 #pragma mark -
 #pragma mark Edit Mode
 

@@ -67,21 +67,6 @@
 		</dict>
 		<dict>
 			<key>CLASS</key>
-			<string>XMSASIPModule</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>OUTLETS</key>
-			<dict>
-				<key>contentView</key>
-				<string>NSView</string>
-				<key>useRegistrationRadioButtons</key>
-				<string>NSMatrix</string>
-			</dict>
-			<key>SUPERCLASS</key>
-			<string>NSObject</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
 			<string>XMSARegistrationModule</string>
 			<key>LANGUAGE</key>
 			<string>ObjC</string>
@@ -97,6 +82,21 @@
 				<string>NSTextField</string>
 				<key>sipRegUsernameField</key>
 				<string>NSTextField</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>XMSASIPModule</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>contentView</key>
+				<string>NSView</string>
+				<key>useRegistrationRadioButtons</key>
+				<string>NSMatrix</string>
 			</dict>
 			<key>SUPERCLASS</key>
 			<string>NSObject</string>
@@ -127,6 +127,28 @@
 				<string>NSView</string>
 				<key>nameField</key>
 				<string>NSTextField</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>toggleInstallABPlugin</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>XMSAPluginsModule</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>contentView</key>
+				<string>NSView</string>
+				<key>installABPluginGloballySwitch</key>
+				<string>NSButton</string>
+				<key>installABPluginSwitch</key>
+				<string>NSButton</string>
 			</dict>
 			<key>SUPERCLASS</key>
 			<string>NSObject</string>
@@ -199,6 +221,8 @@
 				<key>networkModule</key>
 				<string>id</string>
 				<key>newLocationModule</key>
+				<string>id</string>
+				<key>pluginsModule</key>
 				<string>id</string>
 				<key>protocolModule</key>
 				<string>id</string>

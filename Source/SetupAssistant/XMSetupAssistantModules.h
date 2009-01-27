@@ -121,6 +121,18 @@
 
 @end
 
+@interface XMSAPluginsModule : NSObject <XMSetupAssistantModule> {
+ 
+  @private
+  IBOutlet NSView *contentView;
+  IBOutlet NSButton *installABPluginSwitch;
+  IBOutlet NSButton *installABPluginGloballySwitch;
+}
+
+- (IBAction)toggleInstallABPlugin:(id)sender;
+
+@end
+
 #pragma mark -
 #pragma mark Edit Mode
 
