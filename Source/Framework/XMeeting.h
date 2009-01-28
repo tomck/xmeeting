@@ -33,6 +33,11 @@ void XMInitFramework(NSString *pTracePath, BOOL logCallStatistics);
  **/
 void XMCloseFramework();
 
+/**
+ * Returns whether the framework is initialized
+ **/
+BOOL XMIsInitialized();
+
 #import "XMTypes.h"
 #import "XMStringConstants.h"
 

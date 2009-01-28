@@ -18,6 +18,7 @@
 - (id)_init;
 
 - (void)_callEnded:(NSNotification *)notif;
+- (void)_frameworkDidInitialize:(NSNotification *)notif;
 
 @end
 
@@ -48,13 +49,15 @@
 {
   callAddressProviders = [[NSMutableArray alloc] initWithCapacity:3];
   activeCallAddress = nil;
+  addressToCallWhenInitialized = nil;
   
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_callEnded:)
-                                               name:XMNotification_CallManagerDidNotStartCalling
-                                             object:nil];
+                                               name:XMNotification_CallManagerDidNotStartCalling object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_callEnded:)
-                                               name:XMNotification_CallManagerDidClearCall
-                                             object:nil];  
+                                               name:XMNotification_CallManagerDidClearCall object:nil];  
+  // use the _didInitialize notification to ensure the location is properly set
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_frameworkDidInitialize:)
+                                               name:XMNotification_CallManagerDidEndSubsystemSetup object:nil];
   return self;
 }
 
@@ -62,10 +65,10 @@
 {
   [callAddressProviders release];
   
-  if (activeCallAddress != nil) {
-    [activeCallAddress release];
-    activeCallAddress = nil;
-  }
+  [activeCallAddress release];
+  [addressToCallWhenInitialized release];
+  
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
   
   [super dealloc];
 }
@@ -204,6 +207,13 @@
     return;
   }
   
+  if (!XMIsInitialized()) {
+    // framework not yet ready (e.g. if call initiated through a script)
+    [addressToCallWhenInitialized release];
+    addressToCallWhenInitialized = [callAddress retain];
+    return;
+  }
+  
   // check that protocol really is enabled
   XMCallProtocol callProtocol = [[callAddress addressResource] callProtocol];
   XMLocation *activeLocation = [[XMPreferencesManager sharedInstance] activeLocation];
@@ -227,6 +237,17 @@
   if (activeCallAddress != nil) {
     [activeCallAddress release];
     activeCallAddress = nil;
+  }
+}
+
+- (void)_frameworkDidInitialize:(NSNotification *)notif
+{
+  if (addressToCallWhenInitialized != nil) {
+    id<XMCallAddress> addr = addressToCallWhenInitialized;
+    // set addressToCall... to nil -> addr inherits retain count
+    addressToCallWhenInitialized = nil;
+    [self makeCallToAddress:addr];
+    [addr release];
   }
 }
 

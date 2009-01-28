@@ -151,3 +151,7 @@ void _XMThreadExit() {
     [[NSNotificationCenter defaultCenter] postNotificationName:XMNotification_FrameworkDidClose object:nil];
   }
 }
+
+BOOL XMIsInitialized() {
+  return (_XMInitializedStatus == XM_FRAMEWORK_INITIALIZED);
+}

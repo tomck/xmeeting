@@ -37,6 +37,7 @@ typedef enum XMProviderPriority {
 @private
   NSMutableArray *callAddressProviders;
   id<XMCallAddress> activeCallAddress;
+  id<XMCallAddress> addressToCallWhenInitialized;
 }
 
 /**
