@@ -10,6 +10,7 @@
 
 #import <Security/Security.h>
 #import "XMPreferencesManager.h"
+#import "XMApplicationFunctions.h"
 
 #import "XMH323Account.h"
 #import "XMSIPAccount.h"
@@ -18,6 +19,7 @@
 NSString *XMNotification_PreferencesManagerDidChangePreferences = @"XMeeting_PreferencesManagerDidChangePreferences";
 NSString *XMNotification_PreferencesManagerDidChangeActiveLocation = @"XMeeting_PreferencesManagerDidChangeActiveLocation";
 
+NSString *XMKey_PreferencesManagerPreferencesVersion = @"XMeeting_PreferencesVersion";
 NSString *XMKey_PreferencesManagerPreferencesAvailable = @"XMeeting_PreferencesAvailable";
 NSString *XMKey_PreferencesManagerH323Accounts = @"XMeeting_H323Accounts";
 NSString *XMKey_PreferencesManagerSIPAccounts = @"XMeeting_SIPAccounts";
@@ -44,6 +46,8 @@ NSString *XMKey_PreferencesManagerSearchAddressBookDatabase = @"XMeeting_SearchA
 NSString *XMKey_PreferencesManagerEnableAddressBookPhoneNumbers = @"XMeeting_EnableAddressBookPhoneNumbers";
 NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_AddressBookPhoneNumberProtocol";
 
+#define XM_PREFERENCES_VERSION 1
+
 @interface XMPreferencesManager (PrivateMethods)
 
 - (id)_init;
@@ -59,6 +63,8 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
 - (void)_updateCallManagerPreferences:(NSNotification *)notif;
 
 - (void)_resetPasswords:(XMPasswordObjectType)type;
+
+- (void)_updatePreferences:(unsigned)version;
 
 @end
 
@@ -140,6 +146,12 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
 - (void)_setup
 {
   NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  
+  // upgrade the preferences if needed
+  unsigned version = [userDefaults integerForKey:XMKey_PreferencesManagerPreferencesVersion];
+  if (version < XM_PREFERENCES_VERSION) {
+    [self _updatePreferences:version];
+  }
   
   /* Register the default values of the preferences */
   NSMutableDictionary *defaultsDict = [[NSMutableDictionary alloc] init];
@@ -341,6 +353,9 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
   // increasing the integer by one since NSUserDefaults returns zero if the
   // key isn't found in preferences
   [userDefaults setInteger:(activeLocation+1) forKey:XMKey_PreferencesManagerActiveLocation];
+  
+  // ensure the preferences version is written
+  [userDefaults setInteger:XM_PREFERENCES_VERSION forKey:XMKey_PreferencesManagerPreferencesVersion];
   
   // synchronize the database
   [userDefaults synchronize];
@@ -994,6 +1009,60 @@ NSString *XMKey_PreferencesManagerAddressBookPhoneNumberProtocol = @"XMeeting_Ad
     if ([obj type] == type) {
       [obj resetPassword];
     }
+  }
+}
+
+- (void)_updatePreferences:(unsigned)version
+{
+  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  
+  if (version < 1) {
+    // upgrade to version 1
+    NSMutableArray *loc = [[userDefaults objectForKey:XMKey_PreferencesManagerLocations] mutableCopy];
+    unsigned count = [loc count];
+    for (unsigned i = 0; i < count; i++) {
+      NSMutableDictionary *dict = [[loc objectAtIndex:i] mutableCopy];
+      // upgrade the SIP account pointers
+      NSNumber *number = [dict objectForKey:@"XMeeting_SIPAccountID"];
+      if (number != nil) {
+        NSArray *arr = [NSArray arrayWithObjects:number, nil];
+        [dict setObject:arr forKey:XMKey_LocationSIPAccountIDs];
+        [dict setObject:number forKey:XMKey_LocationDefaultSIPAccountID];
+      }
+      // upgrade the STUN servers
+      [dict setObject:XMDefaultSTUNServers() forKey:XMKey_PreferencesSTUNServers];
+      // write back
+      [loc replaceObjectAtIndex:i withObject:dict];
+      [dict release];
+    }
+    // write back
+    [userDefaults setObject:loc forKey:XMKey_PreferencesManagerLocations];
+    [loc release];
+    
+    NSMutableArray *acc = [[userDefaults objectForKey:XMKey_PreferencesManagerH323Accounts] mutableCopy];
+    count = [acc count];
+    for (unsigned i = 0; i < count; i++) {
+      NSMutableDictionary *dict = [[acc objectAtIndex:i] mutableCopy];
+      // upgrade the keys
+      NSObject *obj = [dict objectForKey:@"XMeeting_H323AccountGatekeeper"];
+      if (obj) {
+        [dict setObject:obj forKey:XMKey_H323AccountGatekeeperHost];
+      }
+      obj = [dict objectForKey:@"XMeeting_H323AccountUsername"];
+      if (obj) {
+        [dict setObject:obj forKey:XMKey_H323AccountTerminalAlias1];
+      }
+      obj = [dict objectForKey:@"XMeeting_H323AccountPhoneNumber"];
+      if (obj) {
+        [dict setObject:obj forKey:XMKey_H323AccountTerminalAlias2];
+      }
+      // write back
+      [acc replaceObjectAtIndex:i withObject:dict];
+      [dict release];
+    }
+    // write back
+    [userDefaults setObject:acc forKey:XMKey_PreferencesManagerH323Accounts];
+    [acc release];
   }
 }
 
