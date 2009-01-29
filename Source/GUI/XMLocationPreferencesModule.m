@@ -23,6 +23,7 @@
 #import "XMIPAddressFormatter.h"
 #import "XMIDDPrefixFormatter.h"
 
+#define XM_IMPORT_TAG 40
 #define XM_RENAME_TAG 50
 #define XM_DUPLICATE_TAG 51
 
@@ -1474,6 +1475,9 @@ NSString *XMKey_NetworkTabViewItemIdentifier = @"network";
 {
   int tag = [menuItem tag];
   
+  if (tag == XM_IMPORT_TAG) { // currently disabled
+    return NO;
+  }
   if (tag == XM_RENAME_TAG || tag == XM_DUPLICATE_TAG) {
     NSIndexSet * selectedRows = [locationsTableView selectedRowIndexes];
     if ([selectedRows count] > 1) {
