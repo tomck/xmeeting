@@ -17,7 +17,7 @@ namespace PWLibStupidLinkerHacks {
 }
 
 XMProcess::XMProcess() 
-: PProcess("XMeeting Project", "XMeeting", 0, 4, BetaCode, 1) 
+: PProcess("XMeeting Project", "XMeeting", 0, 4, BetaCode, 0) 
 {
 }
 
