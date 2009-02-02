@@ -15,7 +15,6 @@
 #include <opal/mediafmt.h>
 #include <codec/vidcodec.h>
 #include <h323/h323caps.h>
-#include <sip/sdpcaps.h>
 #include <h224/h323h224.h>
 
 #include "XMTypes.h"

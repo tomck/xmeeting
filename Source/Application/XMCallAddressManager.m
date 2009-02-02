@@ -203,7 +203,6 @@
   }
   
   if (callAddress == nil || [[[callAddress addressResource] address] isEqualToString:@""]) {
-    NSLog(@"nil or EMPTY ADDRESS!");
     return;
   }
   
