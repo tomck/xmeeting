@@ -222,11 +222,11 @@ XMMediaFormat_H263::XMMediaFormat_H263(bool isH263Plus)
   AddOption(cif16Option);
 
   AddOption(new OpalMediaOptionBoolean(IsRFC2429Option(),  false, OpalMediaOption::MinMerge, false));
-  AddOption(new OpalMediaOptionString(OpalVideoFormat::MediaPacketizationOption(), false, ""));
+  AddOption(new OpalMediaOptionString(OpalVideoFormat::MediaPacketizationsOption(), false, ""));
   
   if (isH263Plus) {
     SetOptionBoolean(IsRFC2429Option(), true);
-    SetOptionString(OpalVideoFormat::MediaPacketizationOption(), "RFC2429");
+    SetOptionString(OpalVideoFormat::MediaPacketizationsOption(), "RFC2429");
   }
   
   SetOptionInteger(OpalVideoFormat::FrameWidthOption(), XM_CIF_WIDTH);
@@ -334,7 +334,7 @@ XMMediaFormat_H264::XMMediaFormat_H264()
   AddOption(new OpalMediaOptionUnsigned(LevelOption(),   false, OpalMediaOption::NoMerge, XM_H264_LEVEL_2, XM_H264_LEVEL_1, XM_H264_LEVEL_2));
   AddOption(new OpalMediaOptionBoolean(SingleNALUnitOption(), false, OpalMediaOption::MinMerge, true));
   AddOption(new OpalMediaOptionBoolean(NonInterleavedOption(), false, OpalMediaOption::MinMerge, true));
-  AddOption(new OpalMediaOptionString(OpalVideoFormat::MediaPacketizationOption(), false, "0.0.8.241.0.0.0.1,0.0.8.241.0.0.0.0"));
+  AddOption(new OpalMediaOptionString(OpalVideoFormat::MediaPacketizationsOption(), false, "0.0.8.241.0.0.0.1,0.0.8.241.0.0.0.0"));
 }
 
 PObject* XMMediaFormat_H264::Clone() const
@@ -406,10 +406,11 @@ bool XMMediaFormat_H264::ToNormalisedOptions()
   
   bool singleNALUnitMode = false;
   bool nonInterleavedMode = false;
-  PString mediaPacketizationString = GetOptionString(OpalMediaFormat::MediaPacketizationOption(), "");
+  PString mediaPacketizationString = GetOptionString(OpalMediaFormat::MediaPacketizationsOption(), "");
   PStringArray mediaPacketizations = mediaPacketizationString.Tokenise(",");
   for (PINDEX i = 0; i < mediaPacketizations.GetSize(); i++) {
-    if (mediaPacketizations[i] == "0.0.8.241.0.0.0.0") {
+    if (mediaPacketizations[i] == "0.0.8.241.0.0.0.0" || // normal single NAL unit mode
+        mediaPacketizations[i] == "0.0.8.241.0.0.0") { // stupid polycom endpoints
       singleNALUnitMode = true;
     } else if (mediaPacketizations[i] == "0.0.8.241.0.0.0.1") {
       nonInterleavedMode = true;
@@ -450,14 +451,15 @@ bool XMMediaFormat_H264::ToCustomisedOptions()
   bool singleNALUnitMode = GetOptionBoolean(SingleNALUnitOption(), false);
   bool nonInterleavedMode = GetOptionBoolean(NonInterleavedOption(), false);
   PString packetizations = "";
+  // the truncated options string is for some stupid polycom endpoints
   if (singleNALUnitMode && nonInterleavedMode) {
-    packetizations = "0.0.8.241.0.0.0.1,0.0.8.241.0.0.0.0";
+    packetizations = "0.0.8.241.0.0.0.1,0.0.8.241.0.0.0.0,0.0.8.241.0.0.0";
   } else if (singleNALUnitMode) {
-    packetizations = "0.0.8.241.0.0.0.0";
+    packetizations = "0.0.8.241.0.0.0.0,0.0.8.241.0.0.0";
   } else if (nonInterleavedMode) {
     packetizations = "0.0.8.241.0.0.0.1";
   }
-  SetOptionString(OpalMediaFormat::MediaPacketizationOption(), packetizations);
+  SetOptionString(OpalMediaFormat::MediaPacketizationsOption(), packetizations);
 
   return OpalVideoFormatInternal::ToCustomisedOptions();
 }
@@ -868,11 +870,11 @@ bool XM_H323_H263_Capability::OnReceivedPDU(const H245_VideoCapability & cap)
   if (isH263PlusCapability == true) {
     mediaFormat = XM_MEDIA_FORMAT_H263PLUS;
     mediaFormat.SetOptionBoolean(XMMediaFormat_H263::IsRFC2429Option(), true);
-    mediaFormat.SetOptionString(OpalVideoFormat::MediaPacketizationOption(), "RFC2429");
+    mediaFormat.SetOptionString(OpalVideoFormat::MediaPacketizationsOption(), "RFC2429");
   } else {
     mediaFormat = XM_MEDIA_FORMAT_H263;
     mediaFormat.SetOptionBoolean(XMMediaFormat_H263::IsRFC2429Option(), false);
-    mediaFormat.SetOptionString(OpalVideoFormat::MediaPacketizationOption(), "");
+    mediaFormat.SetOptionString(OpalVideoFormat::MediaPacketizationsOption(), "");
   }
   
   unsigned sqcifMPI = 0;
