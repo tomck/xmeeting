@@ -985,6 +985,19 @@ BOOL _XMIsH263IFrame(UInt8* data);
   if (transmitFrameGrabRate < frameGrabRate) {
     [activeModule setFrameGrabRate:frameGrabRate];
   }
+  
+  // switch back to reasonnable video size
+  videoSize = XMVideoSize_CIF;
+  BOOL needsGrabbing = NO;
+  if (isDoingVideoDisplay == YES || isTransmitting == YES || isRecording == YES) {
+    needsGrabbing = YES;
+  }
+  if (isGrabbing == YES && needsGrabbing == YES) {
+    if (![activeModule setInputFrameSize:videoSize]) {
+      activeModule = nil;
+      [self _updateDeviceListAndSelectDummy];
+    }    
+  }
 	
   transmitFrameGrabRate = UINT_MAX;
 	
