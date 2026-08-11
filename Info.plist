@@ -37,17 +37,26 @@
 			<array>
 				<string>h323</string>
 				<string>callto</string>
-				<string>sip</string>
 				<string>xmeeting</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>0.4-preview2</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>
+	<key>NSCameraUsageDescription</key>
+	<string>XMeeting uses the camera to send video during calls.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>XMeeting uses contacts to find and label call addresses.</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>XMeeting uses the microphone to send audio during calls.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSServices</key>

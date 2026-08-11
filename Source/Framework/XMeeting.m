@@ -51,11 +51,12 @@ void XMInitFramework(NSString *pTracePath, BOOL logCallStatistics)
 
 void _XMLaunchFramework(NSString *pTracePath, BOOL logCallStatistics)
 {
-  // Set the PWLIBPLUGINDIR environment variable to the plugins directory of XMeeting, or PWLib
-  // will search the entire filesystem for pugins before starting up...
+  // Keep both the current and legacy PTLib plugin scans inside the application
+  // bundle while the old OPAL implementation remains available for migration.
   NSBundle *bundle = [NSBundle bundleForClass:[XMCallManager class]];
   NSString *pluginsPath = [[bundle resourcePath] stringByAppendingPathComponent:@"Plugins"];
   const char *string = [pluginsPath cStringUsingEncoding:NSUTF8StringEncoding];
+  setenv("PTLIBPLUGINDIR", string, 1);
   setenv("PWLIBPLUGINDIR", string, 1);
   
   // Entering QuickTime
