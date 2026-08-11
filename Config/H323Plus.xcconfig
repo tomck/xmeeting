@@ -1,0 +1,9 @@
+#include "Modern.xcconfig"
+
+// Override this setting in CI if the dependency SDK is stored elsewhere.
+XMEETING_H323PLUS_ROOT = $(SRCROOT)/.build/h323plus/macos-universal
+
+HEADER_SEARCH_PATHS = $(inherited) "$(XMEETING_H323PLUS_ROOT)/include" "$(XMEETING_H323PLUS_ROOT)/include/openh323"
+LIBRARY_SEARCH_PATHS = $(inherited) "$(XMEETING_H323PLUS_ROOT)/lib"
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) H323_STATIC_LIB=1
+OTHER_LDFLAGS = $(inherited) -lh323plus -lptlib -lresolv -framework AudioToolbox -framework AudioUnit -framework CoreAudio -framework CoreServices
