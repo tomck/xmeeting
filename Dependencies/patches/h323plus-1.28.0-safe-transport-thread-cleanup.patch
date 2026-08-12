@@ -1,0 +1,24 @@
+diff --git a/src/transports.cxx b/src/transports.cxx
+--- a/src/transports.cxx
++++ b/src/transports.cxx
+@@ -1207,8 +1207,19 @@ void H323Transport::CleanUpOnTermination()
+ 
+   if (thread != NULL) {
+     PTRACE(3, "H323\tH323Transport::CleanUpOnTermination for " << thread->GetThreadName());
+-    PAssert(thread->WaitForTermination(10000), "Transport thread did not terminate");
++    if (!thread->WaitForTermination(10000)) {
++      // PThread's destructor requests cancellation but does not wait for the
++      // cancelled thread to finish. Deleting the PThread here while Main() is
++      // still running lets it resume through freed memory, including the
++      // H323Connection reference held by H225CallThread.
++      PTRACE(1, "H323\tTransport thread did not terminate; forcing shutdown");
++      thread->Terminate();
++      thread->WaitForTermination();
++    }
++
++    // The connection and transport own this thread. They must not be
++    // destroyed until Main() has stopped using either object.
+     delete thread;
+     thread = NULL;
+   }
+ }

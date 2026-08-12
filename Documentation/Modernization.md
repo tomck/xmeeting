@@ -13,7 +13,10 @@ extends support to older 64-bit Intel Macs. The dependency baseline is pinned to
 `Scripts/build-h323plus-universal.sh` builds both dependency slices from the
 official tagged repositories and combines them into static universal libraries.
 The PTLib patch in `Dependencies/patches` adds the missing 64-bit little-endian
-configuration for Apple Silicon.
+configuration for Apple Silicon. A second, narrowly scoped H323Plus patch makes
+transport cleanup wait until an outbound call thread has actually terminated;
+upstream 1.28.0 otherwise deletes the thread and its connection after a
+10-second cleanup timeout while the thread can still be running.
 
 ```sh
 ./Scripts/build-h323plus-universal.sh
