@@ -20,6 +20,7 @@ cmake -S Modern -B .build/modern
 cmake --build .build/modern
 .build/modern/h323plus-smoke --help
 .build/modern/h323plus-cocoa-smoke 18201
+open .build/modern/XMeeting.app
 ```
 
 The dependency output is generated at
@@ -52,16 +53,21 @@ and delivers H.323 call and gatekeeper events to its delegate on the main queue.
 It rejects `sip:` addresses at the API boundary so an old preference or URL
 cannot silently route into H323Plus as an invalid H.323 destination.
 
+`Modern/App` is the new ARC AppKit application shell. It deliberately preserves
+XMeeting's compact call-window layout and original iconography while replacing
+the implementation underneath. The current milestone starts a real H.323
+listener and supports outgoing calls, incoming accept/reject, hangup, H.323 URL
+handling, and call-state feedback. Audio and video media are not connected yet.
+
 ## Remaining application migration
 
 The command-line smoke target verifies the new protocol dependency and adapter;
 the legacy `XMeeting` app target is not yet a Sonoma-compatible build. These
 independent removals are still required:
 
-1. Replace the legacy `XMCallManager` consumers with `XMH323Client`; do not port
-   the OPAL dispatcher or its SIP registration paths.
-2. Define the supported codec set, build/package the corresponding universal
+1. Define the supported codec set, build/package the corresponding universal
    H323Plus media plugins, and bridge their audio/video paths to the application.
+2. Establish an interoperable G.711 audio call and add audio device selection.
 3. Replace QuickTime 7 Sequence Grabber, compression, decompression, packetizer,
    and recorder APIs with AVFoundation, VideoToolbox, and CoreMedia.
 4. Replace AddressBook with Contacts and add permission-aware asynchronous

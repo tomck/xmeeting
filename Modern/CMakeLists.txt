@@ -55,6 +55,7 @@ find_library(AUDIO_UNIT_FRAMEWORK AudioUnit REQUIRED)
 find_library(CORE_AUDIO_FRAMEWORK CoreAudio REQUIRED)
 find_library(CORE_SERVICES_FRAMEWORK CoreServices REQUIRED)
 find_library(FOUNDATION_FRAMEWORK Foundation REQUIRED)
+find_library(APPKIT_FRAMEWORK AppKit REQUIRED)
 
 add_library(XMH323PlusEngine STATIC H323Plus/XMH323PlusEngine.cpp)
 target_include_directories(
@@ -113,3 +114,42 @@ target_link_libraries(
 add_executable(h323plus-cocoa-smoke CocoaSmoke/main.mm)
 target_compile_options(h323plus-cocoa-smoke PRIVATE -fobjc-arc)
 target_link_libraries(h323plus-cocoa-smoke PRIVATE XMH323CocoaBridge)
+
+set(
+  XMEETING_APP_RESOURCES
+  "${CMAKE_CURRENT_LIST_DIR}/../Resources/XMeeting.icns"
+  "${CMAKE_CURRENT_LIST_DIR}/../Resources/Images/Call_24.png"
+  "${CMAKE_CURRENT_LIST_DIR}/../Resources/Images/hangup_24.png"
+  "${CMAKE_CURRENT_LIST_DIR}/../Resources/Images/no_video_screen.png"
+  "${CMAKE_CURRENT_LIST_DIR}/../Resources/Images/status_green.png"
+  "${CMAKE_CURRENT_LIST_DIR}/../Resources/Images/status_red.png"
+  "${CMAKE_CURRENT_LIST_DIR}/../Resources/Images/status_yellow.png"
+)
+set_source_files_properties(
+  ${XMEETING_APP_RESOURCES}
+  PROPERTIES MACOSX_PACKAGE_LOCATION "Resources"
+)
+
+add_executable(
+  XMeeting
+  MACOSX_BUNDLE
+  App/main.mm
+  App/XMAppDelegate.h
+  App/XMAppDelegate.mm
+  ${XMEETING_APP_RESOURCES}
+)
+target_include_directories(XMeeting PRIVATE "${CMAKE_CURRENT_LIST_DIR}/App")
+target_compile_options(XMeeting PRIVATE -fobjc-arc)
+target_link_libraries(XMeeting PRIVATE XMH323CocoaBridge "${APPKIT_FRAMEWORK}")
+set_target_properties(
+  XMeeting
+  PROPERTIES
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_BUNDLE_NAME "XMeeting"
+    MACOSX_BUNDLE_BUNDLE_VERSION "0.5.0.1"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "net.sourceforge.xmeeting.XMeeting"
+    MACOSX_BUNDLE_ICON_FILE "XMeeting.icns"
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_LIST_DIR}/App/Info.plist.in"
+    MACOSX_BUNDLE_SHORT_VERSION_STRING "0.5.0-alpha"
+    OUTPUT_NAME "XMeeting"
+)

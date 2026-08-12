@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleExecutable</key>
+  <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
+  <key>CFBundleIconFile</key>
+  <string>XMeeting</string>
+  <key>CFBundleIdentifier</key>
+  <string>${MACOSX_BUNDLE_GUI_IDENTIFIER}</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>XMeeting H.323 address</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>h323</string>
+        <string>callto</string>
+        <string>xmeeting</string>
+      </array>
+    </dict>
+  </array>
+  <key>CFBundleVersion</key>
+  <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>14.0</string>
+  <key>NSCameraUsageDescription</key>
+  <string>XMeeting uses the camera to send video during H.323 calls.</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © 2005–2026 the XMeeting contributors.</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>XMeeting uses the microphone to send audio during H.323 calls.</string>
+  <key>NSPrincipalClass</key>
+  <string>NSApplication</string>
+</dict>
+</plist>
