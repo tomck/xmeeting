@@ -44,7 +44,7 @@
 	<key>CFBundleVersion</key>
 	<string>0.4-preview2</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>14.0</string>
+	<string>11.0</string>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>
 	<key>NSCameraUsageDescription</key>

@@ -34,7 +34,7 @@
   <key>CFBundleVersion</key>
   <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
   <key>LSMinimumSystemVersion</key>
-  <string>14.0</string>
+  <string>11.0</string>
   <key>NSCameraUsageDescription</key>
   <string>XMeeting uses the camera to send video during H.323 calls.</string>
   <key>NSHighResolutionCapable</key>

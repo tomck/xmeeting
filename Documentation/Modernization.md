@@ -2,8 +2,9 @@
 
 ## Supported baseline
 
-New code targets macOS 14 or later, C++17, and the standard macOS architectures
-(`x86_64` and `arm64`). The dependency baseline is pinned to:
+New code targets macOS 11 (Big Sur) or later, C++17, and the standard macOS
+architectures (`x86_64` and `arm64`). This includes every Apple Silicon Mac and
+extends support to older 64-bit Intel Macs. The dependency baseline is pinned to:
 
 - PTLib 2.10.9.6
 - H323Plus 1.28.0
@@ -62,7 +63,7 @@ handling, and call-state feedback. Audio and video media are not connected yet.
 ## Remaining application migration
 
 The command-line smoke target verifies the new protocol dependency and adapter;
-the legacy `XMeeting` app target is not yet a Sonoma-compatible build. These
+the legacy `XMeeting` app target is not compatible with current SDKs. These
 independent removals are still required:
 
 1. Define the supported codec set, build/package the corresponding universal
