@@ -20,6 +20,7 @@ configuration for Apple Silicon.
 cmake -S Modern -B .build/modern
 cmake --build .build/modern
 .build/modern/h323plus-smoke --help
+.build/modern/h323plus-smoke --audio-info
 .build/modern/h323plus-cocoa-smoke 18201
 open .build/modern/XMeeting.app
 ```
@@ -58,24 +59,41 @@ cannot silently route into H323Plus as an invalid H.323 destination.
 XMeeting's compact call-window layout and original iconography while replacing
 the implementation underneath. The current milestone starts a real H.323
 listener and supports outgoing calls, incoming accept/reject, hangup, H.323 URL
-handling, and call-state feedback. Audio and video media are not connected yet.
+handling, and call-state feedback. It advertises only the built-in G.711 A-law
+and µ-law codecs, force-loads PTLib's native CoreAudio driver, selects the
+system-default input and output devices, and requests microphone access before
+enabling calls. It refuses to place or answer a call when PTLib exposes only its
+silent `NullAudio` test device. Video media is not connected yet.
+
+`h323plus-smoke --audio-info` reports the selected devices and advertised
+codecs. Its `--null-audio` option exists only for automated/local loopback tests.
+A two-endpoint loopback has verified call establishment, bidirectional G.711
+logical-channel startup, clean channel shutdown, and hangup without requiring
+physical audio hardware. A real-device call to an independent H.323 product is
+still required before audio interoperability is considered release-tested.
 
 ## Remaining application migration
 
-The command-line smoke target verifies the new protocol dependency and adapter;
-the legacy `XMeeting` app target is not compatible with current SDKs. These
-independent removals are still required:
+The modern app is now at the first audio-capable alpha milestone; the legacy
+`XMeeting` app target remains only as a design and behavior reference because it
+is not compatible with current SDKs. Work remaining for a useful public release
+is prioritized as follows:
 
-1. Define the supported codec set, build/package the corresponding universal
-   H323Plus media plugins, and bridge their audio/video paths to the application.
-2. Establish an interoperable G.711 audio call and add audio device selection.
-3. Replace QuickTime 7 Sequence Grabber, compression, decompression, packetizer,
-   and recorder APIs with AVFoundation, VideoToolbox, and CoreMedia.
-4. Replace AddressBook with Contacts and add permission-aware asynchronous
-   access.
-5. Replace legacy OpenGL/GLUT presentation with Metal or modern Core Animation.
-6. Convert the old nibs/project target, adopt ARC, add hardened-runtime signing,
-   and run call interoperability tests on physical Intel and Apple Silicon Macs.
+1. Test G.711 calls against independent H.323 endpoints using real microphones
+   and speakers on physical Intel and Apple Silicon Macs; fix device-change,
+   permission, echo, failure-reporting, and reconnect behavior found there.
+2. Add input/output device selection, mute, output level, ringtone, and useful
+   call-duration/end-reason feedback.
+3. Add a preferences UI for listener ports, gatekeeper accounts, and the H.460/
+   STUN settings needed to work reliably beyond a local network.
+4. Replace the QuickTime 7 capture/compression path with AVFoundation,
+   VideoToolbox, and CoreMedia; package a deliberately small universal video
+   codec set and display it with modern Core Animation or Metal.
+5. Replace AddressBook with Contacts and add permission-aware asynchronous
+   access if preserving the historical address-book workflow remains valuable.
+6. Add automated regression tests, hardened-runtime signing, notarization,
+   packaging, and a compatibility matrix covering macOS 11 through current
+   releases on both architectures.
 
 `Config/Modern.xcconfig` and `Config/H323Plus.xcconfig` hold the settings for new
 targets, including `XMEETING_H323_ONLY=1`. They are deliberately not attached to

@@ -9,6 +9,11 @@ artwork while using PTLib and H323Plus instead of the historical OpenH323/OPAL
 integration. The original application target is retained as migration reference
 and does not build against current macOS SDKs.
 
+The modern alpha can place and receive H.323 calls with built-in G.711 A-law or
+µ-law audio through the system's CoreAudio input and output devices. Video,
+audio-device selection, release signing, and physical-device interoperability
+testing are still in progress.
+
 See [Documentation/Modernization.md](Documentation/Modernization.md) for the
 dependency build, smoke tests, implemented protocol boundary, and remaining
 application migration work.

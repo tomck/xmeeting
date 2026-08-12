@@ -52,6 +52,7 @@ find_library(
 
 find_library(AUDIO_TOOLBOX_FRAMEWORK AudioToolbox REQUIRED)
 find_library(AUDIO_UNIT_FRAMEWORK AudioUnit REQUIRED)
+find_library(AVFOUNDATION_FRAMEWORK AVFoundation REQUIRED)
 find_library(CORE_AUDIO_FRAMEWORK CoreAudio REQUIRED)
 find_library(CORE_SERVICES_FRAMEWORK CoreServices REQUIRED)
 find_library(FOUNDATION_FRAMEWORK Foundation REQUIRED)
@@ -140,7 +141,10 @@ add_executable(
 )
 target_include_directories(XMeeting PRIVATE "${CMAKE_CURRENT_LIST_DIR}/App")
 target_compile_options(XMeeting PRIVATE -fobjc-arc)
-target_link_libraries(XMeeting PRIVATE XMH323CocoaBridge "${APPKIT_FRAMEWORK}")
+target_link_libraries(
+  XMeeting
+  PRIVATE XMH323CocoaBridge "${APPKIT_FRAMEWORK}" "${AVFOUNDATION_FRAMEWORK}"
+)
 set_target_properties(
   XMeeting
   PROPERTIES

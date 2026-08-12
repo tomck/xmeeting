@@ -2,6 +2,8 @@
 
 #import "XMH323Client.h"
 
+#import <AVFoundation/AVFoundation.h>
+
 #include <cstdio>
 
 namespace {
@@ -102,9 +104,13 @@ NSTextField *labelWithString(NSString *value) {
 @property(nonatomic, strong) NSProgressIndicator *progressIndicator;
 @property(nonatomic, copy, nullable) NSString *activeCallToken;
 @property(nonatomic) XMApplicationCallState callState;
+@property(nonatomic) BOOL microphoneAuthorized;
+@property(nonatomic) BOOL microphonePermissionPending;
 
 - (void)placeOrEndCall:(id)sender;
 - (void)restartListener:(id)sender;
+- (void)prepareMicrophoneAuthorization;
+- (void)refreshReadyStatus;
 - (nullable NSString *)previewOutputPath;
 - (BOOL)writeWindowPreviewToPath:(NSString *)path;
 
@@ -138,6 +144,7 @@ NSTextField *labelWithString(NSString *value) {
   }
 
   self.client = [[XMH323Client alloc] initWithDelegate:self];
+  [self prepareMicrophoneAuthorization];
   [self startListener];
   [self.window makeKeyAndOrderFront:nil];
   [NSApp activateIgnoringOtherApps:YES];
@@ -410,10 +417,47 @@ NSTextField *labelWithString(NSString *value) {
     self.callState = XMApplicationCallStateError;
     self.statusField.stringValue = error.localizedDescription ?: @"Could not start H.323";
   } else {
-    self.callState = XMApplicationCallStateReady;
-    self.statusField.stringValue = @"Ready for H.323 calls";
+    [self refreshReadyStatus];
   }
   [self updateInterface];
+}
+
+- (void)prepareMicrophoneAuthorization {
+  AVAuthorizationStatus status =
+      [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
+  self.microphoneAuthorized = status == AVAuthorizationStatusAuthorized;
+  self.microphonePermissionPending = status == AVAuthorizationStatusNotDetermined;
+
+  if (status == AVAuthorizationStatusNotDetermined) {
+    [AVCaptureDevice requestAccessForMediaType:AVMediaTypeAudio
+                             completionHandler:^(BOOL granted) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        self.microphonePermissionPending = NO;
+        self.microphoneAuthorized = granted;
+        [self refreshReadyStatus];
+        [self updateInterface];
+      });
+    }];
+  }
+}
+
+- (void)refreshReadyStatus {
+  if (!self.client.isStarted) {
+    return;
+  }
+  if (!self.client.isAudioAvailable) {
+    self.callState = XMApplicationCallStateError;
+    self.statusField.stringValue = @"No microphone or audio output device is available";
+  } else if (self.microphonePermissionPending) {
+    self.callState = XMApplicationCallStateStarting;
+    self.statusField.stringValue = @"Waiting for microphone access…";
+  } else if (!self.microphoneAuthorized) {
+    self.callState = XMApplicationCallStateError;
+    self.statusField.stringValue = @"Microphone access is required for calls";
+  } else {
+    self.callState = XMApplicationCallStateReady;
+    self.statusField.stringValue = @"Ready for H.323 audio calls";
+  }
 }
 
 - (void)restartListener:(id)sender {
@@ -443,6 +487,12 @@ NSTextField *labelWithString(NSString *value) {
   }
 
   NSString *address = trimmedString(self.addressField.stringValue);
+  if (!self.client.isAudioAvailable || !self.microphoneAuthorized) {
+    NSBeep();
+    [self refreshReadyStatus];
+    [self updateInterface];
+    return;
+  }
   if (address.length == 0) {
     NSBeep();
     [self.window makeFirstResponder:self.addressField];
@@ -496,7 +546,9 @@ NSTextField *labelWithString(NSString *value) {
   self.callButton.image = bundleImage(hasCall ? @"hangup_24" : @"Call_24");
   self.callButton.toolTip = hasCall ? @"End the active H.323 call" : @"Place an H.323 call";
   self.callButton.accessibilityLabel = hasCall ? @"Hang up" : @"Call";
-  self.callButton.enabled = self.client.isStarted || hasCall;
+  BOOL canStartCall = self.client.isStarted && self.client.isAudioAvailable &&
+                      self.microphoneAuthorized && !self.microphonePermissionPending;
+  self.callButton.enabled = canStartCall || hasCall;
 }
 
 - (void)controlTextDidEndEditing:(NSNotification *)notification {
@@ -508,7 +560,14 @@ NSTextField *labelWithString(NSString *value) {
 #pragma mark - XMH323ClientDelegate
 
 - (void)h323Client:(XMH323Client *)client didReceiveIncomingCall:(XMH323Call *)call {
-  (void)client;
+  if (!client.isAudioAvailable || !self.microphoneAuthorized) {
+    NSError *error = nil;
+    [client rejectCallWithToken:call.token error:&error];
+    self.activeCallToken = nil;
+    [self refreshReadyStatus];
+    [self updateInterface];
+    return;
+  }
   self.activeCallToken = call.token;
   self.callState = XMApplicationCallStateIncoming;
   self.statusField.stringValue = [NSString stringWithFormat:@"Incoming call from %@", displayNameForCall(call)];
@@ -552,8 +611,7 @@ NSTextField *labelWithString(NSString *value) {
   (void)h323Reason;
   (void)q931Cause;
   self.activeCallToken = nil;
-  self.callState = XMApplicationCallStateReady;
-  self.statusField.stringValue = @"Ready for H.323 calls";
+  [self refreshReadyStatus];
   [self updateInterface];
 }
 

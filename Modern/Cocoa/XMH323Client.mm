@@ -92,6 +92,14 @@ std::string stdStringFromString(NSString *value) {
   return utf8 == nullptr ? std::string() : std::string(utf8);
 }
 
+NSArray<NSString *> *stringsFromVector(const std::vector<std::string> &values) {
+  NSMutableArray<NSString *> *result = [NSMutableArray arrayWithCapacity:values.size()];
+  for (const std::string &value : values) {
+    [result addObject:stringFromStdString(value)];
+  }
+  return [result copy];
+}
+
 XMH323Call *callFromCallInfo(const CallInfo &info) {
   return [[XMH323Call alloc] initWithToken:stringFromStdString(info.token)
                                 remoteName:stringFromStdString(info.remoteName)
@@ -289,6 +297,10 @@ CocoaClientImplementation *implementation(XMH323Client *client) {
     return fail(error, XMH323ClientErrorInvalidArgument,
                 @"This XMeeting build supports H.323 addresses only.");
   }
+  if (!self.audioAvailable) {
+    return fail(error, XMH323ClientErrorAudioUnavailable,
+                @"A microphone and audio output device are required for a call.");
+  }
 
   std::string returnedToken;
   if (!implementation(self)->engine.call(stdStringFromString(address), &returnedToken)) {
@@ -303,6 +315,10 @@ CocoaClientImplementation *implementation(XMH323Client *client) {
 - (BOOL)answerCallWithToken:(NSString *)token error:(NSError **)error {
   if (!self.started) {
     return fail(error, XMH323ClientErrorNotStarted, @"The H.323 client is not started.");
+  }
+  if (!self.audioAvailable) {
+    return fail(error, XMH323ClientErrorAudioUnavailable,
+                @"A microphone and audio output device are required to answer.");
   }
   if (token.length == 0 || !implementation(self)->engine.answer(stdStringFromString(token))) {
     return fail(error, XMH323ClientErrorCallFailed, @"The incoming call could not be answered.");
@@ -366,6 +382,22 @@ CocoaClientImplementation *implementation(XMH323Client *client) {
     [result addObject:stringFromStdString(token)];
   }
   return [result copy];
+}
+
+- (BOOL)isAudioAvailable {
+  return implementation(self)->engine.audioSystemInfo().available;
+}
+
+- (NSString *)audioInputDevice {
+  return stringFromStdString(implementation(self)->engine.audioSystemInfo().inputDevice);
+}
+
+- (NSString *)audioOutputDevice {
+  return stringFromStdString(implementation(self)->engine.audioSystemInfo().outputDevice);
+}
+
+- (NSArray<NSString *> *)audioCodecs {
+  return stringsFromVector(implementation(self)->engine.audioSystemInfo().codecs);
 }
 
 - (void)xm_deliverIncomingCall:(XMH323Call *)call {

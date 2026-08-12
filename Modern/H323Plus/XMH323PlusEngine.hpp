@@ -22,6 +22,22 @@ struct CallEndedInfo {
   unsigned q931Cause = 0;
 };
 
+struct AudioSystemInfo {
+  bool available = false;
+  std::string driver;
+  std::string inputDevice;
+  std::string outputDevice;
+  std::vector<std::string> inputDevices;
+  std::vector<std::string> outputDevices;
+  std::vector<std::string> codecs;
+};
+
+struct AudioChannelInfo {
+  std::string token;
+  std::string codec;
+  bool transmitting = false;
+};
+
 // H323Plus invokes these methods from its worker threads. Implementations that
 // touch AppKit must dispatch their work to the main queue.
 class EventSink {
@@ -31,6 +47,8 @@ class EventSink {
   virtual void onIncomingCall(const CallInfo&) {}
   virtual void onCallEstablished(const CallInfo&) {}
   virtual void onCallEnded(const CallEndedInfo&) {}
+  virtual void onAudioChannelStarted(const AudioChannelInfo&) {}
+  virtual void onAudioChannelStopped(const AudioChannelInfo&) {}
   virtual void onGatekeeperRegistered(const std::string&) {}
   virtual void onGatekeeperRegistrationFailed() {}
   virtual void onError(const std::string&) {}
@@ -63,6 +81,10 @@ class H323PlusEngine final {
   bool isRegisteredWithGatekeeper() const;
 
   std::vector<std::string> activeCallTokens() const;
+  AudioSystemInfo audioSystemInfo() const;
+  bool configureAudioDevices(const std::string& driver,
+                             const std::string& inputDevice,
+                             const std::string& outputDevice);
 
  private:
   class Impl;

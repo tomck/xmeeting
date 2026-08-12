@@ -1,11 +1,18 @@
 #include "XMH323PlusEngine.hpp"
 
 #include <ptlib.h>
+#include <ptlib/sound.h>
+
+#include <CoreAudio/CoreAudio.h>
 
 #include <h323ep.h>
 #include <transports.h>
 
 #include <utility>
+
+// PTLib's macOS sound implementation is a static plug-in. Referencing its
+// loader explicitly prevents the archive linker from discarding CoreAudio.
+PPLUGIN_STATIC_LOAD(CoreAudio, PSoundChannel);
 
 namespace xmeeting::h323 {
 namespace {
@@ -25,13 +32,86 @@ CallInfo makeCallInfo(H323Connection& connection, bool incoming) {
   return info;
 }
 
+AudioChannelInfo makeAudioChannelInfo(H323Connection& connection,
+                                      const H323Channel& channel) {
+  AudioChannelInfo info;
+  info.token = toStdString(connection.GetCallToken());
+  info.codec = toStdString(channel.GetCapability().GetFormatName());
+  info.transmitting = channel.GetDirection() == H323Channel::IsTransmitter;
+  return info;
+}
+
+std::vector<std::string> toStringVector(const PStringArray& values) {
+  std::vector<std::string> result;
+  result.reserve(values.GetSize());
+  for (PINDEX index = 0; index < values.GetSize(); ++index) {
+    result.push_back(toStdString(values[index]));
+  }
+  return result;
+}
+
+bool isRealAudioDevice(const PString& value) {
+  return !value.IsEmpty() && !(value *= "Null");
+}
+
+PString defaultCoreAudioDevice(PSoundChannel::Directions direction) {
+  AudioObjectPropertyAddress defaultDeviceProperty = {
+      direction == PSoundChannel::Player ? kAudioHardwarePropertyDefaultOutputDevice
+                                         : kAudioHardwarePropertyDefaultInputDevice,
+      kAudioObjectPropertyScopeGlobal,
+      kAudioObjectPropertyElementMaster,
+  };
+  AudioDeviceID device = kAudioDeviceUnknown;
+  UInt32 deviceSize = sizeof(device);
+  if (AudioObjectGetPropertyData(kAudioObjectSystemObject, &defaultDeviceProperty, 0,
+                                 nullptr, &deviceSize, &device) != noErr ||
+      device == kAudioDeviceUnknown) {
+    return PString::Empty();
+  }
+
+  AudioObjectPropertyAddress nameProperty = {
+      kAudioObjectPropertyName,
+      kAudioObjectPropertyScopeGlobal,
+      kAudioObjectPropertyElementMaster,
+  };
+  CFStringRef name = nullptr;
+  UInt32 nameSize = sizeof(name);
+  if (AudioObjectGetPropertyData(device, &nameProperty, 0, nullptr, &nameSize, &name) != noErr ||
+      name == nullptr) {
+    return PString::Empty();
+  }
+
+  const CFIndex bufferSize =
+      CFStringGetMaximumSizeForEncoding(CFStringGetLength(name), kCFStringEncodingUTF8) + 1;
+  std::vector<char> buffer(static_cast<std::size_t>(bufferSize));
+  const bool converted = CFStringGetCString(name, buffer.data(), bufferSize,
+                                             kCFStringEncodingUTF8);
+  CFRelease(name);
+  return converted ? PString(buffer.data()) : PString::Empty();
+}
+
 }  // namespace
 
 class H323PlusEngine::Impl final : public H323EndPoint {
   PCLASSINFO(Impl, H323EndPoint);
 
  public:
-  explicit Impl(EventSink& sink) : sink_(sink) {}
+  explicit Impl(EventSink& sink) : sink_(sink) {
+    // G.711 is built into H323Plus and is the universal interoperability
+    // baseline for H.323 audio. Do not advertise video until its modern media
+    // path exists.
+    AddAllCapabilities(0, P_MAX_INDEX, "G.711-*");
+    AddAllUserInputCapabilities(0, P_MAX_INDEX);
+
+    // Select PTLib's native macOS devices explicitly. Leaving the driver name
+    // empty can fall back to NullAudio in a statically linked application.
+    const PString inputDevice = defaultCoreAudioDevice(PSoundChannel::Recorder);
+    const PString outputDevice = defaultCoreAudioDevice(PSoundChannel::Player);
+    audioDriver_ = "CoreAudio";
+    if (isRealAudioDevice(inputDevice) && isRealAudioDevice(outputDevice)) {
+      configureAudioDevices("CoreAudio", toStdString(inputDevice), toStdString(outputDevice));
+    }
+  }
 
   ~Impl() override {
     stop();
@@ -129,6 +209,47 @@ class H323PlusEngine::Impl final : public H323EndPoint {
     return result;
   }
 
+  AudioSystemInfo audioSystemInfo() const {
+    AudioSystemInfo info;
+    info.driver = audioDriver_;
+    info.inputDevice = toStdString(GetSoundChannelRecordDevice());
+    info.outputDevice = toStdString(GetSoundChannelPlayDevice());
+    info.inputDevices = toStringVector(
+        PSoundChannel::GetDeviceNames(audioDriver_.c_str(), PSoundChannel::Recorder));
+    info.outputDevices = toStringVector(
+        PSoundChannel::GetDeviceNames(audioDriver_.c_str(), PSoundChannel::Player));
+
+    const H323Capabilities& capabilities = GetCapabilities();
+    for (PINDEX index = 0; index < capabilities.GetSize(); ++index) {
+      const H323Capability& capability = capabilities[index];
+      if (capability.GetMainType() == H323Capability::e_Audio) {
+        info.codecs.push_back(toStdString(capability.GetFormatName()));
+      }
+    }
+
+    info.available = audioDriver_ == "CoreAudio" && audioPlaybackConfigured_ &&
+                     audioRecordingConfigured_ &&
+                     isRealAudioDevice(GetSoundChannelRecordDevice()) &&
+                     isRealAudioDevice(GetSoundChannelPlayDevice()) && !info.codecs.empty();
+    return info;
+  }
+
+  bool configureAudioDevices(const std::string& driver,
+                             const std::string& inputDevice,
+                             const std::string& outputDevice) {
+    audioDriver_ = driver;
+    audioPlaybackConfigured_ = SetSoundChannelPlayDriver(driver.c_str());
+    if (audioPlaybackConfigured_ && !outputDevice.empty()) {
+      audioPlaybackConfigured_ = SetSoundChannelPlayDevice(outputDevice.c_str());
+    }
+
+    audioRecordingConfigured_ = SetSoundChannelRecordDriver(driver.c_str());
+    if (audioRecordingConfigured_ && !inputDevice.empty()) {
+      audioRecordingConfigured_ = SetSoundChannelRecordDevice(inputDevice.c_str());
+    }
+    return audioPlaybackConfigured_ && audioRecordingConfigured_;
+  }
+
   PBoolean OnIncomingCall(H323Connection& connection,
                           const H323SignalPDU&,
                           H323SignalPDU&) override {
@@ -161,6 +282,37 @@ class H323PlusEngine::Impl final : public H323EndPoint {
     H323EndPoint::OnConnectionCleared(connection, token);
   }
 
+  PBoolean OnStartLogicalChannel(H323Connection& connection,
+                                 H323Channel& channel) override {
+    if (!H323EndPoint::OnStartLogicalChannel(connection, channel)) {
+      return false;
+    }
+    if (channel.GetCapability().GetMainType() == H323Capability::e_Audio) {
+      sink_.onAudioChannelStarted(makeAudioChannelInfo(connection, channel));
+    }
+    return true;
+  }
+
+  PBoolean OpenAudioChannel(H323Connection& connection,
+                            PBoolean isEncoding,
+                            unsigned bufferSize,
+                            H323AudioCodec& codec) override {
+    if (H323EndPoint::OpenAudioChannel(connection, isEncoding, bufferSize, codec)) {
+      return true;
+    }
+    sink_.onError(isEncoding ? "Could not open the selected microphone"
+                             : "Could not open the selected audio output device");
+    return false;
+  }
+
+  void OnClosedLogicalChannel(H323Connection& connection,
+                              const H323Channel& channel) override {
+    if (channel.GetCapability().GetMainType() == H323Capability::e_Audio) {
+      sink_.onAudioChannelStopped(makeAudioChannelInfo(connection, channel));
+    }
+    H323EndPoint::OnClosedLogicalChannel(connection, channel);
+  }
+
   void OnRegistrationConfirm(const H323TransportAddress& rasAddress) override {
     H323EndPoint::OnRegistrationConfirm(rasAddress);
     sink_.onGatekeeperRegistered(toStdString(rasAddress));
@@ -174,6 +326,9 @@ class H323PlusEngine::Impl final : public H323EndPoint {
  private:
   EventSink& sink_;
   bool started_ = false;
+  std::string audioDriver_;
+  bool audioPlaybackConfigured_ = false;
+  bool audioRecordingConfigured_ = false;
 };
 
 H323PlusEngine::H323PlusEngine(EventSink& sink)
@@ -223,6 +378,16 @@ bool H323PlusEngine::isRegisteredWithGatekeeper() const {
 
 std::vector<std::string> H323PlusEngine::activeCallTokens() const {
   return impl_->activeCallTokens();
+}
+
+AudioSystemInfo H323PlusEngine::audioSystemInfo() const {
+  return impl_->audioSystemInfo();
+}
+
+bool H323PlusEngine::configureAudioDevices(const std::string& driver,
+                                           const std::string& inputDevice,
+                                           const std::string& outputDevice) {
+  return impl_->configureAudioDevices(driver, inputDevice, outputDevice);
 }
 
 }  // namespace xmeeting::h323

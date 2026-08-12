@@ -10,6 +10,7 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
   XMH323ClientErrorListenerFailed,
   XMH323ClientErrorCallFailed,
   XMH323ClientErrorGatekeeperFailed,
+  XMH323ClientErrorAudioUnavailable,
 };
 
 @class XMH323Client;
@@ -54,6 +55,10 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
 @property(nonatomic, readonly, getter=isRegisteredWithGatekeeper)
     BOOL registeredWithGatekeeper;
 @property(nonatomic, copy, readonly) NSArray<NSString *> *activeCallTokens;
+@property(nonatomic, readonly, getter=isAudioAvailable) BOOL audioAvailable;
+@property(nonatomic, copy, readonly) NSString *audioInputDevice;
+@property(nonatomic, copy, readonly) NSString *audioOutputDevice;
+@property(nonatomic, copy, readonly) NSArray<NSString *> *audioCodecs;
 
 - (instancetype)initWithDelegate:(nullable id<XMH323ClientDelegate>)delegate
     NS_DESIGNATED_INITIALIZER;

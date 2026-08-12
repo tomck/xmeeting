@@ -26,6 +26,20 @@ class ConsoleSink final : public xmeeting::h323::EventSink {
               << " q931Cause=" << ended.q931Cause << std::endl;
   }
 
+  void onAudioChannelStarted(const xmeeting::h323::AudioChannelInfo& audio) override {
+    std::lock_guard<std::mutex> lock(outputMutex_);
+    std::cout << "Audio channel started: token=" << audio.token
+              << " direction=" << (audio.transmitting ? "send" : "receive")
+              << " codec=" << audio.codec << std::endl;
+  }
+
+  void onAudioChannelStopped(const xmeeting::h323::AudioChannelInfo& audio) override {
+    std::lock_guard<std::mutex> lock(outputMutex_);
+    std::cout << "Audio channel stopped: token=" << audio.token
+              << " direction=" << (audio.transmitting ? "send" : "receive")
+              << " codec=" << audio.codec << std::endl;
+  }
+
   void onGatekeeperRegistered(const std::string& address) override {
     std::lock_guard<std::mutex> lock(outputMutex_);
     std::cout << "Gatekeeper registration confirmed by " << address << std::endl;
@@ -61,7 +75,9 @@ class H323PlusSmokeProcess final : public PProcess {
 
   void Main() override {
     PArgList& arguments = GetArguments();
-    arguments.Parse("u-user:x-port:g-gatekeeper:p-password:h-help.", false);
+    arguments.Parse(
+        "u-user:x-port:g-gatekeeper:p-password:A-audio-info.N-null-audio.h-help.",
+        false);
     if (arguments.HasOption('h')) {
       printUsage();
       return;
@@ -72,6 +88,38 @@ class H323PlusSmokeProcess final : public PProcess {
 
     ConsoleSink sink;
     xmeeting::h323::H323PlusEngine engine(sink);
+    if (arguments.HasOption('N') &&
+        !engine.configureAudioDevices("NullAudio", "Null Audio", "Null Audio")) {
+      std::cerr << "Could not configure the null audio test device" << std::endl;
+      SetTerminationValue(1);
+      return;
+    }
+    if (arguments.HasOption('A')) {
+      const xmeeting::h323::AudioSystemInfo audio = engine.audioSystemInfo();
+      std::cout << "Audio driver: " << audio.driver << '\n'
+                << "Input device: " << audio.inputDevice << '\n'
+                << "Output device: " << audio.outputDevice << '\n'
+                << "Detected inputs:";
+      for (const std::string& device : audio.inputDevices) {
+        std::cout << " " << device;
+      }
+      std::cout << "\nDetected outputs:";
+      for (const std::string& device : audio.outputDevices) {
+        std::cout << " " << device;
+      }
+      std::cout << '\n'
+                << "Codecs:";
+      for (const std::string& codec : audio.codecs) {
+        std::cout << " " << codec;
+      }
+      std::cout << '\n';
+      if (!audio.available) {
+        std::cerr << "CoreAudio input/output is not available" << std::endl;
+        SetTerminationValue(1);
+      }
+      return;
+    }
+
     if (!engine.start(user, static_cast<std::uint16_t>(port))) {
       SetTerminationValue(1);
       return;
@@ -120,7 +168,9 @@ class H323PlusSmokeProcess final : public PProcess {
                  "  -u --user name        Local H.323 alias\n"
                  "  -x --port number      Listener port (default 1720)\n"
                  "  -g --gatekeeper host  Register with a gatekeeper\n"
-                 "  -p --password value   Gatekeeper password\n";
+                 "  -p --password value   Gatekeeper password\n"
+                 "  -A --audio-info       Show audio devices and G.711 codecs\n"
+                 "  -N --null-audio       Use silent audio devices for loopback testing\n";
   }
 };
 
