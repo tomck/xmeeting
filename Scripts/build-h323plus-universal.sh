@@ -13,7 +13,8 @@ readonly ARCHITECTURES="${XMEETING_ARCHITECTURES:-x86_64 arm64}"
 readonly WORK_ROOT="${XMEETING_H323PLUS_WORK_ROOT:-$SOURCE_ROOT/.build/h323plus/work}"
 readonly OUTPUT_ROOT="${XMEETING_H323PLUS_OUTPUT_ROOT:-$SOURCE_ROOT/.build/h323plus/macos-universal}"
 readonly SOURCE_CACHE="$WORK_ROOT/sources"
-readonly PTLIB_PATCH_FILE="$SOURCE_ROOT/Dependencies/patches/ptlib-2.10.9.6-apple-silicon.patch"
+readonly PTLIB_PLATFORM_PATCH_FILE="$SOURCE_ROOT/Dependencies/patches/ptlib-2.10.9.6-apple-silicon.patch"
+readonly PTLIB_COREAUDIO_PATCH_FILE="$SOURCE_ROOT/Dependencies/patches/ptlib-2.10.9.6-modern-coreaudio.patch"
 readonly H323PLUS_PATCH_FILE="$SOURCE_ROOT/Dependencies/patches/h323plus-1.28.0-safe-transport-thread-cleanup.patch"
 
 if [[ "$WORK_ROOT" == "/" || -z "$WORK_ROOT" || "$OUTPUT_ROOT" == "/" || -z "$OUTPUT_ROOT" ]]; then
@@ -138,7 +139,8 @@ for architecture in $ARCHITECTURES; do
   reset_architecture_directory "$architecture_root"
   extract_source "$SOURCE_CACHE/ptlib" "$PTLIB_TAG" "$ptlib_source"
   extract_source "$SOURCE_CACHE/h323plus" "$H323PLUS_TAG" "$h323plus_source"
-  patch -d "$ptlib_source" -p1 < "$PTLIB_PATCH_FILE"
+  patch -d "$ptlib_source" -p1 < "$PTLIB_PLATFORM_PATCH_FILE"
+  patch -d "$ptlib_source" -p1 < "$PTLIB_COREAUDIO_PATCH_FILE"
   patch -d "$h323plus_source" -p1 < "$H323PLUS_PATCH_FILE"
 
   (
@@ -243,6 +245,9 @@ lipo -create "${h323plus_archives[@]}" -output "$staging_output/lib/libh323plus.
 
 {
   printf 'PTLib=%s\n' "$PTLIB_TAG"
+  printf 'PTLibPatches=%s,%s\n' \
+    "$(basename "$PTLIB_PLATFORM_PATCH_FILE")" \
+    "$(basename "$PTLIB_COREAUDIO_PATCH_FILE")"
   printf 'H323Plus=%s\n' "$H323PLUS_TAG"
   printf 'H323PlusPatches=%s\n' "$(basename "$H323PLUS_PATCH_FILE")"
   printf 'DeploymentTarget=%s\n' "$DEPLOYMENT_TARGET"

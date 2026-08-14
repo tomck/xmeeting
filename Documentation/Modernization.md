@@ -12,11 +12,15 @@ extends support to older 64-bit Intel Macs. The dependency baseline is pinned to
 
 `Scripts/build-h323plus-universal.sh` builds both dependency slices from the
 official tagged repositories and combines them into static universal libraries.
-The PTLib patch in `Dependencies/patches` adds the missing 64-bit little-endian
-configuration for Apple Silicon. A second, narrowly scoped H323Plus patch makes
-transport cleanup wait until an outbound call thread has actually terminated;
-upstream 1.28.0 otherwise deletes the thread and its connection after a
-10-second cleanup timeout while the thread can still be running.
+The PTLib patches in `Dependencies/patches` add the missing 64-bit little-endian
+configuration for Apple Silicon and move the CoreAudio backend from Apple's
+retired Component Manager to the supported Audio Component API. The CoreAudio
+patch also stops device setup immediately when macOS rejects a component or
+returns an invalid stream format, instead of continuing into an arithmetic
+crash. A narrowly scoped H323Plus patch makes transport cleanup wait until an
+outbound call thread has actually terminated; upstream 1.28.0 otherwise deletes
+the thread and its connection after a 10-second cleanup timeout while the thread
+can still be running.
 
 ```sh
 ./Scripts/build-h323plus-universal.sh
@@ -69,11 +73,20 @@ enabling calls. It refuses to place or answer a call when PTLib exposes only its
 silent `NullAudio` test device. Video media is not connected yet.
 
 `h323plus-smoke --audio-info` reports the selected devices and advertised
-codecs. Its `--null-audio` option exists only for automated/local loopback tests.
-A two-endpoint loopback has verified call establishment, bidirectional G.711
-logical-channel startup, clean channel shutdown, and hangup without requiring
-physical audio hardware. A real-device call to an independent H.323 product is
-still required before audio interoperability is considered release-tested.
+codecs. `--input-device` and `--output-device` allow a particular CoreAudio path
+to be exercised, while `--null-audio` exists only for automated/local loopback
+tests. A two-endpoint loopback has verified call establishment, bidirectional
+G.711 logical-channel startup, clean channel shutdown, and hangup without
+requiring physical audio hardware.
+
+An Intel Mac running macOS 14.5 has also completed independent calls to Zoom's
+H.323 gateway. G.711 A-law send and receive channels opened with the built-in
+MacBook microphone and speakers, RTP flowed in both directions without packet
+loss during the diagnostic interval, and teardown completed cleanly. Repeating
+the call with the system-default Virtual Desktop microphone also opened both
+audio channels and shut down without the original CoreAudio crash. Equivalent
+real-device validation on Apple Silicon and subjective listening tests remain
+release checks.
 
 ## Remaining application migration
 
@@ -82,9 +95,9 @@ The modern app is now at the first audio-capable alpha milestone; the legacy
 is not compatible with current SDKs. Work remaining for a useful public release
 is prioritized as follows:
 
-1. Test G.711 calls against independent H.323 endpoints using real microphones
-   and speakers on physical Intel and Apple Silicon Macs; fix device-change,
-   permission, echo, failure-reporting, and reconnect behavior found there.
+1. Repeat the verified G.711 interoperability call on physical Apple Silicon,
+   then test device-change, permission, echo, failure-reporting, reconnect, and
+   subjective audio quality on both architectures.
 2. Add input/output device selection, mute, output level, ringtone, and useful
    call-duration/end-reason feedback.
 3. Add a preferences UI for listener ports, gatekeeper accounts, and the H.460/

@@ -76,11 +76,18 @@ class H323PlusSmokeProcess final : public PProcess {
   void Main() override {
     PArgList& arguments = GetArguments();
     arguments.Parse(
-        "u-user:x-port:g-gatekeeper:p-password:A-audio-info.N-null-audio.h-help.",
+        "u-user:x-port:g-gatekeeper:p-password:A-audio-info.N-null-audio."
+        "I-input-device:O-output-device:t-trace.h-help.",
         false);
     if (arguments.HasOption('h')) {
       printUsage();
       return;
+    }
+
+    if (arguments.HasOption('t')) {
+      PTrace::Initialise(arguments.GetOptionCount('t'), nullptr,
+                         PTrace::Blocks | PTrace::Timestamp | PTrace::Thread |
+                             PTrace::FileAndLine);
     }
 
     const std::string user = static_cast<const char*>(arguments.GetOptionString('u', "XMeeting"));
@@ -93,6 +100,23 @@ class H323PlusSmokeProcess final : public PProcess {
       std::cerr << "Could not configure the null audio test device" << std::endl;
       SetTerminationValue(1);
       return;
+    }
+    if (!arguments.HasOption('N') &&
+        (arguments.HasOption('I') || arguments.HasOption('O'))) {
+      const xmeeting::h323::AudioSystemInfo audio = engine.audioSystemInfo();
+      const std::string inputDevice = arguments.HasOption('I')
+                                          ? static_cast<const char*>(
+                                                arguments.GetOptionString('I'))
+                                          : audio.inputDevice;
+      const std::string outputDevice = arguments.HasOption('O')
+                                           ? static_cast<const char*>(
+                                                 arguments.GetOptionString('O'))
+                                           : audio.outputDevice;
+      if (!engine.configureAudioDevices("CoreAudio", inputDevice, outputDevice)) {
+        std::cerr << "Could not configure the selected CoreAudio devices" << std::endl;
+        SetTerminationValue(1);
+        return;
+      }
     }
     if (arguments.HasOption('A')) {
       const xmeeting::h323::AudioSystemInfo audio = engine.audioSystemInfo();
@@ -170,7 +194,10 @@ class H323PlusSmokeProcess final : public PProcess {
                  "  -g --gatekeeper host  Register with a gatekeeper\n"
                  "  -p --password value   Gatekeeper password\n"
                  "  -A --audio-info       Show audio devices and G.711 codecs\n"
-                 "  -N --null-audio       Use silent audio devices for loopback testing\n";
+                 "  -N --null-audio       Use silent audio devices for loopback testing\n"
+                 "  -I --input-device     Select a CoreAudio input device\n"
+                 "  -O --output-device    Select a CoreAudio output device\n"
+                 "  -t --trace            Enable PTLib tracing (repeat for detail)\n";
   }
 };
 

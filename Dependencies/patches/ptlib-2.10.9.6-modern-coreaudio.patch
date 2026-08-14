@@ -1,0 +1,251 @@
+diff --git a/include/ptlib/unix/ptlib/maccoreaudio.h b/include/ptlib/unix/ptlib/maccoreaudio.h
+index 5e49d82..e2a0a47 100644
+--- a/include/ptlib/unix/ptlib/maccoreaudio.h
++++ b/include/ptlib/unix/ptlib/maccoreaudio.h
+@@ -126,6 +126,9 @@ class PSoundChannelCoreAudio : public PSoundChannel
+    void CommonConstruct(){ 
+      os_handle = -1; //  == channel closed.
+      // set to a non negative value so IsOpen() returns true
++     mAudioUnit = NULL;
++     mDeviceID = kAudioDeviceUnknown;
++     converter = NULL;
+    }  
+    
+    OSStatus SetupInputUnit(AudioDeviceID in);
+diff --git a/src/ptlib/unix/maccoreaudio.cxx b/src/ptlib/unix/maccoreaudio.cxx
+index 5228012..03fd999 100644
+--- a/src/ptlib/unix/maccoreaudio.cxx
++++ b/src/ptlib/unix/maccoreaudio.cxx
+@@ -232,10 +232,14 @@ PSoundChannelCoreAudio::~PSoundChannelCoreAudio()
+          /* fall through */
+       case setformat_:
+-         err = AudioConverterDispose(converter);
+-         checkStatus(err);
++         if (converter != NULL) {
++            err = AudioConverterDispose(converter);
++            checkStatus(err);
++         }
+          /* fall through */
+       case open_:
+-         err = CloseComponent(mAudioUnit);
+-         checkStatus(err);
++         if (mAudioUnit != NULL) {
++            err = AudioComponentInstanceDispose(mAudioUnit);
++            checkStatus(err);
++         }
+ 			err = AudioDeviceRemovePropertyListener(mDeviceID,  1, 	
+ 					kAudioPropertyWildcardSection, kAudioDevicePropertyVolumeScalar, 
+@@ -670,8 +674,8 @@ OSStatus PSoundChannelCoreAudio::SetupInputUnit(AudioDeviceID in)
+ {  
+    OSStatus err = noErr;
+          
+-   Component comp;            
+-   ComponentDescription desc;
++   AudioComponent comp;
++   AudioComponentDescription desc;
+ 
+    //There are several different types of Audio Units.
+    //Some audio units serve as Outputs, Mixers, or DSP
+@@ -689,18 +693,29 @@ OSStatus PSoundChannelCoreAudio::SetupInputUnit(AudioDeviceID in)
+    desc.componentFlagsMask = 0;
+ 
+    //Finds a component that meets the desc spec's
+-   comp = FindNextComponent(NULL, &desc);
++   comp = AudioComponentFindNext(NULL, &desc);
+    if (comp == NULL) return kAudioCodecUnspecifiedError;
+ 
+    //gains access to the services provided by the component
+-   err = OpenAComponent(comp, &mAudioUnit);
++   err = AudioComponentInstanceNew(comp, &mAudioUnit);
+    checkStatus(err);
++   if (err != noErr)
++      return err;
+ 
+    err = EnableIO();
+    checkStatus(err);
++   if (err != noErr) {
++      AudioComponentInstanceDispose(mAudioUnit);
++      mAudioUnit = NULL;
++      return err;
++   }
+ 
+    err= SetDeviceAsCurrent(in);
+    checkStatus(err);
++   if (err != noErr) {
++      AudioComponentInstanceDispose(mAudioUnit);
++      mAudioUnit = NULL;
++   }
+ 
+    return err;
+ }
+@@ -731,6 +747,8 @@ OSStatus PSoundChannelCoreAudio::EnableIO()
+           &enableIO,
+           sizeof(enableIO));
+    checkStatus(err);
++   if (err != noErr)
++      return err;
+ 
+    //disable Output on the AUHAL
+    enableIO = 0;
+@@ -754,6 +771,6 @@ OSStatus PSoundChannelCoreAudio::SetupOutputUnit(AudioDeviceID out){
+   //The component description must be setup, then used to 
+   //initialize an AudioUnit
+-  ComponentDescription desc;  
++  AudioComponentDescription desc;
+ 
+   desc.componentType = kAudioUnitType_Output;
+   desc.componentSubType = kAudioUnitSubType_HALOutput;
+@@ -764,15 +781,21 @@ OSStatus PSoundChannelCoreAudio::SetupOutputUnit(AudioDeviceID out){
+   desc.componentFlagsMask = 0;
+   
+   //Finds an component that meets the desc spec's 
+-  Component comp = FindNextComponent(NULL, &desc);  
++  AudioComponent comp = AudioComponentFindNext(NULL, &desc);
+   if (comp == NULL) return kAudioCodecUnspecifiedError;
+     
+   //gains access to the services provided by the component
+-  err = OpenAComponent(comp, &mAudioUnit);  
++  err = AudioComponentInstanceNew(comp, &mAudioUnit);
+   checkStatus(err);
++  if (err != noErr)
++    return err;
+ 
+   //enableIO not needed, because output is default
+ 
+   err = SetDeviceAsCurrent(out);
++  if (err != noErr) {
++    AudioComponentInstanceDispose(mAudioUnit);
++    mAudioUnit = NULL;
++  }
+   return err;
+ }
+@@ -786,13 +809,15 @@ OSStatus PSoundChannelCoreAudio::SetDeviceAsCurrent(AudioDeviceID id)
+    if(id == kAudioDeviceUnknown) 
+    {  
+       if(direction == Recorder) {
+-         err = AudioHardwareGetProperty(
+-                  kAudioHardwarePropertyDefaultOutputDevice, &size, &id);
+-      } else {
+          err = AudioHardwareGetProperty(
+                kAudioHardwarePropertyDefaultInputDevice, &size, &id);
++      } else {
++         err = AudioHardwareGetProperty(
++                  kAudioHardwarePropertyDefaultOutputDevice, &size, &id);
+       }
+-      checkStatus(err);   
++      checkStatus(err);
++      if (err != noErr)
++         return err;
+    }                   
+ 
+    mDeviceID = id;
+@@ -839,10 +864,16 @@ PBoolean PSoundChannelCoreAudio::Open(const PString & deviceName,
+      mDeviceID = kAudioDeviceUnknown;
+   } else {
+ 
+     AudioDeviceID deviceID = GetDeviceID(deviceName, direction == Recorder);
++    if (deviceID == kAudioDeviceUnknown) {
++       PTRACE(1, "CoreAudio device not found: " << deviceName);
++       return PFalse;
++    }
+     if(direction == Player)
+        err = SetupOutputUnit(deviceID);
+     else 
+        err = SetupInputUnit(deviceID);
+     checkStatus(err);
++    if (err != noErr)
++       return PFalse;
+   }
+@@ -915,6 +946,12 @@ OSStatus PSoundChannelCoreAudio::MatchHALOutputFormat()
+                            &hwASBD,
+                            &size);
+-   checkStatus(err);  
++   checkStatus(err);
++   if (err != noErr)
++      return err;
++   if (hwASBD.mChannelsPerFrame == 0 || hwASBD.mSampleRate == 0) {
++      PTRACE(1, "CoreAudio output returned an invalid stream format");
++      return kAudioUnitErr_FormatNotSupported;
++   }
+ 
+    // make sure it is non-interleaved
+    PBoolean isInterleaved = 
+@@ -937,5 +974,8 @@ OSStatus PSoundChannelCoreAudio::MatchHALOutputFormat()
+               &hwASBD,
+               size);
++   checkStatus(err);
++   if (err != noErr)
++      return err;
+                                                         
+ 
+    // make sure we really know the current format
+@@ -999,5 +1039,12 @@ OSStatus PSoundChannelCoreAudio::MatchHALInputFormat()
+                         &asbd,
+                         &size);
++   checkStatus(err);
++   if (err != noErr)
++      return err;
++   if (asbd.mChannelsPerFrame == 0 || asbd.mSampleRate == 0) {
++      PTRACE(1, "CoreAudio input returned an invalid stream format");
++      return kAudioUnitErr_FormatNotSupported;
++   }
+ 
+    /*
+     * make it one-channel, non-interleaved, keeping same sample rate 
+@@ -1086,7 +1133,14 @@ PBoolean PSoundChannelCoreAudio::SetFormat(unsigned numChannels,
+       err = MatchHALOutputFormat();  
+    else 
+       err = MatchHALInputFormat();
+    checkStatus(err);
++   if (err != noErr)
++      return PFalse;
++   if (hwASBD.mSampleRate == 0 || hwASBD.mChannelsPerFrame == 0 ||
++       hwASBD.mBytesPerFrame == 0 || hwASBD.mBytesPerPacket == 0) {
++      PTRACE(1, "CoreAudio returned an unusable stream format");
++      return PFalse;
++   }
+   
+    /*
+     * Sample Rate Conversion (SRC)
+@@ -1109,15 +1163,21 @@ PBoolean PSoundChannelCoreAudio::SetFormat(unsigned numChannels,
+    else 
+      err = AudioConverterNew(&hwASBD, &pwlibASBD, &converter);
+    checkStatus(err);
+-  
+-   UInt32 quality = kAudioConverterQuality_Max;
+-   err = AudioConverterSetProperty(converter,
+-                kAudioConverterSampleRateConverterQuality,
+-                sizeof(UInt32),
+-                &quality);
+-   checkStatus(err);
+-  
+-   //if(direction == Recorder){
++   if (err != noErr)
++      return PFalse;
++
++   // An 8 kHz device needs no sample-rate conversion and may reject these
++   // converter properties (for example, Bluetooth headset microphones).
++   if (hwASBD.mSampleRate != pwlibASBD.mSampleRate) {
++     UInt32 quality = kAudioConverterQuality_Max;
++     err = AudioConverterSetProperty(converter,
++                  kAudioConverterSampleRateConverterQuality,
++                  sizeof(UInt32),
++                  &quality);
++     checkStatus(err);
++     if (err != noErr)
++        return PFalse;
++
+      // trying compute number of requested data more predictably also 
+      // for the first request
+      UInt32 primeMethod = kConverterPrimeMethod_None;
+@@ -1126,7 +1186,9 @@ PBoolean PSoundChannelCoreAudio::SetFormat(unsigned numChannels,
+                   sizeof(UInt32),
+                   &primeMethod);
+       checkStatus(err);
+-   //}
++     if (err != noErr)
++        return PFalse;
++   }
+ 
+    state = setformat_;
+    return PTrue;
