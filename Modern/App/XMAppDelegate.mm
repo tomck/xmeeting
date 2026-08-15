@@ -36,6 +36,92 @@ NSString *displayNameForCall(XMH323Call *call) {
   return @"remote endpoint";
 }
 
+NSString *callEndStatus(NSString *remote,
+                        NSInteger h323Reason,
+                        NSUInteger q931Cause,
+                        BOOL wasConnected) {
+  switch (h323Reason) {
+    case 0:  // EndedByLocalUser
+      return @"Call ended";
+    case 1:  // EndedByNoAccept
+      return @"Incoming call was not accepted";
+    case 2:  // EndedByAnswerDenied
+      return @"Incoming call declined";
+    case 3:  // EndedByRemoteUser
+    case 6:  // EndedByCallerAbort
+      return @"Call ended by the remote endpoint";
+    case 4:  // EndedByRefusal
+      return [NSString stringWithFormat:@"%@ refused the call", remote];
+    case 5:  // EndedByNoAnswer
+      return [NSString stringWithFormat:@"No answer from %@", remote];
+    case 7:  // EndedByTransportFail
+    case 8:  // EndedByConnectFail
+      return wasConnected
+                 ? @"The H.323 connection was lost"
+                 : [NSString stringWithFormat:@"Could not establish an H.323 connection to %@",
+                                                     remote];
+    case 9:  // EndedByGatekeeper
+      return @"The gatekeeper ended the call";
+    case 10:  // EndedByNoUser
+      return [NSString stringWithFormat:@"The H.323 user at %@ was not found", remote];
+    case 11:  // EndedByNoBandwidth
+      return @"The call could not obtain enough network bandwidth";
+    case 12:  // EndedByCapabilityExchange
+      return @"The endpoints could not agree on a compatible audio format";
+    case 13:  // EndedByCallForwarded
+      return @"The call was forwarded by the remote endpoint";
+    case 14:  // EndedBySecurityDenial
+      return @"The remote endpoint rejected the call for security reasons";
+    case 15:  // EndedByLocalBusy
+      return @"Incoming call declined because XMeeting was busy";
+    case 16:  // EndedByLocalCongestion
+      return @"XMeeting could not accept the incoming call";
+    case 17:  // EndedByRemoteBusy
+      return [NSString stringWithFormat:@"%@ is busy", remote];
+    case 18:  // EndedByRemoteCongestion
+      return @"The remote H.323 service is congested";
+    case 19:  // EndedByUnreachable
+    case 21:  // EndedByHostOffline
+      return [NSString stringWithFormat:@"Could not reach %@", remote];
+    case 20:  // EndedByNoEndPoint
+      return [NSString stringWithFormat:
+                           @"No H.323 endpoint is listening at %@ on TCP port 1720", remote];
+    case 22:  // EndedByTemporaryFailure
+      return @"The remote H.323 service is temporarily unavailable";
+    case 23:  // EndedByQ931Cause
+      if (q931Cause < 128) {
+        return [NSString stringWithFormat:@"The remote endpoint ended the call (Q.931 cause %lu)",
+                                          (unsigned long)q931Cause];
+      }
+      break;
+    case 24:  // EndedByDurationLimit
+      return @"Call ended after reaching its duration limit";
+    case 25:  // EndedByInvalidConferenceID
+      return @"The conference address is not valid";
+    case 26:  // EndedByOSPRefusal
+      return @"The remote H.323 service refused to route the call";
+    default:
+      break;
+  }
+  return wasConnected ? @"Call disconnected" : @"The H.323 call could not be completed";
+}
+
+BOOL callEndReasonIsFailure(NSInteger h323Reason) {
+  switch (h323Reason) {
+    case 0:   // EndedByLocalUser
+    case 1:   // EndedByNoAccept
+    case 2:   // EndedByAnswerDenied
+    case 3:   // EndedByRemoteUser
+    case 6:   // EndedByCallerAbort
+    case 13:  // EndedByCallForwarded
+    case 15:  // EndedByLocalBusy
+    case 24:  // EndedByDurationLimit
+      return NO;
+    default:
+      return YES;
+  }
+}
+
 NSImage *bundleImage(NSString *name) {
   NSString *path = [NSBundle.mainBundle pathForResource:name ofType:@"png"];
   return path == nil ? nil : [[NSImage alloc] initWithContentsOfFile:path];
@@ -607,11 +693,22 @@ NSTextField *labelWithString(NSString *value) {
         h323Reason:(NSInteger)h323Reason
          q931Cause:(NSUInteger)q931Cause {
   (void)client;
-  (void)call;
-  (void)h323Reason;
-  (void)q931Cause;
+  BOOL wasConnected = self.callState == XMApplicationCallStateConnected;
+  NSString *remote = displayNameForCall(call);
+  if ([remote isEqualToString:@"remote endpoint"]) {
+    NSString *enteredAddress = trimmedString(self.addressField.stringValue);
+    if (enteredAddress.length > 0) {
+      remote = enteredAddress;
+    }
+  }
   self.activeCallToken = nil;
   [self refreshReadyStatus];
+  if (self.callState == XMApplicationCallStateReady) {
+    self.callState = callEndReasonIsFailure(h323Reason)
+                         ? XMApplicationCallStateError
+                         : XMApplicationCallStateReady;
+    self.statusField.stringValue = callEndStatus(remote, h323Reason, q931Cause, wasConnected);
+  }
   [self updateInterface];
 }
 
