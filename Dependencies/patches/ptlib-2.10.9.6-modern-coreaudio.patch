@@ -249,3 +249,16 @@ index 5228012..03fd999 100644
  
     state = setformat_;
     return PTrue;
+diff --git a/src/ptlib/unix/maccoreaudio/circular_buffer.inl b/src/ptlib/unix/maccoreaudio/circular_buffer.inl
+index 6cc51cb..7468cdf 100644
+--- a/src/ptlib/unix/maccoreaudio/circular_buffer.inl
++++ b/src/ptlib/unix/maccoreaudio/circular_buffer.inl
+@@ -103,7 +103,7 @@ class CircularBuffer
+    PINDEX head_next()
+    {
+       //return (head + 1 == capacity) ? 0 : (head + 1);
+-      return (head + 1 % capacity);
++      return (head + 1) % capacity;
+    }
+ 
+    void increment_index(PINDEX &index, PINDEX inc)

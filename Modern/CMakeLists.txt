@@ -157,3 +157,21 @@ set_target_properties(
     MACOSX_BUNDLE_SHORT_VERSION_STRING "0.5.0-alpha"
     OUTPUT_NAME "XMeeting"
 )
+
+# CMake's Makefile generator does not sign application bundles. Relinking an
+# unsigned executable inside a previously signed bundle leaves macOS unable to
+# identify the app for privacy permissions such as microphone access. Give
+# development builds a fresh ad-hoc signature; release builds can replace it
+# with their distribution identity during packaging.
+find_program(XMEETING_CODESIGN_EXECUTABLE codesign)
+if(XMEETING_CODESIGN_EXECUTABLE)
+  add_custom_command(
+    TARGET XMeeting
+    POST_BUILD
+    COMMAND
+      "${XMEETING_CODESIGN_EXECUTABLE}" --force --sign - --timestamp=none
+      "$<TARGET_BUNDLE_DIR:XMeeting>"
+    COMMENT "Ad-hoc signing XMeeting for macOS privacy permissions"
+    VERBATIM
+  )
+endif()
