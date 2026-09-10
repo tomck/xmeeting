@@ -50,6 +50,7 @@ NSErrorDomain const XMH323ClientErrorDomain = @"net.sourceforge.xmeeting.H323Cli
                   q931Cause:(NSUInteger)q931Cause;
 - (void)xm_deliverGatekeeperRegistration:(NSString *)address;
 - (void)xm_deliverGatekeeperRegistrationFailure;
+- (void)xm_deliverH264NALUnits:(NSArray<NSData *> *)nalUnits;
 - (void)xm_deliverError:(NSString *)message;
 
 @end
@@ -98,6 +99,24 @@ NSArray<NSString *> *stringsFromVector(const std::vector<std::string> &values) {
     [result addObject:stringFromStdString(value)];
   }
   return [result copy];
+}
+
+NSArray<NSData *> *dataFromAccessUnit(const xmeeting::h323::H264AccessUnit &accessUnit) {
+  NSMutableArray<NSData *> *result = [NSMutableArray arrayWithCapacity:accessUnit.size()];
+  for (const std::vector<std::uint8_t> &nal : accessUnit) {
+    [result addObject:[NSData dataWithBytes:nal.data() length:nal.size()]];
+  }
+  return [result copy];
+}
+
+xmeeting::h323::H264AccessUnit accessUnitFromData(NSArray<NSData *> *nalUnits) {
+  xmeeting::h323::H264AccessUnit result;
+  result.reserve(nalUnits.count);
+  for (NSData *nal in nalUnits) {
+    const auto *bytes = static_cast<const std::uint8_t *>(nal.bytes);
+    result.emplace_back(bytes, bytes + nal.length);
+  }
+  return result;
 }
 
 XMH323Call *callFromCallInfo(const CallInfo &info) {
@@ -177,6 +196,16 @@ class CocoaEventSink final : public EventSink {
     dispatchOnMainQueue(^{
       [owner xm_deliverGatekeeperRegistrationFailure];
     });
+  }
+
+  void onH264AccessUnit(const xmeeting::h323::H264AccessUnit &accessUnit) override {
+    @autoreleasepool {
+      NSArray<NSData *> *nalUnits = dataFromAccessUnit(accessUnit);
+      __weak XMH323Client *owner = owner_;
+      dispatchOnMainQueue(^{
+        [owner xm_deliverH264NALUnits:nalUnits];
+      });
+    }
   }
 
   void onError(const std::string &message) override {
@@ -400,6 +429,35 @@ CocoaClientImplementation *implementation(XMH323Client *client) {
   return stringsFromVector(implementation(self)->engine.audioSystemInfo().codecs);
 }
 
+- (BOOL)isVideoAvailable {
+  const xmeeting::h323::VideoSystemInfo info =
+      implementation(self)->engine.videoSystemInfo();
+  return info.codecAvailable && info.advertised;
+}
+
+- (NSArray<NSString *> *)videoCodecs {
+  return stringsFromVector(implementation(self)->engine.videoSystemInfo().codecs);
+}
+
+- (BOOL)enableH264VideoWithError:(NSError **)error {
+  if (!self.started) {
+    return fail(error, XMH323ClientErrorNotStarted, @"The H.323 client is not started.");
+  }
+  if (!implementation(self)->engine.enableH264Video()) {
+    return fail(error, XMH323ClientErrorVideoUnavailable,
+                @"The native H.264 video bridge could not be enabled.");
+  }
+  return YES;
+}
+
+- (BOOL)submitH264NALUnits:(NSArray<NSData *> *)nalUnits {
+  if (!self.started || nalUnits.count == 0) {
+    return NO;
+  }
+  return implementation(self)->engine.submitH264AccessUnit(
+      accessUnitFromData(nalUnits));
+}
+
 - (void)xm_deliverIncomingCall:(XMH323Call *)call {
   id<XMH323ClientDelegate> delegate = self.delegate;
   if ([delegate respondsToSelector:@selector(h323Client:didReceiveIncomingCall:)]) {
@@ -437,6 +495,13 @@ CocoaClientImplementation *implementation(XMH323Client *client) {
   id<XMH323ClientDelegate> delegate = self.delegate;
   if ([delegate respondsToSelector:@selector(h323ClientGatekeeperRegistrationDidFail:)]) {
     [delegate h323ClientGatekeeperRegistrationDidFail:self];
+  }
+}
+
+- (void)xm_deliverH264NALUnits:(NSArray<NSData *> *)nalUnits {
+  id<XMH323ClientDelegate> delegate = self.delegate;
+  if ([delegate respondsToSelector:@selector(h323Client:didReceiveH264NALUnits:)]) {
+    [delegate h323Client:self didReceiveH264NALUnits:nalUnits];
   }
 }
 

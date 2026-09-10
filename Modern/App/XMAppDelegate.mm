@@ -1,8 +1,12 @@
 #import "XMAppDelegate.h"
 
+#import "XMCameraCapture.h"
+#import "XMH264Decoder.h"
+#import "XMH264Encoder.h"
 #import "XMH323Client.h"
 
 #import <AVFoundation/AVFoundation.h>
+#import <QuartzCore/QuartzCore.h>
 
 #include <cstdio>
 
@@ -153,6 +157,12 @@ NSTextField *labelWithString(NSString *value) {
 
 @interface XMVideoPlaceholderView : NSView
 @property(nonatomic, strong, nullable) NSImage *placeholderImage;
+@property(nonatomic, strong, nullable) AVCaptureVideoPreviewLayer *previewLayer;
+@property(nonatomic, strong, nullable) AVSampleBufferDisplayLayer *remoteVideoLayer;
+- (void)displayRemotePixelBuffer:(CVPixelBufferRef)pixelBuffer
+           presentationTimeStamp:(CMTime)presentationTimeStamp;
+- (void)clearRemoteVideo;
+- (void)layoutVideoLayers;
 @end
 
 @implementation XMVideoPlaceholderView
@@ -164,34 +174,153 @@ NSTextField *labelWithString(NSString *value) {
   [NSColor.blackColor setFill];
   [background fill];
 
-  [self.placeholderImage drawInRect:self.bounds
-                           fromRect:NSZeroRect
-                          operation:NSCompositingOperationSourceOver
-                           fraction:1
-                     respectFlipped:YES
-                              hints:nil];
+  if (self.previewLayer == nil && self.remoteVideoLayer == nil) {
+    [self.placeholderImage drawInRect:self.bounds
+                             fromRect:NSZeroRect
+                            operation:NSCompositingOperationSourceOver
+                             fraction:1
+                       respectFlipped:YES
+                                hints:nil];
+  }
 
   [NSColor.separatorColor setStroke];
   background.lineWidth = 1;
   [background stroke];
 }
 
+- (void)setPreviewLayer:(AVCaptureVideoPreviewLayer *)previewLayer {
+  [_previewLayer removeFromSuperlayer];
+  _previewLayer = previewLayer;
+  if (_previewLayer != nil) {
+    self.wantsLayer = YES;
+    // Keep the same capture session and preview layer throughout the call.
+    // A higher z position preserves self-view when the remote layer is added
+    // later, or when a camera becomes available during a call.
+    _previewLayer.zPosition = 1;
+    [self.layer addSublayer:_previewLayer];
+  }
+  [self layoutVideoLayers];
+  [self setNeedsDisplay:YES];
+}
+
+- (void)displayRemotePixelBuffer:(CVPixelBufferRef)pixelBuffer
+           presentationTimeStamp:(CMTime)presentationTimeStamp {
+  if (self.remoteVideoLayer == nil) {
+    self.wantsLayer = YES;
+    AVSampleBufferDisplayLayer *layer = [AVSampleBufferDisplayLayer layer];
+    layer.videoGravity = AVLayerVideoGravityResizeAspect;
+    layer.frame = self.bounds;
+    [self.layer addSublayer:layer];
+    self.remoteVideoLayer = layer;
+    [self layoutVideoLayers];
+  }
+  if (self.remoteVideoLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
+    [self.remoteVideoLayer flush];
+  }
+
+  CMVideoFormatDescriptionRef format = nullptr;
+  if (CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault, pixelBuffer,
+                                                    &format) != noErr ||
+      format == nullptr) {
+    return;
+  }
+  CMSampleTimingInfo timing = {kCMTimeInvalid, presentationTimeStamp, kCMTimeInvalid};
+  CMSampleBufferRef sampleBuffer = nullptr;
+  const OSStatus status = CMSampleBufferCreateForImageBuffer(
+      kCFAllocatorDefault, pixelBuffer, true, nullptr, nullptr, format, &timing,
+      &sampleBuffer);
+  CFRelease(format);
+  if (status != noErr || sampleBuffer == nullptr) {
+    return;
+  }
+  CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, true);
+  if (attachments != nullptr && CFArrayGetCount(attachments) != 0) {
+    CFMutableDictionaryRef attachment = static_cast<CFMutableDictionaryRef>(
+        const_cast<void *>(CFArrayGetValueAtIndex(attachments, 0)));
+    CFDictionarySetValue(attachment, kCMSampleAttachmentKey_DisplayImmediately,
+                         kCFBooleanTrue);
+  }
+  [self.remoteVideoLayer enqueueSampleBuffer:sampleBuffer];
+  CFRelease(sampleBuffer);
+  self.accessibilityLabel = self.previewLayer == nil
+                               ? @"Remote H.323 video"
+                               : @"Remote H.323 video with local camera preview";
+}
+
+- (void)clearRemoteVideo {
+  [self.remoteVideoLayer flushAndRemoveImage];
+  [self.remoteVideoLayer removeFromSuperlayer];
+  self.remoteVideoLayer = nil;
+  [self layoutVideoLayers];
+  [self setNeedsDisplay:YES];
+}
+
+- (void)layout {
+  [super layout];
+  [self layoutVideoLayers];
+}
+
+- (void)layoutVideoLayers {
+  // Layer geometry changes should be immediate on connect, resize, and
+  // hangup rather than using Core Animation's default implicit animations.
+  [CATransaction begin];
+  [CATransaction setDisableActions:YES];
+  self.remoteVideoLayer.frame = self.bounds;
+  const BOOL pictureInPicture = self.remoteVideoLayer != nil && self.previewLayer != nil;
+  if (pictureInPicture) {
+    const CGFloat margin = 10;
+    const CGFloat width = MIN(MAX(96, NSWidth(self.bounds) * 0.28),
+                              MAX(0, NSWidth(self.bounds) - 2 * margin));
+    const CGFloat height = MIN(width * 0.75, MAX(0, NSHeight(self.bounds) - 2 * margin));
+    const CGFloat y = self.layer.geometryFlipped
+                          ? NSMaxY(self.bounds) - height - margin
+                          : NSMinY(self.bounds) + margin;
+    // Match the original XMeeting's lower-left picture-in-picture placement.
+    self.previewLayer.frame = CGRectMake(NSMinX(self.bounds) + margin,
+                                         y, width, height);
+    self.previewLayer.cornerRadius = 2;
+    self.previewLayer.borderWidth = 1.5;
+    self.previewLayer.borderColor = [NSColor colorWithWhite:1 alpha:0.8].CGColor;
+    self.previewLayer.backgroundColor = NSColor.blackColor.CGColor;
+    self.previewLayer.masksToBounds = YES;
+  } else {
+    self.previewLayer.frame = self.bounds;
+    self.previewLayer.cornerRadius = 0;
+    self.previewLayer.borderWidth = 0;
+    self.previewLayer.masksToBounds = NO;
+  }
+  self.previewLayer.hidden = NO;
+  self.accessibilityLabel = pictureInPicture ? @"Remote H.323 video with local camera preview"
+      : self.remoteVideoLayer != nil ? @"Remote H.323 video"
+      : self.previewLayer != nil ? @"Local camera preview" : @"Video unavailable";
+  [CATransaction commit];
+}
+
 @end
 
-@interface XMAppDelegate () <XMH323ClientDelegate, NSTextFieldDelegate>
+@interface XMAppDelegate () <XMCameraCaptureDelegate,
+                              XMH264DecoderDelegate,
+                              XMH264EncoderDelegate,
+                              XMH323ClientDelegate,
+                              NSTextFieldDelegate>
 
 @property(nonatomic, strong) NSWindow *window;
 @property(nonatomic, strong) XMH323Client *client;
+@property(nonatomic, strong) XMCameraCapture *cameraCapture;
+@property(nonatomic, strong) XMH264Encoder *h264Encoder;
+@property(nonatomic, strong) XMH264Decoder *h264Decoder;
 @property(nonatomic, strong) NSTextField *aliasField;
 @property(nonatomic, strong) NSTextField *addressField;
 @property(nonatomic, strong) NSTextField *statusField;
 @property(nonatomic, strong) NSImageView *statusImageView;
 @property(nonatomic, strong) NSButton *callButton;
 @property(nonatomic, strong) NSProgressIndicator *progressIndicator;
+@property(nonatomic, strong) XMVideoPlaceholderView *videoView;
 @property(nonatomic, copy, nullable) NSString *activeCallToken;
 @property(nonatomic) XMApplicationCallState callState;
 @property(nonatomic) BOOL microphoneAuthorized;
 @property(nonatomic) BOOL microphonePermissionPending;
+@property(nonatomic) BOOL h264VideoEnabled;
 
 - (void)placeOrEndCall:(id)sender;
 - (void)restartListener:(id)sender;
@@ -230,7 +359,11 @@ NSTextField *labelWithString(NSString *value) {
   }
 
   self.client = [[XMH323Client alloc] initWithDelegate:self];
+  self.cameraCapture = [[XMCameraCapture alloc] initWithDelegate:self];
+  self.h264Encoder = [[XMH264Encoder alloc] initWithDelegate:self];
+  self.h264Decoder = [[XMH264Decoder alloc] initWithDelegate:self];
   [self prepareMicrophoneAuthorization];
+  [self.cameraCapture start];
   [self startListener];
   [self.window makeKeyAndOrderFront:nil];
   [NSApp activateIgnoringOtherApps:YES];
@@ -238,7 +371,10 @@ NSTextField *labelWithString(NSString *value) {
 
 - (void)applicationWillTerminate:(NSNotification *)notification {
   (void)notification;
+  [self.cameraCapture stop];
+  [self.h264Encoder stop];
   [self.client stop];
+  [self.h264Decoder stop];
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
@@ -370,10 +506,10 @@ NSTextField *labelWithString(NSString *value) {
   self.aliasField.toolTip = @"The H.323 alias advertised to other endpoints";
   self.aliasField.accessibilityLabel = @"Local H.323 alias";
 
-  XMVideoPlaceholderView *videoBox = [[XMVideoPlaceholderView alloc] initWithFrame:NSZeroRect];
-  videoBox.translatesAutoresizingMaskIntoConstraints = NO;
-  videoBox.placeholderImage = bundleImage(@"no_video_screen");
-  videoBox.accessibilityLabel = @"Video preview unavailable";
+  self.videoView = [[XMVideoPlaceholderView alloc] initWithFrame:NSZeroRect];
+  self.videoView.translatesAutoresizingMaskIntoConstraints = NO;
+  self.videoView.placeholderImage = bundleImage(@"no_video_screen");
+  self.videoView.accessibilityLabel = @"Video preview unavailable";
 
   self.statusImageView = [[NSImageView alloc] initWithFrame:NSZeroRect];
   self.statusImageView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -421,7 +557,7 @@ NSTextField *labelWithString(NSString *value) {
   callStack.alignment = NSLayoutAttributeCenterY;
   callStack.spacing = 8;
 
-  for (NSView *view in @[aliasLabel, self.aliasField, videoBox, statusStack, callStack]) {
+  for (NSView *view in @[aliasLabel, self.aliasField, self.videoView, statusStack, callStack]) {
     [contentView addSubview:view];
   }
 
@@ -432,12 +568,12 @@ NSTextField *labelWithString(NSString *value) {
     [self.aliasField.leadingAnchor constraintEqualToAnchor:aliasLabel.trailingAnchor constant:10],
     [self.aliasField.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor constant:-18],
 
-    [videoBox.topAnchor constraintEqualToAnchor:self.aliasField.bottomAnchor constant:14],
-    [videoBox.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor constant:18],
-    [videoBox.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor constant:-18],
-    [videoBox.heightAnchor constraintEqualToAnchor:videoBox.widthAnchor multiplier:0.75],
+    [self.videoView.topAnchor constraintEqualToAnchor:self.aliasField.bottomAnchor constant:14],
+    [self.videoView.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor constant:18],
+    [self.videoView.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor constant:-18],
+    [self.videoView.heightAnchor constraintEqualToAnchor:self.videoView.widthAnchor multiplier:0.75],
 
-    [statusStack.topAnchor constraintEqualToAnchor:videoBox.bottomAnchor constant:14],
+    [statusStack.topAnchor constraintEqualToAnchor:self.videoView.bottomAnchor constant:14],
     [statusStack.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor constant:20],
     [statusStack.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor constant:-20],
     [self.statusImageView.widthAnchor constraintEqualToConstant:14],
@@ -542,7 +678,9 @@ NSTextField *labelWithString(NSString *value) {
     self.statusField.stringValue = @"Microphone access is required for calls";
   } else {
     self.callState = XMApplicationCallStateReady;
-    self.statusField.stringValue = @"Ready for H.323 audio calls";
+    self.statusField.stringValue = self.h264VideoEnabled
+                                       ? @"Ready for H.323 audio and H.264 video calls"
+                                       : @"Ready for H.323 audio calls";
   }
 }
 
@@ -645,7 +783,80 @@ NSTextField *labelWithString(NSString *value) {
 
 #pragma mark - XMH323ClientDelegate
 
+#pragma mark - XMCameraCaptureDelegate
+
+- (void)cameraCapture:(XMCameraCapture *)capture
+    didChangePreviewAvailability:(BOOL)available
+                         message:(NSString *)message {
+  if (available) {
+    self.videoView.previewLayer = capture.previewLayer;
+  } else {
+    self.videoView.previewLayer = nil;
+    if (self.videoView.remoteVideoLayer == nil) {
+      self.videoView.accessibilityLabel = message;
+    }
+  }
+}
+
+- (void)cameraCapture:(XMCameraCapture *)capture
+  didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer {
+  (void)capture;
+  [self.h264Encoder encodeSampleBuffer:sampleBuffer];
+}
+
+- (void)h264Encoder:(XMH264Encoder *)encoder
+    didEncodeNALUnits:(NSArray<NSData *> *)nalUnits
+             keyFrame:(BOOL)keyFrame {
+  (void)encoder;
+  (void)keyFrame;
+  NSArray<NSData *> *copiedNALUnits = [[NSArray alloc] initWithArray:nalUnits
+                                                          copyItems:YES];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (!self.h264VideoEnabled) {
+      NSError *error = nil;
+      if (![self.client enableH264VideoWithError:&error]) {
+        std::fprintf(stderr, "XMeeting H.264 bridge: %s\n",
+                     error.localizedDescription.UTF8String);
+        return;
+      }
+      self.h264VideoEnabled = YES;
+      if (self.callState == XMApplicationCallStateReady) {
+        self.statusField.stringValue = @"Ready for H.323 audio and H.264 video calls";
+      }
+    }
+    // A false return is expected until a peer negotiates a transmit channel.
+    [self.client submitH264NALUnits:copiedNALUnits];
+  });
+}
+
+- (void)h264Decoder:(XMH264Decoder *)decoder
+    didDecodePixelBuffer:(CVPixelBufferRef)pixelBuffer
+    presentationTimeStamp:(CMTime)presentationTimeStamp {
+  CVPixelBufferRetain(pixelBuffer);
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (self.activeCallToken.length > 0 && decoder == self.h264Decoder) {
+      [self.videoView displayRemotePixelBuffer:pixelBuffer
+                         presentationTimeStamp:presentationTimeStamp];
+    }
+    CVPixelBufferRelease(pixelBuffer);
+  });
+}
+
+- (void)h264Decoder:(XMH264Decoder *)decoder didFailWithMessage:(NSString *)message {
+  (void)decoder;
+  std::fprintf(stderr, "XMeeting H.264 decoder: %s\n", message.UTF8String);
+}
+
+- (void)h264Encoder:(XMH264Encoder *)encoder didFailWithMessage:(NSString *)message {
+  (void)encoder;
+  std::fprintf(stderr, "XMeeting H.264 encoder: %s\n", message.UTF8String);
+}
+
 - (void)h323Client:(XMH323Client *)client didReceiveIncomingCall:(XMH323Call *)call {
+  if (self.activeCallToken.length > 0) {
+    [client rejectCallWithToken:call.token error:nil];
+    return;
+  }
   if (!client.isAudioAvailable || !self.microphoneAuthorized) {
     NSError *error = nil;
     [client rejectCallWithToken:call.token error:&error];
@@ -689,10 +900,21 @@ NSTextField *labelWithString(NSString *value) {
 }
 
 - (void)h323Client:(XMH323Client *)client
+    didReceiveH264NALUnits:(NSArray<NSData *> *)nalUnits {
+  (void)client;
+  if (self.activeCallToken.length == 0) return;
+  [self.h264Decoder decodeNALUnits:nalUnits
+             presentationTimeStamp:CMClockGetTime(CMClockGetHostTimeClock())];
+}
+
+- (void)h323Client:(XMH323Client *)client
        didEndCall:(XMH323Call *)call
         h323Reason:(NSInteger)h323Reason
          q931Cause:(NSUInteger)q931Cause {
   (void)client;
+  if (self.activeCallToken.length > 0 && ![self.activeCallToken isEqualToString:call.token]) {
+    return;
+  }
   BOOL wasConnected = self.callState == XMApplicationCallStateConnected;
   NSString *remote = displayNameForCall(call);
   if ([remote isEqualToString:@"remote endpoint"]) {
@@ -702,6 +924,10 @@ NSTextField *labelWithString(NSString *value) {
     }
   }
   self.activeCallToken = nil;
+  [self.h264Decoder stop];
+  // Discard already-dispatched frames from the old decoder after hangup.
+  self.h264Decoder = [[XMH264Decoder alloc] initWithDelegate:self];
+  [self.videoView clearRemoteVideo];
   [self refreshReadyStatus];
   if (self.callState == XMApplicationCallStateReady) {
     self.callState = callEndReasonIsFailure(h323Reason)

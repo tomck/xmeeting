@@ -5,6 +5,8 @@ set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Supported macOS archite
 
 project(XMeetingModernization VERSION 0.1 LANGUAGES CXX OBJCXX)
 
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
@@ -54,11 +56,43 @@ find_library(AUDIO_TOOLBOX_FRAMEWORK AudioToolbox REQUIRED)
 find_library(AUDIO_UNIT_FRAMEWORK AudioUnit REQUIRED)
 find_library(AVFOUNDATION_FRAMEWORK AVFoundation REQUIRED)
 find_library(CORE_AUDIO_FRAMEWORK CoreAudio REQUIRED)
+find_library(CORE_MEDIA_FRAMEWORK CoreMedia REQUIRED)
+find_library(CORE_VIDEO_FRAMEWORK CoreVideo REQUIRED)
 find_library(CORE_SERVICES_FRAMEWORK CoreServices REQUIRED)
 find_library(FOUNDATION_FRAMEWORK Foundation REQUIRED)
+find_library(QUARTZ_CORE_FRAMEWORK QuartzCore REQUIRED)
+find_library(VIDEO_TOOLBOX_FRAMEWORK VideoToolbox REQUIRED)
 find_library(APPKIT_FRAMEWORK AppKit REQUIRED)
 
-add_library(XMH323PlusEngine STATIC H323Plus/XMH323PlusEngine.cpp)
+add_library(XMH264RTP STATIC Media/XMH264RTP.cpp)
+target_include_directories(XMH264RTP PUBLIC "${CMAKE_CURRENT_LIST_DIR}/Media")
+
+add_library(
+  XMVideoToolbox
+  STATIC
+  App/XMH264Decoder.h
+  App/XMH264Decoder.mm
+  App/XMH264Encoder.h
+  App/XMH264Encoder.mm
+)
+target_include_directories(XMVideoToolbox PUBLIC "${CMAKE_CURRENT_LIST_DIR}/App")
+target_compile_options(XMVideoToolbox PRIVATE -fobjc-arc)
+target_link_libraries(
+  XMVideoToolbox
+  PUBLIC
+    XMH264RTP
+    "${CORE_MEDIA_FRAMEWORK}"
+    "${CORE_VIDEO_FRAMEWORK}"
+    "${FOUNDATION_FRAMEWORK}"
+    "${VIDEO_TOOLBOX_FRAMEWORK}"
+)
+
+add_library(
+  XMH323PlusEngine
+  STATIC
+  H323Plus/XMH323PlusEngine.cpp
+  H323Plus/XMH323PlusH264.cpp
+)
 target_include_directories(
   XMH323PlusEngine
   PUBLIC "${CMAKE_CURRENT_LIST_DIR}/H323Plus"
@@ -75,6 +109,7 @@ target_compile_options(
 target_link_libraries(
   XMH323PlusEngine
   PUBLIC
+    XMH264RTP
     "${H323PLUS_LIBRARY}"
     "${PTLIB_LIBRARY}"
     "${AUDIO_TOOLBOX_FRAMEWORK}"
@@ -83,6 +118,54 @@ target_link_libraries(
     "${CORE_SERVICES_FRAMEWORK}"
     resolv
 )
+
+if(BUILD_TESTING)
+  add_executable(xmeeting-h264-rtp-tests MediaTests/XMH264RTPTests.cpp)
+  target_link_libraries(xmeeting-h264-rtp-tests PRIVATE XMH264RTP)
+  add_test(NAME xmeeting-h264-rtp-tests COMMAND xmeeting-h264-rtp-tests)
+
+  add_executable(
+    xmeeting-h323plus-h264-tests
+    H323PlusTests/XMH323PlusH264Tests.cpp
+  )
+  target_include_directories(
+    xmeeting-h323plus-h264-tests
+    PRIVATE "${PTLIB_INCLUDE_DIR}" "${H323PLUS_INCLUDE_DIR}"
+  )
+  target_compile_definitions(xmeeting-h323plus-h264-tests PRIVATE H323_STATIC_LIB)
+  target_compile_options(
+    xmeeting-h323plus-h264-tests
+    PRIVATE -Wno-deprecated-declarations -Wno-inconsistent-missing-override
+  )
+  target_link_libraries(
+    xmeeting-h323plus-h264-tests
+    PRIVATE XMH323PlusEngine
+  )
+  add_test(NAME xmeeting-h323plus-h264-tests COMMAND xmeeting-h323plus-h264-tests)
+
+  add_executable(
+    xmeeting-videotoolbox-tests
+    VideoToolboxTests/XMVideoToolboxTests.mm
+  )
+  target_compile_options(xmeeting-videotoolbox-tests PRIVATE -fobjc-arc)
+  target_link_libraries(xmeeting-videotoolbox-tests PRIVATE XMVideoToolbox)
+  add_test(NAME xmeeting-videotoolbox-tests COMMAND xmeeting-videotoolbox-tests)
+
+  add_executable(xmeeting-h264-call-tests VideoToolboxTests/XMH264CallTests.mm)
+  target_include_directories(xmeeting-h264-call-tests PRIVATE "${PTLIB_INCLUDE_DIR}")
+  target_compile_options(xmeeting-h264-call-tests PRIVATE -fobjc-arc -Wno-deprecated-declarations
+                         -Wno-inconsistent-missing-override)
+  target_link_libraries(xmeeting-h264-call-tests PRIVATE XMVideoToolbox XMH323PlusEngine)
+  add_test(NAME xmeeting-h264-call-tests COMMAND xmeeting-h264-call-tests)
+  set_tests_properties(xmeeting-h264-call-tests PROPERTIES TIMEOUT 50 RUN_SERIAL TRUE)
+
+  # Also compile the portable Linux fixture peer here to catch API drift.
+  add_executable(h264-test-peer H323PlusTests/H264TestPeer.cpp)
+  target_include_directories(h264-test-peer PRIVATE "${PTLIB_INCLUDE_DIR}" "${H323PLUS_INCLUDE_DIR}")
+  target_compile_definitions(h264-test-peer PRIVATE H323_STATIC_LIB)
+  target_compile_options(h264-test-peer PRIVATE -Wno-deprecated-declarations -Wno-inconsistent-missing-override)
+  target_link_libraries(h264-test-peer PRIVATE XMH323PlusEngine)
+endif()
 
 add_library(XMH323CocoaBridge STATIC Cocoa/XMH323Client.mm)
 target_include_directories(
@@ -135,6 +218,10 @@ add_executable(
   XMeeting
   MACOSX_BUNDLE
   App/main.mm
+  App/XMCameraCapture.h
+  App/XMCameraCapture.mm
+  App/XMH264Decoder.h
+  App/XMH264Encoder.h
   App/XMAppDelegate.h
   App/XMAppDelegate.mm
   ${XMEETING_APP_RESOURCES}
@@ -143,7 +230,15 @@ target_include_directories(XMeeting PRIVATE "${CMAKE_CURRENT_LIST_DIR}/App")
 target_compile_options(XMeeting PRIVATE -fobjc-arc)
 target_link_libraries(
   XMeeting
-  PRIVATE XMH323CocoaBridge "${APPKIT_FRAMEWORK}" "${AVFOUNDATION_FRAMEWORK}"
+  PRIVATE
+    XMH323CocoaBridge
+    XMVideoToolbox
+    "${APPKIT_FRAMEWORK}"
+    "${AVFOUNDATION_FRAMEWORK}"
+    "${CORE_MEDIA_FRAMEWORK}"
+    "${CORE_VIDEO_FRAMEWORK}"
+    "${QUARTZ_CORE_FRAMEWORK}"
+    "${VIDEO_TOOLBOX_FRAMEWORK}"
 )
 set_target_properties(
   XMeeting

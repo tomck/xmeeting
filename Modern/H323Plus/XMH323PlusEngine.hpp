@@ -38,6 +38,20 @@ struct AudioChannelInfo {
   bool transmitting = false;
 };
 
+using H264AccessUnit = std::vector<std::vector<std::uint8_t>>;
+
+// Video support has three distinct states: the H323Plus/PTLib build can have
+// video framework support, the application can have a usable codec bridge,
+// and the endpoint can advertise that bridge to a remote peer. Keeping those
+// states separate prevents an audio-only build from offering a video channel
+// it cannot capture, encode, decode, or render.
+struct VideoSystemInfo {
+  bool frameworkEnabled = false;
+  bool codecAvailable = false;
+  bool advertised = false;
+  std::vector<std::string> codecs;
+};
+
 // H323Plus invokes these methods from its worker threads. Implementations that
 // touch AppKit must dispatch their work to the main queue.
 class EventSink {
@@ -49,6 +63,7 @@ class EventSink {
   virtual void onCallEnded(const CallEndedInfo&) {}
   virtual void onAudioChannelStarted(const AudioChannelInfo&) {}
   virtual void onAudioChannelStopped(const AudioChannelInfo&) {}
+  virtual void onH264AccessUnit(const H264AccessUnit&) {}
   virtual void onGatekeeperRegistered(const std::string&) {}
   virtual void onGatekeeperRegistrationFailed() {}
   virtual void onError(const std::string&) {}
@@ -82,6 +97,11 @@ class H323PlusEngine final {
 
   std::vector<std::string> activeCallTokens() const;
   AudioSystemInfo audioSystemInfo() const;
+  VideoSystemInfo videoSystemInfo() const;
+  // Video is advertised only after the application has confirmed that its
+  // native camera, encoder, decoder, and renderer are ready.
+  bool enableH264Video();
+  bool submitH264AccessUnit(const H264AccessUnit& accessUnit);
   bool configureAudioDevices(const std::string& driver,
                              const std::string& inputDevice,
                              const std::string& outputDevice);

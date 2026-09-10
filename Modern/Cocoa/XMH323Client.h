@@ -11,6 +11,7 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
   XMH323ClientErrorCallFailed,
   XMH323ClientErrorGatekeeperFailed,
   XMH323ClientErrorAudioUnavailable,
+  XMH323ClientErrorVideoUnavailable,
 };
 
 @class XMH323Client;
@@ -40,6 +41,8 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
 - (void)h323Client:(XMH323Client *)client
     didRegisterWithGatekeeper:(NSString *)gatekeeperAddress;
 - (void)h323ClientGatekeeperRegistrationDidFail:(XMH323Client *)client;
+- (void)h323Client:(XMH323Client *)client
+    didReceiveH264NALUnits:(NSArray<NSData *> *)nalUnits;
 - (void)h323Client:(XMH323Client *)client didEncounterError:(NSString *)message;
 @end
 
@@ -59,6 +62,10 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
 @property(nonatomic, copy, readonly) NSString *audioInputDevice;
 @property(nonatomic, copy, readonly) NSString *audioOutputDevice;
 @property(nonatomic, copy, readonly) NSArray<NSString *> *audioCodecs;
+// Becomes true only when the H323Plus engine has a usable, advertised video
+// codec. Camera permission or a local preview alone must not enable it.
+@property(nonatomic, readonly, getter=isVideoAvailable) BOOL videoAvailable;
+@property(nonatomic, copy, readonly) NSArray<NSString *> *videoCodecs;
 
 - (instancetype)initWithDelegate:(nullable id<XMH323ClientDelegate>)delegate
     NS_DESIGNATED_INITIALIZER;
@@ -84,6 +91,13 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
                       password:(nullable NSString *)password
                          error:(NSError *_Nullable *_Nullable)error;
 - (void)unregisterFromGatekeeper;
+
+// The application calls this only after its local VideoToolbox pipeline has
+// produced a usable H.264 access unit and its receive renderer is ready.
+- (BOOL)enableH264VideoWithError:(NSError *_Nullable *_Nullable)error;
+// Returns NO while no negotiated H.323 video transmitter is active; frames
+// are deliberately dropped instead of being queued during audio-only calls.
+- (BOOL)submitH264NALUnits:(NSArray<NSData *> *)nalUnits;
 
 @end
 

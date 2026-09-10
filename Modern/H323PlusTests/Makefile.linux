@@ -1,0 +1,7 @@
+# Run from a staging directory containing the peer and bridge source files.
+# PTLIBDIR must be explicit because old generated openh323u.mak may embed a
+# configure-time path from a different checkout.
+PROG = h264-test-peer
+SOURCES = H264TestPeer.cpp XMH323PlusH264.cpp XMH264RTP.cpp
+STDCCFLAGS += -std=c++17 -I.
+include $(OPENH323DIR)/openh323u.mak

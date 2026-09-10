@@ -1,4 +1,5 @@
 #include "XMH323PlusEngine.hpp"
+#include "XMH323PlusH264.hpp"
 
 #include <ptlib.h>
 #include <ptlib/sound.h>
@@ -96,12 +97,22 @@ class H323PlusEngine::Impl final : public H323EndPoint {
   PCLASSINFO(Impl, H323EndPoint);
 
  public:
-  explicit Impl(EventSink& sink) : sink_(sink) {
+  explicit Impl(EventSink& sink)
+      : sink_(sink), h264Bridge_(std::make_shared<H264MediaBridge>()) {
     // G.711 is built into H323Plus and is the universal interoperability
     // baseline for H.323 audio. Do not advertise video until its modern media
     // path exists.
     AddAllCapabilities(0, P_MAX_INDEX, "G.711-*");
     AddAllUserInputCapabilities(0, P_MAX_INDEX);
+
+    h264Bridge_->setReceiveHandler([this](const media::H264AccessUnit& accessUnit) {
+      sink_.onH264AccessUnit(accessUnit);
+    });
+    h264Bridge_->setErrorHandler([](const std::string& message) {
+      // A dropped video frame must not change an established audio call into
+      // an application-wide error. The next IDR can recover the picture.
+      PTRACE(2, "XMeeting H.264: " << message);
+    });
 
     // Select PTLib's native macOS devices explicitly. Leaving the driver name
     // empty can fall back to NullAudio in a statically linked application.
@@ -234,6 +245,50 @@ class H323PlusEngine::Impl final : public H323EndPoint {
     return info;
   }
 
+  VideoSystemInfo videoSystemInfo() const {
+    VideoSystemInfo info;
+#ifdef H323_VIDEO
+    info.frameworkEnabled = true;
+#endif
+
+    const H323Capabilities& capabilities = GetCapabilities();
+    for (PINDEX index = 0; index < capabilities.GetSize(); ++index) {
+      const H323Capability& capability = capabilities[index];
+      if (capability.GetMainType() == H323Capability::e_Video) {
+        info.codecs.push_back(toStdString(capability.GetFormatName()));
+      }
+    }
+
+    // The capability list is exactly what H323Plus will offer during H.245
+    // negotiation. A future VideoToolbox bridge must register its codec here
+    // before this becomes true.
+    info.codecAvailable = !info.codecs.empty();
+    info.advertised = info.codecAvailable;
+    return info;
+  }
+
+  bool enableH264Video() {
+#ifdef H323_VIDEO
+    if (h264VideoEnabled_) {
+      return true;
+    }
+    std::unique_ptr<H323Capability> capability =
+        makeH264VideoToolboxCapability(h264Bridge_);
+    if (!capability) {
+      return false;
+    }
+    SetCapability(0, P_MAX_INDEX, capability.release());
+    h264VideoEnabled_ = true;
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  bool submitH264AccessUnit(const H264AccessUnit& accessUnit) {
+    return h264VideoEnabled_ && h264Bridge_->enqueueAccessUnit(accessUnit);
+  }
+
   bool configureAudioDevices(const std::string& driver,
                              const std::string& inputDevice,
                              const std::string& outputDevice) {
@@ -329,6 +384,8 @@ class H323PlusEngine::Impl final : public H323EndPoint {
   std::string audioDriver_;
   bool audioPlaybackConfigured_ = false;
   bool audioRecordingConfigured_ = false;
+  std::shared_ptr<H264MediaBridge> h264Bridge_;
+  bool h264VideoEnabled_ = false;
 };
 
 H323PlusEngine::H323PlusEngine(EventSink& sink)
@@ -382,6 +439,18 @@ std::vector<std::string> H323PlusEngine::activeCallTokens() const {
 
 AudioSystemInfo H323PlusEngine::audioSystemInfo() const {
   return impl_->audioSystemInfo();
+}
+
+VideoSystemInfo H323PlusEngine::videoSystemInfo() const {
+  return impl_->videoSystemInfo();
+}
+
+bool H323PlusEngine::enableH264Video() {
+  return impl_->enableH264Video();
+}
+
+bool H323PlusEngine::submitH264AccessUnit(const H264AccessUnit& accessUnit) {
+  return impl_->submitH264AccessUnit(accessUnit);
 }
 
 bool H323PlusEngine::configureAudioDevices(const std::string& driver,

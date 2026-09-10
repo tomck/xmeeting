@@ -66,11 +66,23 @@ cannot silently route into H323Plus as an invalid H.323 destination.
 XMeeting's compact call-window layout and original iconography while replacing
 the implementation underneath. The current milestone starts a real H.323
 listener and supports outgoing calls, incoming accept/reject, hangup, H.323 URL
-handling, and call-state feedback. It advertises only the built-in G.711 A-law
+handling, and call-state feedback. It advertises the built-in G.711 A-law
 and µ-law codecs, force-loads PTLib's native CoreAudio driver, selects the
 system-default input and output devices, and requests microphone access before
 enabling calls. It refuses to place or answer a call when PTLib exposes only its
-silent `NullAudio` test device. Video media is not connected yet.
+silent `NullAudio` test device. The experimental video path uses AVFoundation,
+VideoToolbox H.264 Baseline, and a native H323Plus codec bridge. It offers video
+after producing a valid local encoded frame, renders received frames with
+`AVSampleBufferDisplayLayer`, keeps a bordered local preview at the lower left
+during remote video, and returns to the full-size local preview after hangup.
+See [VideoTesting.md](VideoTesting.md) for verification and outstanding work.
+
+The original XMeeting screenshots remain the presentation reference: a
+video-first idle window with compact status/dial controls, and an in-call view
+with a small lower-left self-view. Preserve that layout and workflow using
+current AppKit styling rather than recreating Aqua or brushed metal. The
+original in-call control overlay, remote-only selector, and two-view mode are
+not yet restored; adding the self-view does not complete that UI migration.
 
 `h323plus-smoke --audio-info` reports the selected devices and advertised
 codecs. `--input-device` and `--output-device` allow a particular CoreAudio path
@@ -90,7 +102,7 @@ release checks.
 
 ## Remaining application migration
 
-The modern app is now at the first audio-capable alpha milestone; the legacy
+The modern app is now an audio-capable alpha with experimental H.264 video; the legacy
 `XMeeting` app target remains only as a design and behavior reference because it
 is not compatible with current SDKs. Work remaining for a useful public release
 is prioritized as follows:
@@ -102,9 +114,10 @@ is prioritized as follows:
    call-duration/end-reason feedback.
 3. Add a preferences UI for listener ports, gatekeeper accounts, and the H.460/
    STUN settings needed to work reliably beyond a local network.
-4. Replace the QuickTime 7 capture/compression path with AVFoundation,
-   VideoToolbox, and CoreMedia; package a deliberately small universal video
-   codec set and display it with modern Core Animation or Metal.
+4. Resolve the observed 1280x720 camera output versus the configured 640x480
+   video format. Extend the successful Linux camera/video validation to
+   independent H.323 implementations, packet-loss recovery, permission changes,
+   and camera disconnect/reconnect.
 5. Replace AddressBook with Contacts and add permission-aware asynchronous
    access if preserving the historical address-book workflow remains valuable.
 6. Add automated regression tests, hardened-runtime signing, notarization,

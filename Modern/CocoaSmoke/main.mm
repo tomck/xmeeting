@@ -31,6 +31,25 @@ int main(int argc, const char *argv[]) {
       return 3;
     }
 
+    // Video remains hidden until the application explicitly confirms that its
+    // camera, VideoToolbox encoder/decoder, and renderer are ready.
+    if (client.videoAvailable || client.videoCodecs.count != 0) {
+      std::fprintf(stderr, "video was advertised before the native path was enabled\n");
+      return 4;
+    }
+
+    NSError *videoError = nil;
+    if (![client enableH264VideoWithError:&videoError] || !client.videoAvailable ||
+        ![client.videoCodecs containsObject:@"H.264-VideoToolbox"]) {
+      std::fprintf(stderr, "the native H.264 capability could not be enabled: %s\n",
+                   videoError.localizedDescription.UTF8String ?: "unknown error");
+      return 5;
+    }
+    if ([client submitH264NALUnits:@[[NSData dataWithBytes:"\x65" length:1]]]) {
+      std::fprintf(stderr, "an idle H.264 frame was queued without a video channel\n");
+      return 6;
+    }
+
     std::printf("H323Plus Cocoa bridge listening on port %u\n", port);
     [client stop];
   }
