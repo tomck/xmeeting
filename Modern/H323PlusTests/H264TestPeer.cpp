@@ -41,7 +41,7 @@ H264AccessUnit readAnnexB(const std::string& path) {
 class Endpoint final : public H323EndPoint {
   PCLASSINFO(Endpoint, H323EndPoint);
  public:
-  explicit Endpoint(std::shared_ptr<H264MediaBridge> bridge) {
+  explicit Endpoint(std::shared_ptr<H264MediaBridge> bridge, XMVideoResolution resolution) {
     SetLocalUserName("XMeetingVideoTest");
     SetSoundChannelPlayDriver("NullAudio");
     SetSoundChannelRecordDriver("NullAudio");
@@ -49,7 +49,7 @@ class Endpoint final : public H323EndPoint {
     SetSoundChannelRecordDevice("Null Audio");
     AddAllCapabilities(0, P_MAX_INDEX, "G.711-*");
     AddAllUserInputCapabilities(0, P_MAX_INDEX);
-    SetCapability(0, P_MAX_INDEX, xmeeting::h323::makeH264VideoToolboxCapability(bridge).release());
+    SetCapability(0, P_MAX_INDEX, xmeeting::h323::makeH264VideoToolboxCapability(bridge, resolution).release());
   }
   H323Connection::AnswerCallResponse OnAnswerCall(
       H323Connection&, const PString&, const H323SignalPDU&, H323SignalPDU&) override {
@@ -71,13 +71,15 @@ class PeerProcess final : public PProcess {
   PeerProcess() : PProcess("XMeeting", "H264TestPeer", 0, 1, ReleaseCode, 0) {}
   void Main() override {
     auto& args = GetArguments();
-    args.Parse("i-input:o-output:x-port:s-seconds:t-trace.");
+    args.Parse("i-input:o-output:x-port:s-seconds:r-resolution:t-trace.");
     const auto input = args.GetOptionString('i');
     const auto output = args.GetOptionString('o');
     const unsigned port = args.GetOptionString('x', "18222").AsUnsigned();
     const unsigned seconds = args.GetOptionString('s', "120").AsUnsigned();
-    if (input.IsEmpty() || output.IsEmpty() || port == 0 || port > 65535 || seconds == 0 || seconds > 3600) {
-      std::cerr << "Usage: h264-test-peer -i frame.h264 -o received.h264 [-x 18222] [-s 120] [-tttt]\n";
+    const PString selected = args.GetOptionString('r', "vga");
+    if (input.IsEmpty() || output.IsEmpty() || port == 0 || port > 65535 || seconds == 0 || seconds > 3600 ||
+        (selected != "vga" && selected != "720p")) {
+      std::cerr << "Usage: h264-test-peer -i frame.h264 -o received.h264 [-x 18222] [-s 120] [-r vga|720p] [-tttt]\n";
       SetTerminationValue(2);
       return;
     }
@@ -112,7 +114,7 @@ class PeerProcess final : public PProcess {
       ++errors;
       std::cerr << message << std::endl;
     });
-    Endpoint endpoint(bridge);
+    Endpoint endpoint(bridge, selected == "720p" ? XMVideoResolution720p : XMVideoResolutionVGA);
     auto *listener = new H323ListenerTCP(endpoint, PIPSocket::Address::GetAny(4), port);
     if (!endpoint.StartListener(listener)) {
       delete listener;

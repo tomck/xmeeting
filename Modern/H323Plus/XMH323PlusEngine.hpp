@@ -1,4 +1,5 @@
 #pragma once
+#include "XMVideoProfile.h"
 
 #include <cstdint>
 #include <memory>
@@ -100,7 +101,7 @@ class H323PlusEngine final {
   VideoSystemInfo videoSystemInfo() const;
   // Video is advertised only after the application has confirmed that its
   // native camera, encoder, decoder, and renderer are ready.
-  bool enableH264Video();
+  bool enableH264Video(XMVideoResolution resolution = XMVideoResolutionVGA);
   bool submitH264AccessUnit(const H264AccessUnit& accessUnit);
   bool configureAudioDevices(const std::string& driver,
                              const std::string& inputDevice,

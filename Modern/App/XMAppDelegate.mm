@@ -13,6 +13,7 @@
 namespace {
 
 NSString *const XMLocalAliasDefaultsKey = @"XMLocalAlias";
+NSString *const XMVideoResolutionDefaultsKey = @"XMVideoResolution";
 
 typedef NS_ENUM(NSInteger, XMApplicationCallState) {
   XMApplicationCallStateStarting,
@@ -321,6 +322,10 @@ NSTextField *labelWithString(NSString *value) {
 @property(nonatomic) BOOL microphoneAuthorized;
 @property(nonatomic) BOOL microphonePermissionPending;
 @property(nonatomic) BOOL h264VideoEnabled;
+@property(nonatomic) XMVideoResolution videoResolution;
+@property(nonatomic, strong) NSWindow *settingsWindow;
+@property(nonatomic, strong) NSPopUpButton *videoResolutionPopup;
+@property(nonatomic, strong) NSTextField *videoSettingsStatus;
 
 - (void)placeOrEndCall:(id)sender;
 - (void)restartListener:(id)sender;
@@ -335,6 +340,8 @@ NSTextField *labelWithString(NSString *value) {
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
   (void)notification;
+  self.videoResolution = [[NSUserDefaults.standardUserDefaults stringForKey:XMVideoResolutionDefaultsKey]
+                            isEqualToString:@"720p"] ? XMVideoResolution720p : XMVideoResolutionVGA;
   if ([NSProcessInfo.processInfo.arguments containsObject:@"--dark-preview"]) {
     NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
   }
@@ -349,7 +356,9 @@ NSTextField *labelWithString(NSString *value) {
     [self updateInterface];
     self.callButton.enabled = YES;
     [self.window makeKeyAndOrderFront:nil];
-    dispatch_async(dispatch_get_main_queue(), ^{
+    if ([NSProcessInfo.processInfo.arguments containsObject:@"--settings-preview"])
+      [self showSettings:nil];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 200 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
       if (![self writeWindowPreviewToPath:previewOutputPath]) {
         std::fprintf(stderr, "Could not write XMeeting window preview\n");
       }
@@ -358,10 +367,7 @@ NSTextField *labelWithString(NSString *value) {
     return;
   }
 
-  self.client = [[XMH323Client alloc] initWithDelegate:self];
-  self.cameraCapture = [[XMCameraCapture alloc] initWithDelegate:self];
-  self.h264Encoder = [[XMH264Encoder alloc] initWithDelegate:self];
-  self.h264Decoder = [[XMH264Decoder alloc] initWithDelegate:self];
+  [self rebuildMediaPipeline];
   [self prepareMicrophoneAuthorization];
   [self.cameraCapture start];
   [self startListener];
@@ -421,6 +427,9 @@ NSTextField *labelWithString(NSString *value) {
   [applicationMenu addItemWithTitle:@"About XMeeting"
                              action:@selector(orderFrontStandardAboutPanel:)
                       keyEquivalent:@""];
+  NSMenuItem *settingsItem = [applicationMenu addItemWithTitle:@"Settings…"
+      action:@selector(showSettings:) keyEquivalent:@","];
+  settingsItem.target = self;
   [applicationMenu addItem:NSMenuItem.separatorItem];
   NSMenuItem *showWindowItem = [[NSMenuItem alloc] initWithTitle:@"Show XMeeting"
                                                           action:@selector(showMainWindow:)
@@ -602,7 +611,8 @@ NSTextField *labelWithString(NSString *value) {
 }
 
 - (BOOL)writeWindowPreviewToPath:(NSString *)path {
-  NSView *view = self.window.contentView;
+  NSView *view = [NSProcessInfo.processInfo.arguments containsObject:@"--settings-preview"]
+                    ? self.settingsWindow.contentView : self.window.contentView;
   [view layoutSubtreeIfNeeded];
   NSBitmapImageRep *representation = [view bitmapImageRepForCachingDisplayInRect:view.bounds];
   if (representation == nil) {
@@ -700,6 +710,104 @@ NSTextField *labelWithString(NSString *value) {
   [NSApp activateIgnoringOtherApps:YES];
 }
 
+- (void)showSettings:(id)sender {
+  (void)sender;
+  if (self.settingsWindow == nil) {
+    self.settingsWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 450, 250)
+        styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
+        backing:NSBackingStoreBuffered defer:NO];
+    self.settingsWindow.title = @"XMeeting Settings";
+    self.settingsWindow.releasedWhenClosed = NO;
+    self.settingsWindow.tabbingMode = NSWindowTabbingModeDisallowed;
+    XMWindowContentView *content = [[XMWindowContentView alloc]
+        initWithFrame:self.settingsWindow.contentView.bounds];
+    content.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    self.settingsWindow.contentView = content;
+    NSTextField *heading = labelWithString(@"Video");
+    heading.font = [NSFont systemFontOfSize:17 weight:NSFontWeightSemibold];
+    NSTextField *label = labelWithString(@"Outgoing video resolution");
+    self.videoResolutionPopup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+    self.videoResolutionPopup.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.videoResolutionPopup addItemsWithTitles:@[@"VGA — 640 × 480", @"720p — 1280 × 720"]];
+    [self.videoResolutionPopup itemAtIndex:0].tag = XMVideoResolutionVGA;
+    [self.videoResolutionPopup itemAtIndex:1].tag = XMVideoResolution720p;
+    self.videoResolutionPopup.target = self;
+    self.videoResolutionPopup.action = @selector(changeVideoResolution:);
+    self.videoResolutionPopup.accessibilityLabel = @"Outgoing video resolution";
+    NSTextField *explanation = [NSTextField wrappingLabelWithString:
+        @"VGA uses less bandwidth. 720p provides a wider, sharper picture and requires a compatible H.264 peer. Both modes send up to 30 frames per second. The image is fitted without stretching."];
+    explanation.translatesAutoresizingMaskIntoConstraints = NO;
+    explanation.textColor = NSColor.secondaryLabelColor;
+    self.videoSettingsStatus = [NSTextField wrappingLabelWithString:@""];
+    self.videoSettingsStatus.translatesAutoresizingMaskIntoConstraints = NO;
+    self.videoSettingsStatus.font = [NSFont systemFontOfSize:NSFont.smallSystemFontSize];
+    NSStackView *stack = [NSStackView stackViewWithViews:
+        @[heading, label, self.videoResolutionPopup, explanation, self.videoSettingsStatus]];
+    stack.translatesAutoresizingMaskIntoConstraints = NO;
+    stack.orientation = NSUserInterfaceLayoutOrientationVertical;
+    stack.alignment = NSLayoutAttributeLeading;
+    stack.spacing = 12;
+    [self.settingsWindow.contentView addSubview:stack];
+    [NSLayoutConstraint activateConstraints:@[
+      [stack.leadingAnchor constraintEqualToAnchor:self.settingsWindow.contentView.leadingAnchor constant:24],
+      [stack.trailingAnchor constraintEqualToAnchor:self.settingsWindow.contentView.trailingAnchor constant:-24],
+      [stack.topAnchor constraintEqualToAnchor:self.settingsWindow.contentView.topAnchor constant:24],
+      [explanation.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
+      [self.videoSettingsStatus.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
+    ]];
+    [self.settingsWindow center];
+  }
+  [self.videoResolutionPopup selectItemWithTag:self.videoResolution];
+  [self updateVideoSettings];
+  [self.settingsWindow makeKeyAndOrderFront:nil];
+  [self.settingsWindow displayIfNeeded];
+}
+
+- (void)updateVideoSettings {
+  const BOOL hasCall = self.activeCallToken.length > 0 || self.client.activeCallTokens.count > 0;
+  self.videoResolutionPopup.enabled = !hasCall;
+  self.videoSettingsStatus.stringValue = hasCall
+      ? @"Hang up before changing the video resolution."
+      : @"Saved automatically. Changes apply to the next call.";
+}
+
+- (void)changeVideoResolution:(NSPopUpButton *)sender {
+  const XMVideoResolution resolution = (XMVideoResolution)sender.selectedTag;
+  if (self.activeCallToken.length > 0 || self.client.activeCallTokens.count > 0 ||
+      !XMVideoResolutionIsValid(resolution)) {
+    [sender selectItemWithTag:self.videoResolution];
+    [self updateVideoSettings];
+    return;
+  }
+  if (resolution == self.videoResolution) return;
+  self.videoResolution = resolution;
+  [NSUserDefaults.standardUserDefaults setObject:resolution == XMVideoResolution720p ? @"720p" : @"vga"
+                                          forKey:XMVideoResolutionDefaultsKey];
+  [self rebuildMediaPipeline];
+  [self startListener];
+  [self.cameraCapture start];
+}
+
+- (void)rebuildMediaPipeline {
+  // Drain the old capture queue before replacing the encoder. Invalidate old
+  // delegates and ignore already-dispatched output from a previous pipeline.
+  self.cameraCapture.delegate = nil;
+  [self.cameraCapture stop];
+  self.h264Encoder.delegate = nil;
+  [self.h264Encoder stop];
+  self.client.delegate = nil;
+  [self.client stop];
+  self.h264Decoder.delegate = nil;
+  [self.h264Decoder stop];
+  [self.videoView clearRemoteVideo];
+  self.videoView.previewLayer = nil;
+  self.h264VideoEnabled = NO;
+  self.client = [[XMH323Client alloc] initWithDelegate:self];
+  self.cameraCapture = [[XMCameraCapture alloc] initWithDelegate:self resolution:self.videoResolution];
+  self.h264Encoder = [[XMH264Encoder alloc] initWithDelegate:self resolution:self.videoResolution];
+  self.h264Decoder = [[XMH264Decoder alloc] initWithDelegate:self];
+}
+
 - (void)placeOrEndCall:(id)sender {
   (void)sender;
   if (self.activeCallToken.length > 0) {
@@ -743,6 +851,7 @@ NSTextField *labelWithString(NSString *value) {
 }
 
 - (void)updateInterface {
+  [self updateVideoSettings];
   BOOL busy = self.callState == XMApplicationCallStateStarting ||
               self.callState == XMApplicationCallStateCalling ||
               self.callState == XMApplicationCallStateIncoming;
@@ -788,6 +897,7 @@ NSTextField *labelWithString(NSString *value) {
 - (void)cameraCapture:(XMCameraCapture *)capture
     didChangePreviewAvailability:(BOOL)available
                          message:(NSString *)message {
+  if (capture != self.cameraCapture) return;
   if (available) {
     self.videoView.previewLayer = capture.previewLayer;
   } else {
@@ -812,9 +922,10 @@ NSTextField *labelWithString(NSString *value) {
   NSArray<NSData *> *copiedNALUnits = [[NSArray alloc] initWithArray:nalUnits
                                                           copyItems:YES];
   dispatch_async(dispatch_get_main_queue(), ^{
+    if (encoder != self.h264Encoder) return;
     if (!self.h264VideoEnabled) {
       NSError *error = nil;
-      if (![self.client enableH264VideoWithError:&error]) {
+      if (![self.client enableH264VideoWithResolution:self.videoResolution error:&error]) {
         std::fprintf(stderr, "XMeeting H.264 bridge: %s\n",
                      error.localizedDescription.UTF8String);
         return;

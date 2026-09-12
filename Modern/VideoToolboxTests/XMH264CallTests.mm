@@ -30,6 +30,8 @@ using namespace xmeeting::h323;
 }
 @property(nonatomic, strong) XMH264Encoder *encoder;
 @property(nonatomic, strong) XMH264Decoder *decoder;
+@property(nonatomic) XMVideoResolution resolution;
+@property(nonatomic) XMVideoResolution receiveResolution;
 @end
 
 @implementation XMCallVideoHarness
@@ -63,7 +65,8 @@ using namespace xmeeting::h323;
     didDecodePixelBuffer:(CVPixelBufferRef)buffer presentationTimeStamp:(CMTime)time {
   (void)decoder;
   (void)time;
-  if (CVPixelBufferGetWidth(buffer) != 640 || CVPixelBufferGetHeight(buffer) != 480) {
+  const auto profile = XMVideoProfileForResolution(self.receiveResolution);
+  if (CVPixelBufferGetWidth(buffer) != profile.width || CVPixelBufferGetHeight(buffer) != profile.height) {
     ++errors;
   } else {
     ++decodedFrames;
@@ -199,13 +202,23 @@ int main(int argc, char **argv) {
     TestProcess process;
     process.PreInitialise(argc, argv, nullptr);
     std::string peer;
+    XMVideoResolution resolution = XMVideoResolutionVGA;
+    bool mixed = false;
     for (int i = 1; i < argc; ++i) {
       if (std::strcmp(argv[i], "--trace") == 0) PTrace::Initialise(4);
+      else if (std::strcmp(argv[i], "--720p") == 0) resolution = XMVideoResolution720p;
+      else if (std::strcmp(argv[i], "--mixed") == 0) mixed = true;
       else if (std::strcmp(argv[i], "--peer") == 0 && i+1 < argc) peer = argv[++i];
-      else { std::fprintf(stderr, "Usage: xmeeting-h264-call-tests [--trace] [--peer host:port]\n"); return 2; }
+      else { std::fprintf(stderr, "Usage: xmeeting-h264-call-tests [--trace] [--720p|--mixed] [--peer host:port]\n"); return 2; }
     }
     XMCallVideoHarness *a = [[XMCallVideoHarness alloc] init];
     XMCallVideoHarness *b = [[XMCallVideoHarness alloc] init];
+    a.resolution = resolution;
+    b.resolution = mixed ? XMVideoResolution720p : resolution;
+    a.receiveResolution = b.resolution;
+    b.receiveResolution = a.resolution;
+    a.encoder = [[XMH264Encoder alloc] initWithDelegate:a resolution:a.resolution];
+    b.encoder = [[XMH264Encoder alloc] initWithDelegate:b resolution:b.resolution];
     if (!prepareVideo(a) || !prepareVideo(b)) {
       std::fprintf(stderr, "FAIL: could not encode synthetic H.264 video\n");
       return 1;
@@ -217,7 +230,7 @@ int main(int argc, char **argv) {
     if (localPeer) peer = "127.0.0.1:" + std::to_string(port + 1);
     bool ok = caller.configureAudioDevices("NullAudio", "Null Audio", "Null Audio") &&
               callee.configureAudioDevices("NullAudio", "Null Audio", "Null Audio") &&
-              caller.enableH264Video() && callee.enableH264Video() &&
+              caller.enableH264Video(a.resolution) && callee.enableH264Video(b.resolution) &&
               caller.start("XMeetingVideoCaller", port) &&
               callee.start("XMeetingVideoCallee", port + 1);
     for (unsigned round = 1; ok && round <= 2; ++round)

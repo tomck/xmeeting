@@ -1,0 +1,142 @@
+name: macOS alpha
+
+on:
+  push:
+    branches: [modernize/macos11-h323plus]
+    tags: ['v*-alpha.*']
+  pull_request:
+    paths: ['Modern/**', 'Scripts/**', 'Dependencies/**', 'Resources/**', 'Documentation/**', '.github/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-alpha-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build universal / test Intel
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set alpha version
+        id: version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$REF_TYPE" == tag ]]; then
+            if [[ ! "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
+              echo "Expected a tag such as v0.5.0-alpha.1" >&2
+              exit 1
+            fi
+            version="${REF_NAME#v}"
+          else
+            version="0.5.0-alpha.0.dev.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "numeric=${version%%-alpha.*}" >> "$GITHUB_OUTPUT"
+          echo "sdk=$(xcrun --sdk macosx --show-sdk-version)" >> "$GITHUB_OUTPUT"
+          echo "xcode=$(xcodebuild -version | tail -1 | tr ' ' '-')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        id: sdk
+        with:
+          path: .build/h323plus/macos-universal
+          key: universal-sdk-${{ runner.os }}-${{ runner.arch }}-${{ steps.version.outputs.sdk }}-${{ steps.version.outputs.xcode }}-${{ hashFiles('Scripts/build-h323plus-universal.sh', 'Dependencies/patches/**') }}
+      - name: Build pinned PTLib and H323Plus
+        if: steps.sdk.outputs.cache-hit != 'true'
+        env:
+          XMEETING_BUILD_JOBS: '3'
+        run: bash Scripts/build-h323plus-universal.sh
+      - name: Build app and tests
+        env:
+          APP_VERSION: ${{ steps.version.outputs.numeric }}
+        run: |
+          cmake -S Modern -B .build/release -DCMAKE_BUILD_TYPE=Release \
+            -DXMEETING_APP_VERSION="$APP_VERSION" -DXMEETING_APP_BUILD="$GITHUB_RUN_NUMBER"
+          cmake --build .build/release --parallel 3
+      - name: Test Intel natively
+        run: |
+          test "$(uname -m)" = x86_64
+          ctest --test-dir .build/release --output-on-failure --timeout 60
+      - name: Package alpha and corresponding sources
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: bash Scripts/package-macos-alpha.sh .build/release .build/dist "$VERSION"
+      - name: Pack same universal test binaries for Apple Silicon
+        run: |
+          tar -czf .build/native-tests.tar.gz -C .build/release \
+            xmeeting-h264-rtp-tests xmeeting-h323plus-h264-tests \
+            xmeeting-videotoolbox-tests xmeeting-h264-call-tests
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: native-tests
+          path: .build/native-tests.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: macos-alpha-downloads
+          path: .build/dist/*
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: intel-test-log
+          path: .build/release/Testing/Temporary/LastTest.log
+
+  apple-silicon:
+    name: Test Apple Silicon natively
+    needs: build
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: native-tests
+      - name: Run all six cases from the same universal build
+        run: |
+          test "$(uname -m)" = arm64
+          mkdir tests
+          tar -xzf native-tests.tar.gz -C tests
+          ./tests/xmeeting-h264-rtp-tests
+          ./tests/xmeeting-h323plus-h264-tests
+          ./tests/xmeeting-videotoolbox-tests
+          ./tests/xmeeting-h264-call-tests
+          ./tests/xmeeting-h264-call-tests --720p
+          ./tests/xmeeting-h264-call-tests --mixed
+
+  publish:
+    name: Publish tagged prerelease
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [build, apple-silicon]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: macos-alpha-downloads
+          path: dist
+      - name: Verify and publish alpha assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          (cd dist && sha256sum -c SHA256SUMS.txt)
+          gh release create "$TAG" dist/* --verify-tag --prerelease --latest=false \
+            --title "XMeeting ${TAG#v} — experimental macOS build" \
+            --notes-file Documentation/AlphaTesting.md

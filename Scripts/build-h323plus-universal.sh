@@ -6,8 +6,10 @@ readonly SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 readonly SOURCE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 readonly PTLIB_REPOSITORY="https://github.com/willamowius/ptlib.git"
 readonly PTLIB_TAG="v2_10_9_6"
+readonly PTLIB_COMMIT="c01afdc78cc4fb56e497b04aea69ef575fc53bf0"
 readonly H323PLUS_REPOSITORY="https://github.com/willamowius/h323plus.git"
 readonly H323PLUS_TAG="v1_28_0"
+readonly H323PLUS_COMMIT="0919d7671a5bea325240e32b72e7d1796942cb85"
 readonly DEPLOYMENT_TARGET="${XMEETING_DEPLOYMENT_TARGET:-11.0}"
 readonly ARCHITECTURES="${XMEETING_ARCHITECTURES:-x86_64 arm64}"
 readonly WORK_ROOT="${XMEETING_H323PLUS_WORK_ROOT:-$SOURCE_ROOT/.build/h323plus/work}"
@@ -121,6 +123,10 @@ normalise_ptlib_build_options() {
 
 fetch_source "$PTLIB_REPOSITORY" "$PTLIB_TAG" "$SOURCE_CACHE/ptlib"
 fetch_source "$H323PLUS_REPOSITORY" "$H323PLUS_TAG" "$SOURCE_CACHE/h323plus"
+
+# A moved upstream tag must not silently change the released dependency source.
+test "$(git -C "$SOURCE_CACHE/ptlib" rev-parse "$PTLIB_TAG^{commit}")" = "$PTLIB_COMMIT"
+test "$(git -C "$SOURCE_CACHE/h323plus" rev-parse "$H323PLUS_TAG^{commit}")" = "$H323PLUS_COMMIT"
 
 readonly BUILD_TRIPLET="$(sh "$SOURCE_CACHE/ptlib/config.guess")"
 ptlib_archives=()
@@ -243,12 +249,25 @@ cp -R "$header_source/h323plus/include" "$staging_output/include/openh323"
 lipo -create "${ptlib_archives[@]}" -output "$staging_output/lib/libptlib.a"
 lipo -create "${h323plus_archives[@]}" -output "$staging_output/lib/libh323plus.a"
 
+# Keep the exact upstream sources with the cached SDK for binary distributions.
+# XMeeting's release source archive also carries the patches and build script.
+mkdir -p "$staging_output/sources" "$staging_output/licenses"
+git -C "$SOURCE_CACHE/ptlib" archive --format=tar.gz --prefix="ptlib-$PTLIB_TAG/" \
+  "$PTLIB_COMMIT" > "$staging_output/sources/ptlib-$PTLIB_TAG.tar.gz"
+git -C "$SOURCE_CACHE/h323plus" archive --format=tar.gz --prefix="h323plus-$H323PLUS_TAG/" \
+  "$H323PLUS_COMMIT" > "$staging_output/sources/h323plus-$H323PLUS_TAG.tar.gz"
+git -C "$SOURCE_CACHE/ptlib" show "$PTLIB_COMMIT:mpl-1.0.htm" > "$staging_output/licenses/PTLib-MPL-1.0.html"
+git -C "$SOURCE_CACHE/h323plus" show "$H323PLUS_COMMIT:mpl-1.0.htm" > "$staging_output/licenses/H323Plus-MPL-1.0.html"
+git -C "$SOURCE_CACHE/h323plus" show "$H323PLUS_COMMIT:MPL-1.1.html" > "$staging_output/licenses/H323Plus-MPL-1.1.html"
+
 {
   printf 'PTLib=%s\n' "$PTLIB_TAG"
+  printf 'PTLibCommit=%s\n' "$PTLIB_COMMIT"
   printf 'PTLibPatches=%s,%s\n' \
     "$(basename "$PTLIB_PLATFORM_PATCH_FILE")" \
     "$(basename "$PTLIB_COREAUDIO_PATCH_FILE")"
   printf 'H323Plus=%s\n' "$H323PLUS_TAG"
+  printf 'H323PlusCommit=%s\n' "$H323PLUS_COMMIT"
   printf 'H323PlusPatches=%s\n' "$(basename "$H323PLUS_PATCH_FILE")"
   printf 'DeploymentTarget=%s\n' "$DEPLOYMENT_TARGET"
   printf 'Architectures=%s\n' "$ARCHITECTURES"

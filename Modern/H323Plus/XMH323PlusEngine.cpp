@@ -267,18 +267,20 @@ class H323PlusEngine::Impl final : public H323EndPoint {
     return info;
   }
 
-  bool enableH264Video() {
+  bool enableH264Video(XMVideoResolution resolution) {
 #ifdef H323_VIDEO
+    if (!XMVideoResolutionIsValid(resolution)) return false;
     if (h264VideoEnabled_) {
-      return true;
+      return resolution == videoResolution_;
     }
     std::unique_ptr<H323Capability> capability =
-        makeH264VideoToolboxCapability(h264Bridge_);
+        makeH264VideoToolboxCapability(h264Bridge_, resolution);
     if (!capability) {
       return false;
     }
     SetCapability(0, P_MAX_INDEX, capability.release());
     h264VideoEnabled_ = true;
+    videoResolution_ = resolution;
     return true;
 #else
     return false;
@@ -386,6 +388,7 @@ class H323PlusEngine::Impl final : public H323EndPoint {
   bool audioRecordingConfigured_ = false;
   std::shared_ptr<H264MediaBridge> h264Bridge_;
   bool h264VideoEnabled_ = false;
+  XMVideoResolution videoResolution_ = XMVideoResolutionVGA;
 };
 
 H323PlusEngine::H323PlusEngine(EventSink& sink)
@@ -445,8 +448,8 @@ VideoSystemInfo H323PlusEngine::videoSystemInfo() const {
   return impl_->videoSystemInfo();
 }
 
-bool H323PlusEngine::enableH264Video() {
-  return impl_->enableH264Video();
+bool H323PlusEngine::enableH264Video(XMVideoResolution resolution) {
+  return impl_->enableH264Video(resolution);
 }
 
 bool H323PlusEngine::submitH264AccessUnit(const H264AccessUnit& accessUnit) {

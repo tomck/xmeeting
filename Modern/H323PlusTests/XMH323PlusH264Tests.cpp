@@ -30,7 +30,9 @@ class TestProcess final : public PProcess {
   void Main() override {}
 };
 
-void testCapabilityPdu(H323Capability& capability) {
+void testCapabilityPdu(H323Capability& capability, XMVideoResolution resolution = XMVideoResolutionVGA) {
+  const auto profile = XMVideoProfileForResolution(resolution);
+  const auto receiveProfile = XMVideoProfileForResolution(XMVideoResolution720p);
   require(capability.GetMainType() == H323Capability::e_Video,
           "The native H.264 capability is not a video capability");
   require(capability.GetFormatName() == "H.264-VideoToolbox",
@@ -49,6 +51,20 @@ void testCapabilityPdu(H323Capability& capability) {
           "The H.264 capability uses the wrong H.241 identifier");
   require(generic.HasOptionalField(H245_GenericCapability::e_collapsing),
           "The H.264 capability omitted its profile and level");
+  require(generic.m_maxBitRate == receiveProfile.bitRate / 100,
+          "The H.264 capability advertised the wrong bitrate");
+  bool foundLevel = false;
+  for (PINDEX i = 0; i < generic.m_collapsing.GetSize(); ++i) {
+    const auto& parameter = generic.m_collapsing[i];
+    if (parameter.m_parameterIdentifier.GetTag() == H245_ParameterIdentifier::e_standard &&
+        (const PASN_Integer&)parameter.m_parameterIdentifier == 42) {
+      foundLevel = (const PASN_Integer&)parameter.m_parameterValue == receiveProfile.h241Level;
+    }
+  }
+  require(foundLevel, "The advertised decoder ceiling does not support 720p");
+  require(capability.GetMediaFormat().GetOptionInteger(OpalVideoFormat::FrameWidthOption) == profile.width &&
+          capability.GetMediaFormat().GetOptionInteger(OpalVideoFormat::FrameHeightOption) == profile.height,
+          "The codec dimensions do not match the selected resolution");
 
   H245_RTPPayloadType packetization;
   require(H323SetRTPPacketization(packetization, capability.GetMediaFormat(),
@@ -60,6 +76,64 @@ void testCapabilityPdu(H323Capability& capability) {
   const PASN_ObjectId& packetizationIdentifier = packetization.m_payloadDescriptor;
   require(packetizationIdentifier.AsString() == "0.0.8.241.0.0.0.1",
           "The H.264 capability does not signal non-interleaved packetization");
+}
+
+void testProfileIsolationAndLimits() {
+  using namespace xmeeting::h323;
+  auto bridge = std::make_shared<H264MediaBridge>();
+  auto vga = makeH264VideoToolboxCapability(bridge, XMVideoResolutionVGA);
+  auto hd = makeH264VideoToolboxCapability(bridge, XMVideoResolution720p);
+  testCapabilityPdu(*vga);
+  testCapabilityPdu(*hd, XMVideoResolution720p);
+  testCapabilityPdu(*vga); // HD construction must not mutate the VGA template.
+  require(!makeH264VideoToolboxCapability(bridge, (XMVideoResolution)99),
+          "An invalid resolution was accepted");
+
+  H245_Capability vgaPdu, hdPdu;
+  require(vga->OnSendingPDU(vgaPdu) && hd->OnSendingPDU(hdPdu), "Profile serialization failed");
+  // Simulate a legacy VGA-only receiver. New XMeeting can receive 720p
+  // regardless of its selected outgoing resolution.
+  H245_VideoCapability& legacyVideo = vgaPdu;
+  H245_GenericCapability& legacy = legacyVideo;
+  legacy.m_maxBitRate = 5120;
+  for (PINDEX i = 0; i < legacy.m_collapsing.GetSize(); ++i) {
+    auto& parameter = legacy.m_collapsing[i];
+    if ((const PASN_Integer&)parameter.m_parameterIdentifier == 42)
+      (PASN_Integer&)parameter.m_parameterValue = 64;
+  }
+  H245_DataType hdChannel;
+  require(hd->OnSendingPDU(hdChannel), "Could not serialize HD OLC");
+  require(hd->OnReceivedPDU(vgaPdu), "Could not read VGA peer limits");
+  H323EndPoint endpoint;
+  H323Connection connection(endpoint, 1);
+  std::unique_ptr<H323Codec> encoder(hd->CreateCodec(H323Codec::Encoder));
+  require(!encoder->Open(connection), "720p transmission exceeded the peer's VGA level");
+  require(!bridge->isTransmitting(), "Rejected 720p channel activated the bridge");
+
+  require(vga->OnReceivedPDU(hdChannel, true),
+          "Choosing VGA output incorrectly disabled 720p reception");
+  H245_VideoCapability& oversizedVideo = hdChannel;
+  H245_GenericCapability& oversized = oversizedVideo;
+  for (PINDEX i = 0; i < oversized.m_collapsing.GetSize(); ++i) {
+    auto& parameter = oversized.m_collapsing[i];
+    if ((const PASN_Integer&)parameter.m_parameterIdentifier == 42)
+      (PASN_Integer&)parameter.m_parameterValue = 85;
+  }
+  require(!vga->OnReceivedPDU(hdChannel, true), "An unsupported Level 4 channel was accepted");
+  auto outgoing = makeH264VideoToolboxCapability(bridge, XMVideoResolutionVGA);
+  require(outgoing->OnReceivedPDU(hdPdu), "Could not read HD peer limits");
+  H245_DataType olc;
+  require(outgoing->OnSendingPDU(olc), "Could not serialize VGA OLC");
+  auto receiver = makeH264VideoToolboxCapability(bridge, XMVideoResolutionVGA);
+  require(receiver->OnReceivedPDU(olc, true),
+          "VGA OLC incorrectly inherited the HD peer's level");
+  require(receiver->GetMediaFormat().GetOptionInteger("Generic Parameter 42") == 64,
+          "VGA output signaled an HD encoding level");
+
+  auto limited = makeH264VideoToolboxCapability(bridge, XMVideoResolutionVGA);
+  limited->GetWritableMediaFormat().SetOptionInteger(OpalVideoFormat::MaxBitRateOption, 64000);
+  std::unique_ptr<H323Codec> limitedEncoder(limited->CreateCodec(H323Codec::Encoder));
+  require(!limitedEncoder->Open(connection), "Transmission exceeded the peer's bitrate limit");
 }
 
 void testCodecRoundTrip(H323Capability& capability,
@@ -136,6 +210,7 @@ void testCodecRoundTrip(H323Capability& capability,
 
 int main() {
   TestProcess process;
+  testProfileIsolationAndLimits();
   auto bridge = std::make_shared<xmeeting::h323::H264MediaBridge>();
   std::unique_ptr<H323Capability> capability =
       xmeeting::h323::makeH264VideoToolboxCapability(bridge);

@@ -1,5 +1,6 @@
 #import <CoreMedia/CoreMedia.h>
 #import <Foundation/Foundation.h>
+#import "XMVideoProfile.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -11,8 +12,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak, nullable) id<XMH264EncoderDelegate> delegate;
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger encodedFrameCount;
+@property(nonatomic, readonly) XMVideoResolution resolution;
 
+- (instancetype)initWithDelegate:(nullable id<XMH264EncoderDelegate>)delegate;
 - (instancetype)initWithDelegate:(nullable id<XMH264EncoderDelegate>)delegate
+                     resolution:(XMVideoResolution)resolution
     NS_DESIGNATED_INITIALIZER;
 - (instancetype)init;
 - (BOOL)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer;

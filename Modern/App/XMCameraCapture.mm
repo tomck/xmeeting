@@ -8,6 +8,8 @@
 @property(nonatomic, strong) AVCaptureSession *session;
 @property(nonatomic, strong) AVCaptureVideoDataOutput *videoOutput;
 @property(nonatomic) dispatch_queue_t sessionQueue;
+@property(nonatomic) XMVideoResolution resolution;
+@property(atomic) BOOL stopped;
 
 @end
 
@@ -18,9 +20,16 @@
 }
 
 - (instancetype)initWithDelegate:(id<XMCameraCaptureDelegate>)delegate {
+  return [self initWithDelegate:delegate resolution:XMVideoResolutionVGA];
+}
+
+- (instancetype)initWithDelegate:(id<XMCameraCaptureDelegate>)delegate
+                     resolution:(XMVideoResolution)resolution {
+  if (!XMVideoResolutionIsValid(resolution)) return nil;
   self = [super init];
   if (self != nil) {
     _delegate = delegate;
+    _resolution = resolution;
     _session = [[AVCaptureSession alloc] init];
     _previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:_session];
     _previewLayer.videoGravity = AVLayerVideoGravityResizeAspect;
@@ -54,6 +63,7 @@
 }
 
 - (void)stop {
+  self.stopped = YES;
   // Drain capture callbacks before the application destroys the encoder they
   // use. Shutdown is called by the application on the main thread.
   dispatch_sync(self.sessionQueue, ^{
@@ -67,6 +77,7 @@
 
 - (void)configureAndStartSession {
   dispatch_async(self.sessionQueue, ^{
+    if (self.stopped) return;
     if (self.session.isRunning) {
       [self publishAvailability:YES message:@"Camera preview ready"];
       return;
@@ -87,9 +98,6 @@
     }
 
     [self.session beginConfiguration];
-    if ([self.session canSetSessionPreset:AVCaptureSessionPreset640x480]) {
-      self.session.sessionPreset = AVCaptureSessionPreset640x480;
-    }
     for (AVCaptureInput *existingInput in self.session.inputs) {
       [self.session removeInput:existingInput];
     }
@@ -100,6 +108,11 @@
     if ([self.session canAddInput:input]) {
       [self.session addInput:input];
     }
+    // Query preset support after attaching the actual camera. The encoder
+    // still enforces dimensions if the camera supplies another native size.
+    AVCaptureSessionPreset preset = self.resolution == XMVideoResolution720p
+        ? AVCaptureSessionPreset1280x720 : AVCaptureSessionPreset640x480;
+    if ([self.session canSetSessionPreset:preset]) self.session.sessionPreset = preset;
     if (self.session.inputs.count != 0) {
       AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
       output.alwaysDiscardsLateVideoFrames = YES;

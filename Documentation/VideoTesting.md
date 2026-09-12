@@ -1,10 +1,33 @@
 # Experimental H.264 video verification
 
-The native path connects AVFoundation capture, VideoToolbox H.264 Baseline 3.0,
+The native path connects AVFoundation capture, VideoToolbox H.264 Baseline,
 an H.241 capability, RFC 6184 RTP, VideoToolbox decoding, and AppKit display.
-The initial target is 640x480, up to 30 fps, and 512 kbit/s. Local preview alone
-does not prove a video call. Capability advertisement is explicitly enabled
+Local preview alone does not prove a video call. Capability advertisement is explicitly enabled
 after the application produces an encoded access unit.
+
+## Video settings
+
+Choose **XMeeting > Settings… > Outgoing video resolution** (Command-comma).
+VGA is the default. The selection is saved automatically, applies before the
+next call, and cannot be changed while a call is active or connecting.
+
+| Output | Dimensions | H.264 Baseline level | Bitrate target | Maximum frame rate |
+| --- | --- | --- | --- | --- |
+| VGA | 640x480 | 3.0 | 512 kbit/s | 30 fps |
+| 720p | 1280x720 | 3.1 | 1.5 Mbit/s | 30 fps |
+
+Capture requests the selected preset after attaching the actual camera.
+VideoToolbox then scales and letterboxes input into a fixed-size pixel buffer,
+so a camera providing a different native format cannot silently change the
+encoded output. Configuration errors prevent video enablement. Incoming video
+can be up to 720p regardless of the selected outgoing resolution.
+
+The open-channel description uses the actual output profile; the advertised
+receive ceiling is Baseline 3.1. The H.241 level values are 64 (3.0) and 71 (3.1),
+as specified by [H.241, Table 8-4](https://www.itu.int/rec/dologin_pub.asp?id=T-REC-H.241-200605-S%21%21PDF-E&lang=e&type=items).
+An encoder refuses to transmit beyond the peer's advertised level/profile or
+bitrate limits. If an older endpoint cannot receive 720p, select VGA and redial;
+automatic mid-call resolution adaptation is not implemented.
 
 ## Automated macOS tests
 
@@ -25,9 +48,11 @@ Tests use generated video and silent audio, without camera or microphone access.
 | Test | What it checks |
 | --- | --- |
 | `xmeeting-h264-rtp-tests` | AVCC conversion, single-NAL/FU-A, receive STAP-A, truncated input, sequence gaps/wrap, timestamp boundaries, and receive size limits |
-| `xmeeting-h323plus-h264-tests` | H.241 capability/packetization signaling, real codec Read/Write, shutdown, bounded transmit queue, IDR recovery after overflow |
-| `xmeeting-videotoolbox-tests` | Real VideoToolbox encode/decode of a generated 640x480 frame |
+| `xmeeting-h323plus-h264-tests` | Per-profile signaling, independent receive limits, unsupported-level/bitrate rejection, real codec Read/Write, shutdown, bounded queue, IDR recovery |
+| `xmeeting-videotoolbox-tests` | BGRA/NV12 camera-size normalization into both output sizes, actual SPS profile/level, decoded dimensions, duplicate-timestamp suppression |
 | `xmeeting-h264-call-tests` | Two consecutive calls between real H323Plus endpoints, bidirectional RTP/VideoToolbox decode, G.711 channels, hangup, and redial |
+| `xmeeting-h264-720p-call-tests` | The same two-call checks with 720p output in both directions |
+| `xmeeting-h264-mixed-call-tests` | Two calls with VGA output at one end and 720p output at the other |
 
 The call test uses temporary high listener ports, has a 50-second CTest timeout,
 and requires at least ten decoded frames at each endpoint in each call. It can
@@ -57,7 +82,7 @@ Create a new staging directory on the Linux host. Copy these files into it:
 
 - `Modern/H323PlusTests/H264TestPeer.cpp` and `Makefile.linux`
 - `Modern/H323Plus/XMH323PlusH264.cpp` and `.hpp`
-- `Modern/Media/XMH264RTP.cpp` and `.hpp`
+- `Modern/Media/XMH264RTP.cpp`, `.hpp`, and `XMVideoProfile.h`
 
 With the VM's existing PTLib/H323Plus builds and Debian's `ffmpeg` installed:
 
@@ -69,6 +94,10 @@ ffmpeg -v error -f lavfi -i testsrc2=size=640x480:rate=10 -frames:v 1 \
   -tune zerolatency -x264-params keyint=1 -f h264 test-frame.h264
 ./obj_linux_x86_64_s/h264-test-peer -i test-frame.h264 -o received.h264 -x 18222 -s 120
 ```
+
+For a 720p fixture, generate `testsrc2=size=1280x720:rate=10` with `-level:v 3.1`
+and run the peer with `-r 720p`. The default is `-r vga`. Use the matching mode
+for the Mac test (`xmeeting-h264-call-tests --720p --peer host:port`).
 
 Place the call during that 120-second interval. Use a fresh output filename for
 each run; the peer writes the specified recording file. It exits automatically
@@ -115,10 +144,17 @@ verification and the temporary listener stopped. This confirms actual camera
 transmission to Linux as well as remote test-pattern display on the Mac; it
 does not establish interoperability with an independent H.323 stack.
 
-The observed 1280x720 camera output differs from the configured 640x480 video
-format. Capture/encoder output must be reconciled with the negotiated format
-and H.264 limits before a release; successful decoding by this fixture does
-not demonstrate acceptance by stricter endpoints.
+That 1280x720 output revealed that the earlier camera preset did not enforce
+the configured VGA format. The new fixed-size encoder input and shared output
+profiles address this mismatch. Repeat a physical-camera call in each settings
+mode to verify the full device/UI path in addition to the synthetic tests.
+
+On 2026-09-11 all six tests passed on the Intel Mac, including VGA/VGA,
+720p/720p, and mixed VGA/720p two-call loops. Synthetic 1280x720 NV12 and
+1920x1080 BGRA inputs decoded at the selected VGA output size; VGA BGRA and
+720p NV12 inputs decoded at the selected 720p size. The tests also checked the
+actual encoded SPS profile/level and rejected unsupported peer limits. Both
+settings selections were visually checked in the native settings window.
 
 For a visual camera call, run the peer with `-o /dev/null` to discard incoming
 video, open the rebuilt app, wait for "Ready for H.323 audio and H.264 video
@@ -129,7 +165,7 @@ Hang up and check that the local preview returns to full size, then redial.
 The plain address `192.168.0.31` still reaches the
 existing audio-only endpoint on port 1720.
 
-Still required: resolve the camera-format mismatch, independent H.323 endpoint
+Still required: physical-camera checks of both settings modes, independent H.323 endpoint
 interoperability, physical Apple Silicon and
 macOS 11 testing, camera/permission changes, and sustained audio/video quality.
 RTP discontinuities now discard damaged access units; transmit overflow waits

@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import "XMVideoProfile.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -95,6 +96,8 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
 // The application calls this only after its local VideoToolbox pipeline has
 // produced a usable H.264 access unit and its receive renderer is ready.
 - (BOOL)enableH264VideoWithError:(NSError *_Nullable *_Nullable)error;
+- (BOOL)enableH264VideoWithResolution:(XMVideoResolution)resolution
+                              error:(NSError *_Nullable *_Nullable)error;
 // Returns NO while no negotiated H.323 video transmitter is active; frames
 // are deliberately dropped instead of being queued during audio-only calls.
 - (BOOL)submitH264NALUnits:(NSArray<NSData *> *)nalUnits;

@@ -5,6 +5,9 @@ set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Supported macOS archite
 
 project(XMeetingModernization VERSION 0.1 LANGUAGES CXX OBJCXX)
 
+set(XMEETING_APP_VERSION "0.5.0" CACHE STRING "Numeric application version")
+set(XMEETING_APP_BUILD "1" CACHE STRING "Application build number")
+
 include(CTest)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -157,7 +160,10 @@ if(BUILD_TESTING)
                          -Wno-inconsistent-missing-override)
   target_link_libraries(xmeeting-h264-call-tests PRIVATE XMVideoToolbox XMH323PlusEngine)
   add_test(NAME xmeeting-h264-call-tests COMMAND xmeeting-h264-call-tests)
-  set_tests_properties(xmeeting-h264-call-tests PROPERTIES TIMEOUT 50 RUN_SERIAL TRUE)
+  add_test(NAME xmeeting-h264-720p-call-tests COMMAND xmeeting-h264-call-tests --720p)
+  add_test(NAME xmeeting-h264-mixed-call-tests COMMAND xmeeting-h264-call-tests --mixed)
+  set_tests_properties(xmeeting-h264-call-tests xmeeting-h264-720p-call-tests xmeeting-h264-mixed-call-tests
+                       PROPERTIES TIMEOUT 50 RUN_SERIAL TRUE)
 
   # Also compile the portable Linux fixture peer here to catch API drift.
   add_executable(h264-test-peer H323PlusTests/H264TestPeer.cpp)
@@ -245,11 +251,11 @@ set_target_properties(
   PROPERTIES
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_BUNDLE_NAME "XMeeting"
-    MACOSX_BUNDLE_BUNDLE_VERSION "0.5.0.1"
+    MACOSX_BUNDLE_BUNDLE_VERSION "${XMEETING_APP_BUILD}"
     MACOSX_BUNDLE_GUI_IDENTIFIER "net.sourceforge.xmeeting.XMeeting"
     MACOSX_BUNDLE_ICON_FILE "XMeeting.icns"
     MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_LIST_DIR}/App/Info.plist.in"
-    MACOSX_BUNDLE_SHORT_VERSION_STRING "0.5.0-alpha"
+    MACOSX_BUNDLE_SHORT_VERSION_STRING "${XMEETING_APP_VERSION}"
     OUTPUT_NAME "XMeeting"
 )
 

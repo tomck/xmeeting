@@ -16,15 +16,27 @@ H323Plus RTP. Local calls and two calls to a Linux test peer verify video in bot
 directions, including independent FFmpeg decoding on Linux. Remote video display
 and the local picture-in-picture preview have also been confirmed by a user.
 Linux independently decoded 434 frames from a physical-camera call without
-errors. The observed 1280x720 camera output differs from the configured 640x480
-format; that mismatch, broader interoperability, audio-device selection, and
-release signing remain in progress. See the
+errors. **XMeeting > Settings…** now selects VGA (640x480) or 720p (1280x720)
+outgoing video. Output is resized to the selected format and uses a matching
+H.264 encoding level; incoming video can still be up to 720p in either mode.
+Physical-camera checks of both settings modes, broader interoperability,
+audio-device selection, and release signing remain in progress. See the
 [video verification guide](Documentation/VideoTesting.md) for reproducible tests
 and the limits of the current evidence.
 
 See [Documentation/Modernization.md](Documentation/Modernization.md) for the
 dependency build, smoke tests, implemented protocol boundary, and remaining
 application migration work.
+
+## Test builds
+
+The [macOS alpha workflow](.github/workflows/macos-alpha.yml) builds a universal
+download and tests the same video-call binaries on Intel and Apple Silicon.
+Version tags publish experimental prereleases after both checks pass; ordinary
+branch builds only upload Actions artifacts. See the
+[tester instructions](Documentation/AlphaTesting.md) and
+[release procedure](Documentation/Releasing.md). These builds are not yet
+Developer ID signed or notarized, and Internet NAT traversal is not configured.
 
 ## Commit attribution
 

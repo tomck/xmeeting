@@ -5,6 +5,7 @@
 #include <codecs.h>
 #include <h323caps.h>
 #include <h323con.h>
+#include <h245.h>
 #include <mediafmt.h>
 
 #include <condition_variable>
@@ -47,7 +48,7 @@ void addGenericUnsignedOption(OpalMediaFormat& format,
   format.AddOption(option);
 }
 
-OpalVideoFormat& h264VideoToolboxFormat() {
+OpalMediaFormat h264VideoToolboxFormat(XMVideoResolution resolution) {
   static OpalVideoFormat format(kH264FormatName,
                                 RTP_DataFrame::DynamicBase,
                                 kFrameWidth,
@@ -85,7 +86,16 @@ OpalVideoFormat& h264VideoToolboxFormat() {
     return true;
   }();
   (void)configured;
-  return format;
+  // The registered format is only a template. Never mutate it when another
+  // endpoint chooses a different resolution in the same process.
+  OpalMediaFormat selected = format;
+  const auto profile = XMVideoProfileForResolution(resolution);
+  selected.SetOptionInteger(OpalVideoFormat::FrameWidthOption, profile.width);
+  selected.SetOptionInteger(OpalVideoFormat::FrameHeightOption, profile.height);
+  selected.SetOptionInteger(OpalVideoFormat::TargetBitRateOption, profile.bitRate);
+  selected.SetOptionInteger(OpalVideoFormat::MaxBitRateOption, profile.bitRate);
+  selected.SetOptionInteger("Generic Parameter 42", profile.h241Level);
+  return selected;
 }
 
 }  // namespace
@@ -235,12 +245,13 @@ class H264VideoCodec final : public H323VideoCodec {
  public:
   H264VideoCodec(const OpalMediaFormat& format,
                  Direction direction,
-                 std::shared_ptr<H264MediaBridge> bridge)
+                 std::shared_ptr<H264MediaBridge> bridge,
+                 XMVideoResolution resolution)
       : H323VideoCodec(format, direction),
         direction_(direction),
-        bridge_(std::move(bridge)) {
-    frameWidth = kFrameWidth;
-    frameHeight = kFrameHeight;
+        bridge_(std::move(bridge)), profile_(XMVideoProfileForResolution(resolution)) {
+    frameWidth = profile_.width;
+    frameHeight = profile_.height;
   }
 
   ~H264VideoCodec() override {
@@ -248,6 +259,14 @@ class H264VideoCodec final : public H323VideoCodec {
   }
 
   PBoolean Open(H323Connection&) override {
+    // Do not silently send 720p into a VGA-only negotiated channel. A peer
+    // with lower limits can still use audio; the user can select VGA and redial.
+    if (direction_ == Encoder &&
+        ((GetMediaFormat().GetOptionInteger("Generic Parameter 41") & kH241BaselineProfile) == 0 ||
+         GetMediaFormat().GetOptionInteger("Generic Parameter 42") < profile_.h241Level ||
+         GetMediaFormat().GetOptionInteger(OpalVideoFormat::MaxBitRateOption) < profile_.bitRate)) {
+      return false;
+    }
     if (open_.exchange(true)) {
       return true;
     }
@@ -307,6 +326,7 @@ class H264VideoCodec final : public H323VideoCodec {
  private:
   Direction direction_;
   std::shared_ptr<H264MediaBridge> bridge_;
+  XMVideoProfile profile_;
   std::atomic_bool open_{false};
 };
 
@@ -314,10 +334,12 @@ class H264VideoToolboxCapability final : public H323GenericVideoCapability {
   PCLASSINFO(H264VideoToolboxCapability, H323GenericVideoCapability);
 
  public:
-  explicit H264VideoToolboxCapability(std::shared_ptr<H264MediaBridge> bridge)
-      : H323GenericVideoCapability(kH264CapabilityOid, kBitRate / 100),
-        bridge_(std::move(bridge)) {
-    GetWritableMediaFormat() = h264VideoToolboxFormat();
+  explicit H264VideoToolboxCapability(std::shared_ptr<H264MediaBridge> bridge,
+                                     XMVideoResolution resolution)
+      : H323GenericVideoCapability(kH264CapabilityOid,
+                                   XMVideoProfileForResolution(resolution).bitRate / 100),
+        bridge_(std::move(bridge)), resolution_(resolution) {
+    GetWritableMediaFormat() = h264VideoToolboxFormat(resolution);
     rtpPayloadType = GetMediaFormat().GetPayloadType();
     SetCapabilityDirection(H323Capability::e_ReceiveAndTransmit);
   }
@@ -331,11 +353,43 @@ class H264VideoToolboxCapability final : public H323GenericVideoCapability {
   }
 
   H323Codec* CreateCodec(H323Codec::Direction direction) const override {
-    return new H264VideoCodec(GetMediaFormat(), direction, bridge_);
+    return new H264VideoCodec(GetMediaFormat(), direction, bridge_, resolution_);
+  }
+
+  PBoolean OnSendingPDU(H245_VideoCapability& pdu, CommandType type) const override {
+    pdu.SetTag(H245_VideoCapability::e_genericVideoCapability);
+    // TCS describes our decoder ceiling, independent of the chosen output.
+    // OLC describes our actual encoder, not the remote endpoint's TCS limits.
+    const auto resolution = type == e_TCS ? XMVideoResolution720p : resolution_;
+    if (!OnSendingGenericPDU(pdu, h264VideoToolboxFormat(resolution), type)) return false;
+    H245_GenericCapability& generic = pdu;
+    generic.IncludeOptionalField(H245_GenericCapability::e_maxBitRate);
+    generic.m_maxBitRate = XMVideoProfileForResolution(resolution).bitRate / 100;
+    return true;
+  }
+
+  PBoolean OnSendingPDU(H245_VideoMode& pdu) const override {
+    pdu.SetTag(H245_VideoMode::e_genericVideoMode);
+    return OnSendingGenericPDU(pdu, h264VideoToolboxFormat(resolution_), e_ReqMode);
+  }
+
+  PBoolean OnReceivedPDU(const H245_VideoCapability& pdu, CommandType type) override {
+    if (!H323GenericVideoCapability::OnReceivedPDU(pdu, type)) return false;
+    const auto profile = XMVideoProfileForResolution(XMVideoResolution720p);
+    const auto& format = GetMediaFormat();
+    if ((format.GetOptionInteger("Generic Parameter 41") & kH241BaselineProfile) == 0)
+      return false;
+    if (type != e_TCS &&
+        (format.GetOptionInteger("Generic Parameter 42") > profile.h241Level ||
+         format.GetOptionInteger("Generic Parameter 42") <= 0 ||
+         format.GetOptionInteger(OpalVideoFormat::MaxBitRateOption) > profile.bitRate))
+      return false;
+    return true;
   }
 
  private:
   std::shared_ptr<H264MediaBridge> bridge_;
+  XMVideoResolution resolution_;
 };
 
 H264MediaBridge::H264MediaBridge() : impl_(std::make_unique<Impl>()) {}
@@ -364,11 +418,11 @@ bool H264MediaBridge::isReceiving() const {
 }
 
 std::unique_ptr<H323Capability> makeH264VideoToolboxCapability(
-    const std::shared_ptr<H264MediaBridge>& bridge) {
-  if (!bridge) {
+    const std::shared_ptr<H264MediaBridge>& bridge, XMVideoResolution resolution) {
+  if (!bridge || !XMVideoResolutionIsValid(resolution)) {
     return nullptr;
   }
-  return std::make_unique<H264VideoToolboxCapability>(bridge);
+  return std::make_unique<H264VideoToolboxCapability>(bridge, resolution);
 }
 
 }  // namespace xmeeting::h323

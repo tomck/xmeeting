@@ -440,10 +440,14 @@ CocoaClientImplementation *implementation(XMH323Client *client) {
 }
 
 - (BOOL)enableH264VideoWithError:(NSError **)error {
+  return [self enableH264VideoWithResolution:XMVideoResolutionVGA error:error];
+}
+
+- (BOOL)enableH264VideoWithResolution:(XMVideoResolution)resolution error:(NSError **)error {
   if (!self.started) {
     return fail(error, XMH323ClientErrorNotStarted, @"The H.323 client is not started.");
   }
-  if (!implementation(self)->engine.enableH264Video()) {
+  if (!implementation(self)->engine.enableH264Video(resolution)) {
     return fail(error, XMH323ClientErrorVideoUnavailable,
                 @"The native H.264 video bridge could not be enabled.");
   }

@@ -7,6 +7,8 @@
 @interface XMH264Encoder ()
 
 @property(nonatomic) VTCompressionSessionRef compressionSession;
+@property(nonatomic) VTPixelTransferSessionRef transferSession;
+@property(nonatomic) CMTime lastSubmittedTime;
 @property(nonatomic, readwrite, getter=isRunning) BOOL running;
 @property(nonatomic, readwrite) NSUInteger encodedFrameCount;
 
@@ -98,9 +100,17 @@ NSArray<NSData *> *nalUnitsFromSampleBuffer(CMSampleBufferRef sampleBuffer,
 }
 
 - (instancetype)initWithDelegate:(id<XMH264EncoderDelegate>)delegate {
+  return [self initWithDelegate:delegate resolution:XMVideoResolutionVGA];
+}
+
+- (instancetype)initWithDelegate:(id<XMH264EncoderDelegate>)delegate
+                     resolution:(XMVideoResolution)resolution {
+  if (!XMVideoResolutionIsValid(resolution)) return nil;
   self = [super init];
   if (self != nil) {
     _delegate = delegate;
+    _resolution = resolution;
+    _lastSubmittedTime = kCMTimeInvalid;
   }
   return self;
 }
@@ -124,43 +134,91 @@ NSArray<NSData *> *nalUnitsFromSampleBuffer(CMSampleBufferRef sampleBuffer,
   if (!CMTIME_IS_VALID(presentationTime)) {
     presentationTime = CMClockGetTime(CMClockGetHostTimeClock());
   }
+  const XMVideoProfile profile = XMVideoProfileForResolution(self.resolution);
+  if (CMTIME_IS_NUMERIC(self.lastSubmittedTime)) {
+    const double elapsed = CMTimeGetSeconds(CMTimeSubtract(presentationTime, self.lastSubmittedTime));
+    if (elapsed >= 0 && elapsed + 0.00001 < 1.0 / profile.framesPerSecond) return YES;
+  }
+
+  // Camera presets are requests, not an output-size guarantee (including for
+  // virtual cameras). Normalize every input into the selected encoder format.
+  CVPixelBufferRef output = nullptr;
+  CVPixelBufferPoolRef pool = VTCompressionSessionGetPixelBufferPool(self.compressionSession);
+  if (pool == nullptr || CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, pool, &output) != kCVReturnSuccess) {
+    [self reportFailure:@"Could not allocate the selected video output size"];
+    return NO;
+  }
+  const OSStatus transferStatus = VTPixelTransferSessionTransferImage(self.transferSession, imageBuffer, output);
+  if (transferStatus != noErr) {
+    CFRelease(output);
+    [self reportFailure:@"Could not resize the camera frame for video output"];
+    return NO;
+  }
+  CVBufferRemoveAttachment(output, kCVImageBufferCleanApertureKey);
+  CVBufferRemoveAttachment(output, kCVImageBufferPixelAspectRatioKey);
   const OSStatus status = VTCompressionSessionEncodeFrame(
-      self.compressionSession, imageBuffer, presentationTime, kCMTimeInvalid, nullptr, nullptr, nullptr);
+      self.compressionSession, output, presentationTime,
+      CMTimeMake(1, profile.framesPerSecond), nullptr, nullptr, nullptr);
+  CFRelease(output);
   if (status != noErr) {
     [self reportFailure:@"VideoToolbox could not encode a camera frame"];
     return NO;
   }
+  self.lastSubmittedTime = presentationTime;
   return YES;
 }
 
 - (BOOL)createCompressionSessionForImageBuffer:(CVImageBufferRef)imageBuffer {
-  const int width = static_cast<int>(CVPixelBufferGetWidth(imageBuffer));
-  const int height = static_cast<int>(CVPixelBufferGetHeight(imageBuffer));
+  (void)imageBuffer;
+  const XMVideoProfile profile = XMVideoProfileForResolution(self.resolution);
+  NSDictionary *attributes = @{
+    (id)kCVPixelBufferWidthKey: @(profile.width),
+    (id)kCVPixelBufferHeightKey: @(profile.height),
+    (id)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange),
+    (id)kCVPixelBufferIOSurfacePropertiesKey: @{},
+  };
   VTCompressionSessionRef session = nullptr;
   const OSStatus createStatus = VTCompressionSessionCreate(
-      kCFAllocatorDefault, width, height, kCMVideoCodecType_H264, nullptr, nullptr, nullptr,
+      kCFAllocatorDefault, profile.width, profile.height, kCMVideoCodecType_H264,
+      nullptr, (__bridge CFDictionaryRef)attributes, nullptr,
       compressionOutput, (__bridge void *)self, &session);
   if (createStatus != noErr || session == nullptr) {
     [self reportFailure:@"VideoToolbox could not create an H.264 encoder"];
     return NO;
   }
 
-  VTSessionSetProperty(session, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
-  VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel,
-                       kVTProfileLevel_H264_Baseline_3_0);
-  VTSessionSetProperty(session, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
-  VTSessionSetProperty(session, kVTCompressionPropertyKey_ExpectedFrameRate, (__bridge CFTypeRef)@(30));
-  VTSessionSetProperty(session, kVTCompressionPropertyKey_AverageBitRate, (__bridge CFTypeRef)@(512000));
-  VTSessionSetProperty(session, kVTCompressionPropertyKey_MaxKeyFrameInterval,
-                       (__bridge CFTypeRef)@(60));
-  VTCompressionSessionPrepareToEncodeFrames(session);
-
+  CFStringRef level = self.resolution == XMVideoResolution720p
+                         ? kVTProfileLevel_H264_Baseline_3_1 : kVTProfileLevel_H264_Baseline_3_0;
+  NSDictionary *properties = @{
+    (id)kVTCompressionPropertyKey_RealTime: @YES,
+    (id)kVTCompressionPropertyKey_ProfileLevel: (__bridge id)level,
+    (id)kVTCompressionPropertyKey_AllowFrameReordering: @NO,
+    (id)kVTCompressionPropertyKey_ExpectedFrameRate: @(profile.framesPerSecond),
+    (id)kVTCompressionPropertyKey_AverageBitRate: @(profile.bitRate),
+    (id)kVTCompressionPropertyKey_MaxKeyFrameInterval: @(profile.framesPerSecond * 2),
+    (id)kVTCompressionPropertyKey_DataRateLimits: @[@(profile.bitRate / 8), @1],
+  };
   self.compressionSession = session;
+  if (VTSessionSetProperties(session, (__bridge CFDictionaryRef)properties) != noErr ||
+      VTCompressionSessionPrepareToEncodeFrames(session) != noErr ||
+      VTPixelTransferSessionCreate(kCFAllocatorDefault, &_transferSession) != noErr ||
+      VTSessionSetProperty(self.transferSession, kVTPixelTransferPropertyKey_ScalingMode,
+                           kVTScalingMode_Letterbox) != noErr) {
+    [self stop];
+    [self reportFailure:@"VideoToolbox could not configure the selected video format"];
+    return NO;
+  }
   self.running = YES;
   return YES;
 }
 
 - (void)stop {
+  self.lastSubmittedTime = kCMTimeInvalid;
+  if (self.transferSession != nullptr) {
+    VTPixelTransferSessionInvalidate(self.transferSession);
+    CFRelease(self.transferSession);
+    self.transferSession = nullptr;
+  }
   if (self.compressionSession == nullptr) {
     return;
   }
@@ -174,6 +232,14 @@ NSArray<NSData *> *nalUnitsFromSampleBuffer(CMSampleBufferRef sampleBuffer,
 - (void)handleCompressionStatus:(OSStatus)status sampleBuffer:(CMSampleBufferRef)sampleBuffer {
   if (status != noErr || sampleBuffer == nil) {
     [self reportFailure:@"VideoToolbox did not produce an H.264 frame"];
+    return;
+  }
+
+  const XMVideoProfile profile = XMVideoProfileForResolution(self.resolution);
+  const CMVideoDimensions size = CMVideoFormatDescriptionGetDimensions(
+      CMSampleBufferGetFormatDescription(sampleBuffer));
+  if (size.width != profile.width || size.height != profile.height) {
+    [self reportFailure:@"The encoder output does not match the selected video resolution"];
     return;
   }
 

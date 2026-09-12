@@ -114,8 +114,8 @@ is prioritized as follows:
    call-duration/end-reason feedback.
 3. Add a preferences UI for listener ports, gatekeeper accounts, and the H.460/
    STUN settings needed to work reliably beyond a local network.
-4. Resolve the observed 1280x720 camera output versus the configured 640x480
-   video format. Extend the successful Linux camera/video validation to
+4. Verify the new VGA/720p output settings with physical cameras (the encoder
+   now enforces the selected dimensions and H.264 level). Extend Linux validation to
    independent H.323 implementations, packet-loss recovery, permission changes,
    and camera disconnect/reconnect.
 5. Replace AddressBook with Contacts and add permission-aware asynchronous

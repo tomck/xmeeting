@@ -1,12 +1,13 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
+#import "XMVideoProfile.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol XMCameraCaptureDelegate;
 
-// Owns the macOS camera session used for local preview today and the raw-frame
-// handoff to the H.264 bridge later. It deliberately does not make H.323
+// Owns the macOS camera session used for local preview and the raw-frame
+// handoff to the H.264 bridge. It deliberately does not make H.323
 // capability decisions; a camera alone is not sufficient to advertise video.
 @interface XMCameraCapture : NSObject
 
@@ -15,7 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly, getter=isPreviewActive) BOOL previewActive;
 @property(nonatomic, copy, readonly) NSString *statusMessage;
 
+- (instancetype)initWithDelegate:(nullable id<XMCameraCaptureDelegate>)delegate;
 - (instancetype)initWithDelegate:(nullable id<XMCameraCaptureDelegate>)delegate
+                     resolution:(XMVideoResolution)resolution
     NS_DESIGNATED_INITIALIZER;
 - (instancetype)init;
 - (void)start;

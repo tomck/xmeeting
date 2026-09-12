@@ -1,6 +1,7 @@
 #pragma once
 
 #include "XMH264RTP.hpp"
+#include "XMVideoProfile.h"
 
 #include <functional>
 #include <memory>
@@ -46,6 +47,7 @@ class H264MediaBridge final {
 // endpoint must explicitly add it to its capability table after the complete
 // capture, encode, decode, and render path is ready.
 std::unique_ptr<H323Capability> makeH264VideoToolboxCapability(
-    const std::shared_ptr<H264MediaBridge>& bridge);
+    const std::shared_ptr<H264MediaBridge>& bridge,
+    XMVideoResolution resolution = XMVideoResolutionVGA);
 
 }  // namespace xmeeting::h323
