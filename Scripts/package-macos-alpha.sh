@@ -26,7 +26,7 @@ for asset in "$NAME.zip" "$SOURCE_NAME.tar.gz" SHA256SUMS.txt; do
     exit 1
   fi
 done
-lipo -verify_arch x86_64 arm64 "$APP/Contents/MacOS/XMeeting"
+lipo "$APP/Contents/MacOS/XMeeting" -verify_arch x86_64 arm64
 codesign --verify --deep --strict --verbose=2 "$APP"
 plutil -lint "$APP/Contents/Info.plist"
 test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")" = "${VERSION%%-alpha.*}"
