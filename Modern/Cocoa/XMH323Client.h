@@ -63,6 +63,11 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
 @property(nonatomic, copy, readonly) NSString *audioInputDevice;
 @property(nonatomic, copy, readonly) NSString *audioOutputDevice;
 @property(nonatomic, copy, readonly) NSArray<NSString *> *audioCodecs;
+@property(nonatomic, copy, readonly) NSArray<NSString *> *audioInputDevices;
+@property(nonatomic, copy, readonly) NSArray<NSString *> *audioOutputDevices;
+@property(nonatomic, readonly) BOOL fastStartEnabled;
+@property(nonatomic, getter=isMicrophoneMuted) BOOL microphoneMuted;
+@property(nonatomic) BOOL videoTransmissionEnabled;
 // Becomes true only when the H323Plus engine has a usable, advertised video
 // codec. Camera permission or a local preview alone must not enable it.
 @property(nonatomic, readonly, getter=isVideoAvailable) BOOL videoAvailable;
@@ -76,6 +81,14 @@ typedef NS_ERROR_ENUM(XMH323ClientErrorDomain, XMH323ClientErrorCode) {
                listenPort:(uint16_t)listenPort
                     error:(NSError *_Nullable *_Nullable)error;
 - (void)stop;
+
+// Fast Start must be configured before starting the listener. It defaults to YES.
+- (BOOL)setFastStartEnabled:(BOOL)enabled error:(NSError *_Nullable *_Nullable)error;
+// Empty strings select the macOS system defaults. Explicit missing or ambiguous
+// device names fail; they never silently fall back to another microphone.
+- (BOOL)configureAudioInputDevice:(NSString *)inputDevice
+                    outputDevice:(NSString *)outputDevice
+                           error:(NSError *_Nullable *_Nullable)error;
 
 - (BOOL)callAddress:(NSString *)address
                token:(NSString *_Nullable *_Nullable)token

@@ -136,6 +136,77 @@ void testProfileIsolationAndLimits() {
   require(!limitedEncoder->Open(connection), "Transmission exceeded the peer's bitrate limit");
 }
 
+void testBeeHDReceiveLimits() {
+  // Sanitized receiveVideoCapability from the 2026-09-26 BEEHD call.
+  // No addresses, aliases, or media from the diagnostic log are retained.
+  const unsigned identifiers[] = {41, 42, 3, 4, 5, 6, 8};
+  const unsigned values[] = {64, 43, 216, 15, 127, 320, 1270};
+  H245_Capability pdu;
+  pdu.SetTag(H245_Capability::e_receiveVideoCapability);
+  H245_VideoCapability& video = pdu;
+  video.SetTag(H245_VideoCapability::e_genericVideoCapability);
+  H245_GenericCapability& generic = video;
+  generic.m_capabilityIdentifier.SetTag(H245_CapabilityIdentifier::e_standard);
+  (PASN_ObjectId&)generic.m_capabilityIdentifier = "0.0.8.241.0.0.1";
+  generic.IncludeOptionalField(H245_GenericCapability::e_maxBitRate);
+  generic.m_maxBitRate = 40960;
+  generic.IncludeOptionalField(H245_GenericCapability::e_collapsing);
+  generic.m_collapsing.SetSize(7);
+  for (PINDEX i = 0; i < 7; ++i) {
+    auto& parameter = generic.m_collapsing[i];
+    parameter.m_parameterIdentifier.SetTag(H245_ParameterIdentifier::e_standard);
+    (PASN_Integer&)parameter.m_parameterIdentifier = identifiers[i];
+    parameter.m_parameterValue.SetTag(i == 0 ? H245_ParameterValue::e_booleanArray
+                                             : H245_ParameterValue::e_unsignedMin);
+    (PASN_Integer&)parameter.m_parameterValue = values[i];
+  }
+  H323EndPoint endpoint;
+  H323Connection connection(endpoint, 1);
+  auto canOpen = [&](XMVideoResolution resolution) {
+    auto bridge = std::make_shared<xmeeting::h323::H264MediaBridge>();
+    auto capability = xmeeting::h323::makeH264VideoToolboxCapability(bridge, resolution);
+    if (!capability->OnReceivedPDU(pdu)) return false;
+    std::unique_ptr<H323Codec> encoder(capability->CreateCodec(H323Codec::Encoder));
+    const bool opened = encoder->Open(connection);
+    require(bridge->isTransmitting() == opened, "Rejected capability activated transmission");
+    encoder->Close();
+    return opened;
+  };
+  require(canOpen(XMVideoResolution720p), "BEEHD extended limits rejected 720p at 4096 kbit/s");
+  require(canOpen(XMVideoResolutionVGA), "BEEHD extended limits rejected VGA");
+  generic.m_maxBitRate = 7680;
+  require(!canOpen(XMVideoResolution720p), "Extended limits bypassed the video bitrate ceiling");
+  require(canOpen(XMVideoResolutionVGA), "VGA was rejected within BEEHD's 768 kbit/s ceiling");
+  generic.m_maxBitRate = 40960;
+  (PASN_Integer&)generic.m_collapsing[3].m_parameterValue = 14; // 3584 < 3600 macroblocks
+  require(!canOpen(XMVideoResolution720p), "720p exceeded CustomMaxFS");
+  (PASN_Integer&)generic.m_collapsing[3].m_parameterValue = 15;
+  (PASN_Integer&)generic.m_collapsing[2].m_parameterValue = 215; // 107500 < 108000 MB/s
+  require(!canOpen(XMVideoResolution720p), "720p30 exceeded CustomMaxMBPS");
+  (PASN_Integer&)generic.m_collapsing[2].m_parameterValue = 216;
+  (PASN_Integer&)generic.m_collapsing[0].m_parameterValue = 32; // Main only
+  require(!canOpen(XMVideoResolution720p), "Extended limits bypassed Baseline profile matching");
+  (PASN_Integer&)generic.m_collapsing[0].m_parameterValue = 64;
+  auto reused = xmeeting::h323::makeH264VideoToolboxCapability(
+      std::make_shared<xmeeting::h323::H264MediaBridge>(), XMVideoResolution720p);
+  require(reused->OnReceivedPDU(pdu), "Could not retain BEEHD receive limits");
+  H245_Capability localPdu;
+  require(reused->OnSendingPDU(localPdu), "Could not serialize local capability");
+  const H245_VideoCapability& localVideo = localPdu;
+  const H245_GenericCapability& localGeneric = localVideo;
+  require(localGeneric.m_collapsing.GetSize() == 2,
+          "Peer custom limits leaked into our advertised receive capability");
+  (PASN_Integer&)generic.m_collapsing[1].m_parameterValue = 0;
+  require(!canOpen(XMVideoResolution720p), "Unknown mandatory level accepted with extensions");
+  (PASN_Integer&)generic.m_collapsing[1].m_parameterValue = 43;
+  generic.m_collapsing.SetSize(2); // Same level, no extensions: neither output fits.
+  require(!canOpen(XMVideoResolution720p) && !canOpen(XMVideoResolutionVGA),
+          "A low base level without extensions was treated as HD-capable");
+  require(reused->OnReceivedPDU(pdu), "Could not update receive limits");
+  std::unique_ptr<H323Codec> updated(reused->CreateCodec(H323Codec::Encoder));
+  require(!updated->Open(connection), "Removed custom limits survived capability update");
+}
+
 void testCodecRoundTrip(H323Capability& capability,
                         const std::shared_ptr<xmeeting::h323::H264MediaBridge>& bridge) {
   std::unique_ptr<H323Codec> encoder(capability.CreateCodec(H323Codec::Encoder));
@@ -206,11 +277,39 @@ void testCodecRoundTrip(H323Capability& capability,
   require(!bridgeError.empty(), "The oversized H.264 payload was not diagnosed");
 }
 
+void testCameraGate() {
+  auto bridge = std::make_shared<xmeeting::h323::H264MediaBridge>();
+  auto capability = xmeeting::h323::makeH264VideoToolboxCapability(bridge);
+  H323EndPoint endpoint;
+  H323Connection connection(endpoint, 1);
+  std::unique_ptr<H323Codec> encoder(capability->CreateCodec(H323Codec::Encoder));
+  bridge->setTransmissionEnabled(false);
+  require(encoder->Open(connection), "A camera-off channel could not negotiate");
+  require(!bridge->enqueueAccessUnit({{0x65, 0x11}}), "Camera-off leaked a frame on channel open");
+  bridge->setTransmissionEnabled(true);
+  require(bridge->enqueueAccessUnit({{0x65, 0x11}}), "Initial IDR was not accepted");
+  bridge->setTransmissionEnabled(false);
+  require(!bridge->enqueueAccessUnit({{0x65, 0x22}}), "Camera-off accepted a new frame");
+  bridge->setTransmissionEnabled(true);
+  require(!bridge->enqueueAccessUnit({{0x41, 0x33}}), "Camera resumed before an IDR");
+  require(bridge->enqueueAccessUnit({{0x65, 0x44}}), "Fresh IDR did not resume transmission");
+  BYTE bytes[2000];
+  unsigned length = 0;
+  RTP_DataFrame frame;
+  require(encoder->Read(bytes, length, frame) && length == 2 && bytes[1] == 0x44,
+          "A frame queued before camera-off was transmitted on resume");
+  bridge->setTransmissionEnabled(false);
+  encoder->Close();
+  require(!bridge->isTransmitting(), "Camera-off blocked channel shutdown");
+}
+
 }  // namespace
 
 int main() {
   TestProcess process;
+  testBeeHDReceiveLimits();
   testProfileIsolationAndLimits();
+  testCameraGate();
   auto bridge = std::make_shared<xmeeting::h323::H264MediaBridge>();
   std::unique_ptr<H323Capability> capability =
       xmeeting::h323::makeH264VideoToolboxCapability(bridge);

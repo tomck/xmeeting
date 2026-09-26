@@ -123,6 +123,9 @@ target_link_libraries(
 )
 
 if(BUILD_TESTING)
+  add_executable(xmeeting-call-duration-tests MediaTests/XMCallDurationTests.cpp)
+  target_include_directories(xmeeting-call-duration-tests PRIVATE "${CMAKE_CURRENT_LIST_DIR}/Media")
+  add_test(NAME xmeeting-call-duration-tests COMMAND xmeeting-call-duration-tests)
   add_executable(xmeeting-h264-rtp-tests MediaTests/XMH264RTPTests.cpp)
   target_link_libraries(xmeeting-h264-rtp-tests PRIVATE XMH264RTP)
   add_test(NAME xmeeting-h264-rtp-tests COMMAND xmeeting-h264-rtp-tests)
@@ -146,6 +149,14 @@ if(BUILD_TESTING)
   )
   add_test(NAME xmeeting-h323plus-h264-tests COMMAND xmeeting-h323plus-h264-tests)
 
+  add_executable(xmeeting-call-cancellation-tests H323PlusTests/XMCallCancellationTests.cpp)
+  target_include_directories(xmeeting-call-cancellation-tests PRIVATE "${PTLIB_INCLUDE_DIR}" "${H323PLUS_INCLUDE_DIR}")
+  target_compile_definitions(xmeeting-call-cancellation-tests PRIVATE H323_STATIC_LIB)
+  target_compile_options(xmeeting-call-cancellation-tests PRIVATE -Wno-deprecated-declarations -Wno-inconsistent-missing-override)
+  target_link_libraries(xmeeting-call-cancellation-tests PRIVATE XMH323PlusEngine)
+  add_test(NAME xmeeting-call-cancellation-tests COMMAND xmeeting-call-cancellation-tests)
+  set_tests_properties(xmeeting-call-cancellation-tests PROPERTIES TIMEOUT 40)
+
   add_executable(
     xmeeting-videotoolbox-tests
     VideoToolboxTests/XMVideoToolboxTests.mm
@@ -154,15 +165,31 @@ if(BUILD_TESTING)
   target_link_libraries(xmeeting-videotoolbox-tests PRIVATE XMVideoToolbox)
   add_test(NAME xmeeting-videotoolbox-tests COMMAND xmeeting-videotoolbox-tests)
 
-  add_executable(xmeeting-h264-call-tests VideoToolboxTests/XMH264CallTests.mm)
+  add_executable(xmeeting-h264-call-tests VideoToolboxTests/XMH264CallTests.mm VideoToolboxTests/XMTestAudio.cpp)
   target_include_directories(xmeeting-h264-call-tests PRIVATE "${PTLIB_INCLUDE_DIR}")
-  target_compile_options(xmeeting-h264-call-tests PRIVATE -fobjc-arc -Wno-deprecated-declarations
+  target_compile_options(xmeeting-h264-call-tests PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc> -Wno-deprecated-declarations
                          -Wno-inconsistent-missing-override)
   target_link_libraries(xmeeting-h264-call-tests PRIVATE XMVideoToolbox XMH323PlusEngine)
   add_test(NAME xmeeting-h264-call-tests COMMAND xmeeting-h264-call-tests)
   add_test(NAME xmeeting-h264-720p-call-tests COMMAND xmeeting-h264-call-tests --720p)
   add_test(NAME xmeeting-h264-mixed-call-tests COMMAND xmeeting-h264-call-tests --mixed)
+  add_test(NAME xmeeting-h264-reverse-mixed-call-tests COMMAND xmeeting-h264-call-tests --mixed --720p)
+  add_test(NAME xmeeting-h264-slow-mixed-call-tests COMMAND xmeeting-h264-call-tests --mixed --no-fast-start)
+  add_test(NAME xmeeting-h264-slow-reverse-mixed-call-tests COMMAND xmeeting-h264-call-tests --mixed --720p --no-fast-start)
+  add_test(NAME xmeeting-call-settings-tests COMMAND h323plus-cocoa-smoke 18209)
+  add_test(NAME xmeeting-h264-slow-call-tests COMMAND xmeeting-h264-call-tests --no-fast-start)
+  add_test(NAME xmeeting-h264-slow-callee-tests COMMAND xmeeting-h264-call-tests --slow-callee)
+  add_test(NAME xmeeting-h264-slow-caller-tests COMMAND xmeeting-h264-call-tests --slow-caller)
+  add_test(NAME xmeeting-audio-fast-call-tests COMMAND xmeeting-h264-call-tests --audio-only)
+  add_test(NAME xmeeting-audio-slow-call-tests COMMAND xmeeting-h264-call-tests --audio-only --no-fast-start)
+  add_test(NAME xmeeting-call-controls-tests COMMAND xmeeting-h264-call-tests --controls)
+  add_test(NAME xmeeting-slow-call-controls-tests COMMAND xmeeting-h264-call-tests --controls --no-fast-start)
   set_tests_properties(xmeeting-h264-call-tests xmeeting-h264-720p-call-tests xmeeting-h264-mixed-call-tests
+                       xmeeting-h264-reverse-mixed-call-tests xmeeting-h264-slow-mixed-call-tests
+                       xmeeting-h264-slow-reverse-mixed-call-tests xmeeting-call-settings-tests
+                       xmeeting-h264-slow-call-tests xmeeting-h264-slow-callee-tests xmeeting-h264-slow-caller-tests
+                       xmeeting-audio-fast-call-tests xmeeting-audio-slow-call-tests
+                       xmeeting-call-controls-tests xmeeting-slow-call-controls-tests
                        PROPERTIES TIMEOUT 50 RUN_SERIAL TRUE)
 
   # Also compile the portable Linux fixture peer here to catch API drift.

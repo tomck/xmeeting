@@ -159,7 +159,26 @@ int runCase(XMVideoResolution resolution, unsigned sourceWidth, unsigned sourceH
   return 0;
 }
 
+int runPreflight(XMVideoResolution resolution) {
+  @autoreleasepool {
+    XMVideoToolboxTestHarness *harness = [[XMVideoToolboxTestHarness alloc] init];
+    harness.resolution = resolution;
+    harness.encoder = [[XMH264Encoder alloc] initWithDelegate:harness resolution:resolution];
+    if (![harness.encoder prepareWithBlackFrame]) return 1;
+    const long timedOut = dispatch_semaphore_wait(harness.completion,
+        dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC));
+    [harness.encoder stop]; [harness.decoder stop];
+    if (timedOut || harness.failure != nil) {
+      std::fprintf(stderr, "FAIL: camera-free codec preflight\n");
+      return 1;
+    }
+    std::printf("PASS: camera-free encoder preflight at %s\n", resolution == XMVideoResolutionVGA ? "VGA" : "720p");
+  }
+  return 0;
+}
+
 int main() {
+  if (runPreflight(XMVideoResolutionVGA) || runPreflight(XMVideoResolution720p)) return 1;
   return runCase(XMVideoResolutionVGA, 1280, 720, kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange) ||
          runCase(XMVideoResolutionVGA, 1920, 1080, kCVPixelFormatType_32BGRA) ||
          runCase(XMVideoResolution720p, 640, 480, kCVPixelFormatType_32BGRA) ||

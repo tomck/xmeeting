@@ -18,8 +18,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithDelegate:(nullable id<XMCameraCaptureDelegate>)delegate;
 - (instancetype)initWithDelegate:(nullable id<XMCameraCaptureDelegate>)delegate
+                     resolution:(XMVideoResolution)resolution;
+- (instancetype)initWithDelegate:(nullable id<XMCameraCaptureDelegate>)delegate
                      resolution:(XMVideoResolution)resolution
+                 deviceUniqueID:(NSString *)deviceUniqueID
     NS_DESIGNATED_INITIALIZER;
++ (NSArray<AVCaptureDevice *> *)availableVideoDevices;
 - (instancetype)init;
 - (void)start;
 - (void)stop;

@@ -1,7 +1,7 @@
 # Experimental macOS releases
 
 `.github/workflows/macos-alpha.yml` builds a universal macOS 11+ app on an Intel
-macOS 15 runner and runs all six tests. The same universal test binaries then
+macOS 15 runner and runs all 19 tests. The same universal test binaries then
 run natively on an Apple Silicon macOS 15 runner. No camera or microphone is
 used in CI. A release is gated on both jobs; real-device and independent H.323
 interoperability checks remain necessary.
@@ -66,7 +66,7 @@ signing identities or overwriting an existing release asset. Numeric bundle
 versions are separate from the human-readable alpha tag in `Build.txt`.
 
 Upstream source archives in the source download are unmodified snapshots. The
-three files in `Dependencies/patches/` and
+files in `Dependencies/patches/` and
 `Scripts/build-h323plus-universal.sh` specify our changes and build procedure.
 The script normally fetches those pinned revisions from GitHub; the supplied
 archives also preserve the source if upstream hosting changes.

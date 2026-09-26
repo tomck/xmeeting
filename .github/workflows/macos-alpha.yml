@@ -74,7 +74,8 @@ jobs:
         run: |
           tar -czf .build/native-tests.tar.gz -C .build/release \
             xmeeting-h264-rtp-tests xmeeting-h323plus-h264-tests \
-            xmeeting-videotoolbox-tests xmeeting-h264-call-tests
+            xmeeting-videotoolbox-tests xmeeting-h264-call-tests h323plus-cocoa-smoke \
+            xmeeting-call-duration-tests xmeeting-call-cancellation-tests
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: native-tests
@@ -102,17 +103,30 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: native-tests
-      - name: Run all six cases from the same universal build
+      - name: Run all cases from the same universal build
         run: |
           test "$(uname -m)" = arm64
           mkdir tests
           tar -xzf native-tests.tar.gz -C tests
           ./tests/xmeeting-h264-rtp-tests
+          ./tests/xmeeting-call-duration-tests
+          ./tests/xmeeting-call-cancellation-tests
           ./tests/xmeeting-h323plus-h264-tests
           ./tests/xmeeting-videotoolbox-tests
           ./tests/xmeeting-h264-call-tests
           ./tests/xmeeting-h264-call-tests --720p
           ./tests/xmeeting-h264-call-tests --mixed
+          ./tests/xmeeting-h264-call-tests --mixed --720p
+          ./tests/xmeeting-h264-call-tests --mixed --no-fast-start
+          ./tests/xmeeting-h264-call-tests --mixed --720p --no-fast-start
+          ./tests/xmeeting-h264-call-tests --no-fast-start
+          ./tests/xmeeting-h264-call-tests --slow-callee
+          ./tests/xmeeting-h264-call-tests --slow-caller
+          ./tests/xmeeting-h264-call-tests --audio-only
+          ./tests/xmeeting-h264-call-tests --audio-only --no-fast-start
+          ./tests/h323plus-cocoa-smoke 18209
+          ./tests/xmeeting-h264-call-tests --controls
+          ./tests/xmeeting-h264-call-tests --controls --no-fast-start
 
   publish:
     name: Publish tagged prerelease

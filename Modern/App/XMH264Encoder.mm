@@ -119,6 +119,33 @@ NSArray<NSData *> *nalUnitsFromSampleBuffer(CMSampleBufferRef sampleBuffer,
   [self stop];
 }
 
+- (BOOL)prepareWithBlackFrame {
+  const XMVideoProfile profile = XMVideoProfileForResolution(self.resolution);
+  CVPixelBufferRef pixels = nullptr;
+  OSStatus status = CVPixelBufferCreate(kCFAllocatorDefault, profile.width, profile.height,
+      kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+      (__bridge CFDictionaryRef)@{(id)kCVPixelBufferIOSurfacePropertiesKey: @{}}, &pixels);
+  if (status != noErr) return NO;
+  status = CVPixelBufferLockBaseAddress(pixels, 0);
+  if (status != noErr) { CFRelease(pixels); return NO; }
+  for (size_t plane = 0; plane < CVPixelBufferGetPlaneCount(pixels); ++plane)
+    memset(CVPixelBufferGetBaseAddressOfPlane(pixels, plane), plane == 0 ? 16 : 128,
+           CVPixelBufferGetBytesPerRowOfPlane(pixels, plane) * CVPixelBufferGetHeightOfPlane(pixels, plane));
+  CVPixelBufferUnlockBaseAddress(pixels, 0);
+  CMVideoFormatDescriptionRef format = nullptr;
+  CMSampleBufferRef sample = nullptr;
+  CMSampleTimingInfo timing = {CMTimeMake(1, profile.framesPerSecond),
+                               CMClockGetTime(CMClockGetHostTimeClock()), kCMTimeInvalid};
+  status = CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault, pixels, &format);
+  if (status == noErr)
+    status = CMSampleBufferCreateReadyWithImageBuffer(kCFAllocatorDefault, pixels, format, &timing, &sample);
+  const BOOL encoded = status == noErr && [self encodeSampleBuffer:sample];
+  if (sample != nullptr) CFRelease(sample);
+  if (format != nullptr) CFRelease(format);
+  CFRelease(pixels);
+  return encoded;
+}
+
 - (BOOL)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer {
   CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
   if (imageBuffer == nil) {

@@ -18,6 +18,7 @@ readonly SOURCE_CACHE="$WORK_ROOT/sources"
 readonly PTLIB_PLATFORM_PATCH_FILE="$SOURCE_ROOT/Dependencies/patches/ptlib-2.10.9.6-apple-silicon.patch"
 readonly PTLIB_COREAUDIO_PATCH_FILE="$SOURCE_ROOT/Dependencies/patches/ptlib-2.10.9.6-modern-coreaudio.patch"
 readonly H323PLUS_PATCH_FILE="$SOURCE_ROOT/Dependencies/patches/h323plus-1.28.0-safe-transport-thread-cleanup.patch"
+readonly H323PLUS_CONNECT_PATCH_FILE="$SOURCE_ROOT/Dependencies/patches/h323plus-1.28.0-cancel-pending-connect.patch"
 
 if [[ "$WORK_ROOT" == "/" || -z "$WORK_ROOT" || "$OUTPUT_ROOT" == "/" || -z "$OUTPUT_ROOT" ]]; then
   echo "Refusing to use an unsafe build or output directory." >&2
@@ -148,6 +149,7 @@ for architecture in $ARCHITECTURES; do
   patch -d "$ptlib_source" -p1 < "$PTLIB_PLATFORM_PATCH_FILE"
   patch -d "$ptlib_source" -p1 < "$PTLIB_COREAUDIO_PATCH_FILE"
   patch -d "$h323plus_source" -p1 < "$H323PLUS_PATCH_FILE"
+  patch -d "$h323plus_source" -p1 < "$H323PLUS_CONNECT_PATCH_FILE"
 
   (
     cd "$ptlib_source"

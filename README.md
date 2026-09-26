@@ -19,8 +19,14 @@ Linux independently decoded 434 frames from a physical-camera call without
 errors. **XMeeting > Settings…** now selects VGA (640x480) or 720p (1280x720)
 outgoing video. Output is resized to the selected format and uses a matching
 H.264 encoding level; incoming video can still be up to 720p in either mode.
+Settings also selects the camera, microphone, and speakers, and offers H.225
+Fast Start (enabled by default) with ordinary H.245 fallback. Selections are
+saved while idle; an explicitly selected missing device is not silently replaced.
+The call window has microphone mute, camera on/off, and elapsed connected time.
+Mute and camera-off can be selected before dialing and stay selected across
+calls in the same app session. They do not change macOS global device levels.
 Physical-camera checks of both settings modes, broader interoperability,
-audio-device selection, and release signing remain in progress. See the
+physical-device switching checks, and release signing remain in progress. See the
 [video verification guide](Documentation/VideoTesting.md) for reproducible tests
 and the limits of the current evidence.
 

@@ -4,8 +4,10 @@
 #import "XMH264Decoder.h"
 #import "XMH264Encoder.h"
 #import "XMH323Client.h"
+#include "XMCallDuration.hpp"
 
 #import <AVFoundation/AVFoundation.h>
+#import <CoreAudio/CoreAudio.h>
 #import <QuartzCore/QuartzCore.h>
 
 #include <cstdio>
@@ -14,6 +16,36 @@ namespace {
 
 NSString *const XMLocalAliasDefaultsKey = @"XMLocalAlias";
 NSString *const XMVideoResolutionDefaultsKey = @"XMVideoResolution";
+NSString *const XMFastStartDefaultsKey = @"XMFastStartEnabled";
+NSString *const XMCameraDefaultsKey = @"XMCameraDeviceID";
+NSString *const XMAudioInputDefaultsKey = @"XMAudioInputDevice";
+NSString *const XMAudioOutputDefaultsKey = @"XMAudioOutputDevice";
+
+void populateDevices(NSPopUpButton *popup, NSArray<NSString *> *names,
+                     NSArray<NSString *> *identifiers, NSString *selection, NSString *savedName) {
+  [popup removeAllItems];
+  [popup addItemWithTitle:@"System Default"];
+  popup.lastItem.representedObject = @"";
+  for (NSUInteger index = 0; index < identifiers.count; ++index) {
+    NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:names[index] action:nil keyEquivalent:@""];
+    item.representedObject = identifiers[index];
+    // CoreAudio in PTLib identifies devices by name. Never guess between two
+    // microphones with the same name; the user must give them unique names.
+    if ([identifiers filteredArrayUsingPredicate:
+        [NSPredicate predicateWithFormat:@"SELF == %@", identifiers[index]]].count > 1) {
+      item.title = [item.title stringByAppendingString:@" (duplicate name)"];
+      item.enabled = NO;
+    }
+    [popup.menu addItem:item];
+  }
+  NSInteger selected = [popup indexOfItemWithRepresentedObject:selection];
+  if (selected < 0) {
+    [popup addItemWithTitle:[NSString stringWithFormat:@"Unavailable — %@", savedName.length ? savedName : @"saved device"]];
+    popup.lastItem.representedObject = selection;
+    selected = popup.numberOfItems - 1;
+  }
+  [popup selectItemAtIndex:selected];
+}
 
 typedef NS_ENUM(NSInteger, XMApplicationCallState) {
   XMApplicationCallStateStarting,
@@ -160,6 +192,7 @@ NSTextField *labelWithString(NSString *value) {
 @property(nonatomic, strong, nullable) NSImage *placeholderImage;
 @property(nonatomic, strong, nullable) AVCaptureVideoPreviewLayer *previewLayer;
 @property(nonatomic, strong, nullable) AVSampleBufferDisplayLayer *remoteVideoLayer;
+@property(nonatomic) BOOL cameraOff;
 - (void)displayRemotePixelBuffer:(CVPixelBufferRef)pixelBuffer
            presentationTimeStamp:(CMTime)presentationTimeStamp;
 - (void)clearRemoteVideo;
@@ -176,7 +209,15 @@ NSTextField *labelWithString(NSString *value) {
   [background fill];
 
   if (self.previewLayer == nil && self.remoteVideoLayer == nil) {
-    [self.placeholderImage drawInRect:self.bounds
+    if (self.cameraOff) {
+      NSDictionary *attributes = @{NSFontAttributeName: [NSFont systemFontOfSize:24],
+                                   NSForegroundColorAttributeName: NSColor.whiteColor};
+      NSString *message = @"Camera is off";
+      NSSize size = [message sizeWithAttributes:attributes];
+      [message drawAtPoint:NSMakePoint((self.bounds.size.width - size.width) / 2,
+                                     (self.bounds.size.height - size.height) / 2)
+           withAttributes:attributes];
+    } else [self.placeholderImage drawInRect:self.bounds
                              fromRect:NSZeroRect
                             operation:NSCompositingOperationSourceOver
                              fraction:1
@@ -303,7 +344,9 @@ NSTextField *labelWithString(NSString *value) {
                               XMH264DecoderDelegate,
                               XMH264EncoderDelegate,
                               XMH323ClientDelegate,
-                              NSTextFieldDelegate>
+                              NSTextFieldDelegate> {
+  xmeeting::media::CallDuration _callDuration;
+}
 
 @property(nonatomic, strong) NSWindow *window;
 @property(nonatomic, strong) XMH323Client *client;
@@ -326,6 +369,24 @@ NSTextField *labelWithString(NSString *value) {
 @property(nonatomic, strong) NSWindow *settingsWindow;
 @property(nonatomic, strong) NSPopUpButton *videoResolutionPopup;
 @property(nonatomic, strong) NSTextField *videoSettingsStatus;
+@property(nonatomic, strong) NSPopUpButton *cameraPopup;
+@property(nonatomic, strong) NSPopUpButton *microphonePopup;
+@property(nonatomic, strong) NSPopUpButton *speakerPopup;
+@property(nonatomic, strong) NSButton *fastStartCheckbox;
+@property(nonatomic, strong) NSButton *refreshDevicesButton;
+@property(nonatomic) BOOL fastStartEnabled;
+@property(nonatomic, copy) NSString *cameraDeviceID;
+@property(nonatomic, copy) NSString *audioInputDevice;
+@property(nonatomic, copy) NSString *audioOutputDevice;
+@property(nonatomic, copy) AudioObjectPropertyListenerBlock audioDevicesChanged;
+@property(nonatomic, strong) NSButton *microphoneMuteButton;
+@property(nonatomic, strong) NSButton *cameraToggleButton;
+@property(nonatomic, strong) NSMenuItem *microphoneMuteMenuItem;
+@property(nonatomic, strong) NSMenuItem *cameraToggleMenuItem;
+@property(nonatomic, strong) NSTextField *durationField;
+@property(nonatomic, strong) NSTimer *durationTimer;
+@property(nonatomic) BOOL microphoneMuted;
+@property(nonatomic) BOOL cameraEnabled;
 
 - (void)placeOrEndCall:(id)sender;
 - (void)restartListener:(id)sender;
@@ -340,6 +401,13 @@ NSTextField *labelWithString(NSString *value) {
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
   (void)notification;
+  self.cameraEnabled = YES;
+  NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+  [defaults registerDefaults:@{XMFastStartDefaultsKey: @YES}];
+  self.fastStartEnabled = [defaults boolForKey:XMFastStartDefaultsKey];
+  self.cameraDeviceID = [defaults stringForKey:XMCameraDefaultsKey] ?: @"";
+  self.audioInputDevice = [defaults stringForKey:XMAudioInputDefaultsKey] ?: @"";
+  self.audioOutputDevice = [defaults stringForKey:XMAudioOutputDefaultsKey] ?: @"";
   self.videoResolution = [[NSUserDefaults.standardUserDefaults stringForKey:XMVideoResolutionDefaultsKey]
                             isEqualToString:@"720p"] ? XMVideoResolution720p : XMVideoResolutionVGA;
   if ([NSProcessInfo.processInfo.arguments containsObject:@"--dark-preview"]) {
@@ -353,6 +421,14 @@ NSTextField *labelWithString(NSString *value) {
   if (previewOutputPath != nil) {
     self.callState = XMApplicationCallStateReady;
     self.statusField.stringValue = @"Ready for H.323 calls";
+    if ([NSProcessInfo.processInfo.arguments containsObject:@"--controls-preview"]) {
+      self.microphoneMuted = YES;
+      self.cameraEnabled = NO;
+      self.activeCallToken = @"preview";
+      self.callState = XMApplicationCallStateConnected;
+      self.statusField.stringValue = @"Connected to XMeeting Test";
+      _callDuration.start(NSProcessInfo.processInfo.systemUptime - 65);
+    }
     [self updateInterface];
     self.callButton.enabled = YES;
     [self.window makeKeyAndOrderFront:nil];
@@ -368,8 +444,9 @@ NSTextField *labelWithString(NSString *value) {
   }
 
   [self rebuildMediaPipeline];
+  [self observeAudioDevices];
   [self prepareMicrophoneAuthorization];
-  [self.cameraCapture start];
+  if (self.cameraEnabled) [self.cameraCapture start];
   [self startListener];
   [self.window makeKeyAndOrderFront:nil];
   [NSApp activateIgnoringOtherApps:YES];
@@ -377,6 +454,16 @@ NSTextField *labelWithString(NSString *value) {
 
 - (void)applicationWillTerminate:(NSNotification *)notification {
   (void)notification;
+  [self.durationTimer invalidate];
+  if (self.audioDevicesChanged != nil) {
+    for (AudioObjectPropertySelector selector : {kAudioHardwarePropertyDevices,
+        kAudioHardwarePropertyDefaultInputDevice, kAudioHardwarePropertyDefaultOutputDevice}) {
+      AudioObjectPropertyAddress address = {selector, kAudioObjectPropertyScopeGlobal,
+                                            kAudioObjectPropertyElementMain};
+      AudioObjectRemovePropertyListenerBlock(kAudioObjectSystemObject, &address,
+          dispatch_get_main_queue(), self.audioDevicesChanged);
+    }
+  }
   [self.cameraCapture stop];
   [self.h264Encoder stop];
   [self.client stop];
@@ -466,6 +553,15 @@ NSTextField *labelWithString(NSString *value) {
                                                   keyEquivalent:@""];
   placeCallItem.target = self;
   [callMenu addItem:placeCallItem];
+  [callMenu addItem:NSMenuItem.separatorItem];
+  self.microphoneMuteMenuItem = [callMenu addItemWithTitle:@"Mute Microphone"
+      action:@selector(toggleMicrophoneMute:) keyEquivalent:@"m"];
+  self.cameraToggleMenuItem = [callMenu addItemWithTitle:@"Turn Camera Off"
+      action:@selector(toggleCamera:) keyEquivalent:@"v"];
+  for (NSMenuItem *item in @[self.microphoneMuteMenuItem, self.cameraToggleMenuItem]) {
+    item.target = self;
+    item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
+  }
   callMenuItem.submenu = callMenu;
 
   NSMenuItem *windowMenuItem = [[NSMenuItem alloc] initWithTitle:@""
@@ -542,6 +638,27 @@ NSTextField *labelWithString(NSString *value) {
   statusStack.alignment = NSLayoutAttributeCenterY;
   statusStack.spacing = 8;
 
+  self.microphoneMuteButton = [NSButton buttonWithTitle:@"Mic On" target:self action:@selector(toggleMicrophoneMute:)];
+  self.cameraToggleButton = [NSButton buttonWithTitle:@"Camera On" target:self action:@selector(toggleCamera:)];
+  for (NSButton *button in @[self.microphoneMuteButton, self.cameraToggleButton]) {
+    button.translatesAutoresizingMaskIntoConstraints = NO;
+    button.bezelStyle = NSBezelStyleTexturedRounded;
+    button.buttonType = NSButtonTypePushOnPushOff;
+    button.font = [NSFont systemFontOfSize:12];
+    button.imagePosition = NSImageLeading;
+  }
+  self.durationField = labelWithString(@"--:--");
+  self.durationField.font = [NSFont monospacedDigitSystemFontOfSize:12 weight:NSFontWeightRegular];
+  self.durationField.alignment = NSTextAlignmentRight;
+  self.durationField.accessibilityLabel = @"Call duration";
+  self.durationField.toolTip = @"Time since the call connected; the final duration remains after hangup.";
+  NSStackView *controlsStack = [NSStackView stackViewWithViews:
+      @[self.microphoneMuteButton, self.cameraToggleButton, self.durationField]];
+  controlsStack.translatesAutoresizingMaskIntoConstraints = NO;
+  controlsStack.orientation = NSUserInterfaceLayoutOrientationHorizontal;
+  controlsStack.alignment = NSLayoutAttributeCenterY;
+  controlsStack.spacing = 8;
+
   self.addressField = [NSTextField textFieldWithString:@""];
   self.addressField.translatesAutoresizingMaskIntoConstraints = NO;
   self.addressField.placeholderString = @"H.323 address or alias@host";
@@ -566,7 +683,7 @@ NSTextField *labelWithString(NSString *value) {
   callStack.alignment = NSLayoutAttributeCenterY;
   callStack.spacing = 8;
 
-  for (NSView *view in @[aliasLabel, self.aliasField, self.videoView, statusStack, callStack]) {
+  for (NSView *view in @[aliasLabel, self.aliasField, self.videoView, statusStack, controlsStack, callStack]) {
     [contentView addSubview:view];
   }
 
@@ -590,7 +707,13 @@ NSTextField *labelWithString(NSString *value) {
     [self.progressIndicator.widthAnchor constraintEqualToConstant:16],
     [self.progressIndicator.heightAnchor constraintEqualToConstant:16],
 
-    [callStack.topAnchor constraintEqualToAnchor:statusStack.bottomAnchor constant:14],
+    [controlsStack.topAnchor constraintEqualToAnchor:statusStack.bottomAnchor constant:12],
+    [controlsStack.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor constant:18],
+    [controlsStack.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor constant:-18],
+    [self.microphoneMuteButton.widthAnchor constraintEqualToConstant:102],
+    [self.cameraToggleButton.widthAnchor constraintEqualToConstant:120],
+    [self.durationField.widthAnchor constraintGreaterThanOrEqualToConstant:72],
+    [callStack.topAnchor constraintEqualToAnchor:controlsStack.bottomAnchor constant:12],
     [callStack.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor constant:18],
     [callStack.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor constant:-18],
     [callStack.bottomAnchor constraintEqualToAnchor:contentView.bottomAnchor constant:-18],
@@ -679,7 +802,7 @@ NSTextField *labelWithString(NSString *value) {
   }
   if (!self.client.isAudioAvailable) {
     self.callState = XMApplicationCallStateError;
-    self.statusField.stringValue = @"No microphone or audio output device is available";
+    self.statusField.stringValue = @"Selected audio device unavailable — check Settings";
   } else if (self.microphonePermissionPending) {
     self.callState = XMApplicationCallStateStarting;
     self.statusField.stringValue = @"Waiting for microphone access…";
@@ -713,7 +836,7 @@ NSTextField *labelWithString(NSString *value) {
 - (void)showSettings:(id)sender {
   (void)sender;
   if (self.settingsWindow == nil) {
-    self.settingsWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 450, 250)
+    self.settingsWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 500, 490)
         styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
         backing:NSBackingStoreBuffered defer:NO];
     self.settingsWindow.title = @"XMeeting Settings";
@@ -725,6 +848,9 @@ NSTextField *labelWithString(NSString *value) {
     self.settingsWindow.contentView = content;
     NSTextField *heading = labelWithString(@"Video");
     heading.font = [NSFont systemFontOfSize:17 weight:NSFontWeightSemibold];
+    self.cameraPopup = [self devicePopupWithLabel:@"Camera"];
+    self.microphonePopup = [self devicePopupWithLabel:@"Microphone"];
+    self.speakerPopup = [self devicePopupWithLabel:@"Speakers"];
     NSTextField *label = labelWithString(@"Outgoing video resolution");
     self.videoResolutionPopup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
     self.videoResolutionPopup.translatesAutoresizingMaskIntoConstraints = NO;
@@ -732,17 +858,33 @@ NSTextField *labelWithString(NSString *value) {
     [self.videoResolutionPopup itemAtIndex:0].tag = XMVideoResolutionVGA;
     [self.videoResolutionPopup itemAtIndex:1].tag = XMVideoResolution720p;
     self.videoResolutionPopup.target = self;
-    self.videoResolutionPopup.action = @selector(changeVideoResolution:);
+    self.videoResolutionPopup.action = @selector(changeCallSettings:);
     self.videoResolutionPopup.accessibilityLabel = @"Outgoing video resolution";
     NSTextField *explanation = [NSTextField wrappingLabelWithString:
-        @"VGA uses less bandwidth. 720p provides a wider, sharper picture and requires a compatible H.264 peer. Both modes send up to 30 frames per second. The image is fitted without stretching."];
+        @"VGA uses less bandwidth. 720p provides a sharper picture. Both send up to 30 frames per second, fitted without stretching."];
     explanation.translatesAutoresizingMaskIntoConstraints = NO;
     explanation.textColor = NSColor.secondaryLabelColor;
     self.videoSettingsStatus = [NSTextField wrappingLabelWithString:@""];
     self.videoSettingsStatus.translatesAutoresizingMaskIntoConstraints = NO;
     self.videoSettingsStatus.font = [NSFont systemFontOfSize:NSFont.smallSystemFontSize];
+    NSTextField *audioHeading = labelWithString(@"Audio");
+    audioHeading.font = heading.font;
+    NSTextField *callHeading = labelWithString(@"Calls");
+    callHeading.font = heading.font;
+    self.fastStartCheckbox = [NSButton checkboxWithTitle:@"Enable H.225 Fast Start"
+        target:self action:@selector(changeCallSettings:)];
+    self.fastStartCheckbox.toolTip = @"Offer media channels during call setup. Falls back to H.245 negotiation when the peer does not support Fast Start. This does not enable H.460.6.";
+    NSTextField *fastStartHelp = [NSTextField wrappingLabelWithString:
+        @"Connects media sooner when supported by the other endpoint. Turn off if an older endpoint has trouble connecting."];
+    fastStartHelp.textColor = NSColor.secondaryLabelColor;
+    self.refreshDevicesButton = [NSButton buttonWithTitle:@"Refresh Devices"
+        target:self action:@selector(refreshDevices:)];
     NSStackView *stack = [NSStackView stackViewWithViews:
-        @[heading, label, self.videoResolutionPopup, explanation, self.videoSettingsStatus]];
+        @[heading, [self settingsRow:@"Camera" control:self.cameraPopup],
+          [self settingsRow:label.stringValue control:self.videoResolutionPopup], explanation,
+          audioHeading, [self settingsRow:@"Microphone" control:self.microphonePopup],
+          [self settingsRow:@"Speakers" control:self.speakerPopup], callHeading,
+          self.fastStartCheckbox, fastStartHelp, self.refreshDevicesButton, self.videoSettingsStatus]];
     stack.translatesAutoresizingMaskIntoConstraints = NO;
     stack.orientation = NSUserInterfaceLayoutOrientationVertical;
     stack.alignment = NSLayoutAttributeLeading;
@@ -753,11 +895,16 @@ NSTextField *labelWithString(NSString *value) {
       [stack.trailingAnchor constraintEqualToAnchor:self.settingsWindow.contentView.trailingAnchor constant:-24],
       [stack.topAnchor constraintEqualToAnchor:self.settingsWindow.contentView.topAnchor constant:24],
       [explanation.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
+      [fastStartHelp.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
       [self.videoSettingsStatus.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
     ]];
+    for (NSView *view in stack.arrangedSubviews) {
+      if ([view isKindOfClass:NSStackView.class])
+        [view.widthAnchor constraintEqualToAnchor:stack.widthAnchor].active = YES;
+    }
     [self.settingsWindow center];
   }
-  [self.videoResolutionPopup selectItemWithTag:self.videoResolution];
+  [self refreshDeviceMenus];
   [self updateVideoSettings];
   [self.settingsWindow makeKeyAndOrderFront:nil];
   [self.settingsWindow displayIfNeeded];
@@ -766,26 +913,112 @@ NSTextField *labelWithString(NSString *value) {
 - (void)updateVideoSettings {
   const BOOL hasCall = self.activeCallToken.length > 0 || self.client.activeCallTokens.count > 0;
   self.videoResolutionPopup.enabled = !hasCall;
+  self.cameraPopup.enabled = self.microphonePopup.enabled = self.speakerPopup.enabled = !hasCall;
+  self.fastStartCheckbox.enabled = self.refreshDevicesButton.enabled = !hasCall;
   self.videoSettingsStatus.stringValue = hasCall
-      ? @"Hang up before changing the video resolution."
+      ? @"Hang up before changing call settings or devices."
       : @"Saved automatically. Changes apply to the next call.";
+  if (!hasCall && self.client != nil && !self.client.audioAvailable)
+    self.videoSettingsStatus.stringValue = @"Selected audio device unavailable or duplicated. Choose another device or reconnect it and click Refresh Devices.";
+  else if (!hasCall && !self.cameraEnabled)
+    self.videoSettingsStatus.stringValue = @"Camera is off. Use Camera On in the call window to resume. Settings are saved automatically.";
+  else if (!hasCall && self.cameraCapture != nil && !self.cameraCapture.previewActive)
+    self.videoSettingsStatus.stringValue = self.cameraCapture.statusMessage;
 }
 
-- (void)changeVideoResolution:(NSPopUpButton *)sender {
-  const XMVideoResolution resolution = (XMVideoResolution)sender.selectedTag;
+- (NSPopUpButton *)devicePopupWithLabel:(NSString *)label {
+  NSPopUpButton *popup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+  popup.translatesAutoresizingMaskIntoConstraints = NO;
+  popup.menu.autoenablesItems = NO;
+  popup.target = self;
+  popup.action = @selector(changeCallSettings:);
+  popup.accessibilityLabel = label;
+  [popup setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow
+      forOrientation:NSLayoutConstraintOrientationHorizontal];
+  return popup;
+}
+
+- (void)observeAudioDevices {
+  __weak XMAppDelegate *weakSelf = self;
+  self.audioDevicesChanged = ^(UInt32 count, const AudioObjectPropertyAddress *addresses) {
+    (void)count;
+    (void)addresses;
+    XMAppDelegate *owner = weakSelf;
+    if (owner == nil || owner.activeCallToken.length > 0 || owner.client.activeCallTokens.count > 0) return;
+    [owner.client configureAudioInputDevice:owner.audioInputDevice
+        outputDevice:owner.audioOutputDevice error:nil];
+    [owner refreshDeviceMenus];
+    [owner refreshReadyStatus];
+    [owner updateInterface];
+  };
+  for (AudioObjectPropertySelector selector : {kAudioHardwarePropertyDevices,
+      kAudioHardwarePropertyDefaultInputDevice, kAudioHardwarePropertyDefaultOutputDevice}) {
+    AudioObjectPropertyAddress address = {selector, kAudioObjectPropertyScopeGlobal,
+                                          kAudioObjectPropertyElementMain};
+    AudioObjectAddPropertyListenerBlock(kAudioObjectSystemObject, &address,
+        dispatch_get_main_queue(), self.audioDevicesChanged);
+  }
+}
+
+- (NSStackView *)settingsRow:(NSString *)title control:(NSView *)control {
+  NSTextField *label = labelWithString(title);
+  [label.widthAnchor constraintEqualToConstant:155].active = YES;
+  NSStackView *row = [NSStackView stackViewWithViews:@[label, control]];
+  row.orientation = NSUserInterfaceLayoutOrientationHorizontal;
+  row.alignment = NSLayoutAttributeCenterY;
+  row.spacing = 8;
+  [control.widthAnchor constraintEqualToAnchor:row.widthAnchor constant:-163].active = YES;
+  return row;
+}
+
+- (void)refreshDeviceMenus {
+  if (self.settingsWindow == nil) return;
+  NSArray<AVCaptureDevice *> *cameras = [XMCameraCapture availableVideoDevices];
+  populateDevices(self.cameraPopup, [cameras valueForKey:@"localizedName"],
+      [cameras valueForKey:@"uniqueID"], self.cameraDeviceID,
+      [NSUserDefaults.standardUserDefaults stringForKey:@"XMCameraDeviceName"]);
+  NSArray<NSString *> *inputs = self.client.audioInputDevices ?: @[];
+  NSArray<NSString *> *outputs = self.client.audioOutputDevices ?: @[];
+  populateDevices(self.microphonePopup, inputs, inputs, self.audioInputDevice, self.audioInputDevice);
+  populateDevices(self.speakerPopup, outputs, outputs, self.audioOutputDevice, self.audioOutputDevice);
+  [self.videoResolutionPopup selectItemWithTag:self.videoResolution];
+  self.fastStartCheckbox.state = self.fastStartEnabled ? NSControlStateValueOn : NSControlStateValueOff;
+}
+
+- (void)refreshDevices:(id)sender {
+  (void)sender;
+  if (self.activeCallToken.length > 0 || self.client.activeCallTokens.count > 0) return;
+  [self rebuildMediaPipeline];
+  [self startListener];
+  if (self.cameraEnabled) [self.cameraCapture start];
+  [self refreshDeviceMenus];
+}
+
+- (void)changeCallSettings:(id)sender {
+  (void)sender;
+  const XMVideoResolution resolution = (XMVideoResolution)self.videoResolutionPopup.selectedTag;
   if (self.activeCallToken.length > 0 || self.client.activeCallTokens.count > 0 ||
       !XMVideoResolutionIsValid(resolution)) {
-    [sender selectItemWithTag:self.videoResolution];
+    [self refreshDeviceMenus];
     [self updateVideoSettings];
     return;
   }
-  if (resolution == self.videoResolution) return;
   self.videoResolution = resolution;
-  [NSUserDefaults.standardUserDefaults setObject:resolution == XMVideoResolution720p ? @"720p" : @"vga"
-                                          forKey:XMVideoResolutionDefaultsKey];
-  [self rebuildMediaPipeline];
-  [self startListener];
-  [self.cameraCapture start];
+  self.fastStartEnabled = self.fastStartCheckbox.state == NSControlStateValueOn;
+  self.cameraDeviceID = self.cameraPopup.selectedItem.representedObject ?: @"";
+  self.audioInputDevice = self.microphonePopup.selectedItem.representedObject ?: @"";
+  self.audioOutputDevice = self.speakerPopup.selectedItem.representedObject ?: @"";
+  NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+  [defaults setObject:resolution == XMVideoResolution720p ? @"720p" : @"vga" forKey:XMVideoResolutionDefaultsKey];
+  [defaults setBool:self.fastStartEnabled forKey:XMFastStartDefaultsKey];
+  [defaults setObject:self.cameraDeviceID forKey:XMCameraDefaultsKey];
+  for (AVCaptureDevice *camera in [XMCameraCapture availableVideoDevices]) {
+    if ([camera.uniqueID isEqualToString:self.cameraDeviceID])
+      [defaults setObject:camera.localizedName forKey:@"XMCameraDeviceName"];
+  }
+  [defaults setObject:self.audioInputDevice forKey:XMAudioInputDefaultsKey];
+  [defaults setObject:self.audioOutputDevice forKey:XMAudioOutputDefaultsKey];
+  [self refreshDevices:nil];
 }
 
 - (void)rebuildMediaPipeline {
@@ -803,9 +1036,99 @@ NSTextField *labelWithString(NSString *value) {
   self.videoView.previewLayer = nil;
   self.h264VideoEnabled = NO;
   self.client = [[XMH323Client alloc] initWithDelegate:self];
-  self.cameraCapture = [[XMCameraCapture alloc] initWithDelegate:self resolution:self.videoResolution];
+  self.client.microphoneMuted = self.microphoneMuted;
+  self.client.videoTransmissionEnabled = self.cameraEnabled;
+  [self.client setFastStartEnabled:self.fastStartEnabled error:nil];
+  [self.client configureAudioInputDevice:self.audioInputDevice outputDevice:self.audioOutputDevice error:nil];
+  self.cameraCapture = [[XMCameraCapture alloc] initWithDelegate:self resolution:self.videoResolution
+      deviceUniqueID:self.cameraDeviceID];
   self.h264Encoder = [[XMH264Encoder alloc] initWithDelegate:self resolution:self.videoResolution];
   self.h264Decoder = [[XMH264Decoder alloc] initWithDelegate:self];
+  // Camera-off must not prevent negotiating video for later unmuting. This
+  // probes the codec without camera access; no call is active during rebuild.
+  if (![self.h264Encoder prepareWithBlackFrame])
+    std::fprintf(stderr, "XMeeting: H.264 preflight failed; audio remains available\n");
+}
+
+- (void)toggleMicrophoneMute:(id)sender {
+  (void)sender;
+  self.microphoneMuted = !self.microphoneMuted;
+  self.client.microphoneMuted = self.microphoneMuted;
+  [self updateCallControls];
+}
+
+- (void)toggleCamera:(id)sender {
+  (void)sender;
+  self.cameraEnabled = !self.cameraEnabled;
+  // Close the transmit gate before draining capture/encoder callbacks.
+  self.client.videoTransmissionEnabled = self.cameraEnabled;
+  self.cameraCapture.delegate = nil;
+  [self.cameraCapture stop];
+  self.h264Encoder.delegate = nil;
+  [self.h264Encoder stop];
+  self.cameraCapture = nil;
+  self.h264Encoder = [[XMH264Encoder alloc] initWithDelegate:self resolution:self.videoResolution];
+  self.videoView.previewLayer = nil;
+  if (self.cameraEnabled) {
+    // A new encoder produces an IDR and new parameter sets on resume. Old
+    // queued callbacks are ignored by the existing encoder identity check.
+    self.cameraCapture = [[XMCameraCapture alloc] initWithDelegate:self resolution:self.videoResolution
+        deviceUniqueID:self.cameraDeviceID];
+    [self.cameraCapture start];
+  } else if (!self.h264VideoEnabled) {
+    [self.h264Encoder prepareWithBlackFrame];
+  }
+  [self updateCallControls];
+  [self updateVideoSettings];
+}
+
+- (void)updateCallControls {
+  self.microphoneMuteButton.title = self.microphoneMuted ? @"Mic Muted" : @"Mic On";
+  self.microphoneMuteButton.state = self.microphoneMuted ? NSControlStateValueOn : NSControlStateValueOff;
+  self.microphoneMuteButton.image = [NSImage imageWithSystemSymbolName:
+      self.microphoneMuted ? @"mic.slash.fill" : @"mic.fill" accessibilityDescription:nil];
+  self.microphoneMuteButton.contentTintColor = self.microphoneMuted ? NSColor.systemRedColor : nil;
+  self.microphoneMuteButton.toolTip = self.microphoneMuted ? @"Unmute outgoing microphone audio (Shift-Command-M)"
+      : @"Mute outgoing microphone audio (Shift-Command-M). This does not change the Mac's global microphone level.";
+  self.microphoneMuteButton.accessibilityLabel = self.microphoneMuted ? @"Microphone muted. Unmute microphone" : @"Microphone on. Mute microphone";
+  self.microphoneMuteMenuItem.title = self.microphoneMuted ? @"Unmute Microphone" : @"Mute Microphone";
+  self.cameraToggleButton.title = self.cameraEnabled ? @"Camera On" : @"Camera Off";
+  self.cameraToggleButton.state = self.cameraEnabled ? NSControlStateValueOff : NSControlStateValueOn;
+  self.cameraToggleButton.image = [NSImage imageWithSystemSymbolName:
+      self.cameraEnabled ? @"video.fill" : @"video.slash.fill" accessibilityDescription:nil];
+  self.cameraToggleButton.contentTintColor = self.cameraEnabled ? nil : NSColor.systemRedColor;
+  self.cameraToggleButton.toolTip = self.cameraEnabled ? @"Stop the camera and outgoing video (Shift-Command-V). The other endpoint may retain the last picture."
+      : @"Start the camera and resume outgoing video (Shift-Command-V)";
+  self.cameraToggleButton.accessibilityLabel = self.cameraEnabled ? @"Camera on. Turn camera off" : @"Camera off. Turn camera on";
+  self.cameraToggleMenuItem.title = self.cameraEnabled ? @"Turn Camera Off" : @"Turn Camera On";
+  self.videoView.cameraOff = !self.cameraEnabled;
+  [self.videoView setNeedsDisplay:YES];
+  [self updateCallDuration];
+}
+
+- (void)updateCallDuration {
+  self.durationField.stringValue = [NSString stringWithUTF8String:
+      _callDuration.display(NSProcessInfo.processInfo.systemUptime).c_str()];
+}
+
+- (void)resetCallDuration {
+  [self.durationTimer invalidate];
+  self.durationTimer = nil;
+  _callDuration.reset();
+  [self updateCallDuration];
+}
+
+- (void)startCallDuration {
+  _callDuration.start(NSProcessInfo.processInfo.systemUptime);
+  if (self.durationTimer == nil) {
+    __weak XMAppDelegate *weakSelf = self;
+    self.durationTimer = [NSTimer timerWithTimeInterval:1 repeats:YES block:^(NSTimer *timer) {
+      (void)timer;
+      [weakSelf updateCallDuration];
+    }];
+    [NSRunLoop.mainRunLoop addTimer:self.durationTimer forMode:NSRunLoopCommonModes];
+  }
+  [self updateCallDuration];
 }
 
 - (void)placeOrEndCall:(id)sender {
@@ -819,6 +1142,8 @@ NSTextField *labelWithString(NSString *value) {
   }
 
   NSString *address = trimmedString(self.addressField.stringValue);
+  // Re-resolve System Default and validate explicit devices before dialing.
+  [self.client configureAudioInputDevice:self.audioInputDevice outputDevice:self.audioOutputDevice error:nil];
   if (!self.client.isAudioAvailable || !self.microphoneAuthorized) {
     NSBeep();
     [self refreshReadyStatus];
@@ -833,6 +1158,7 @@ NSTextField *labelWithString(NSString *value) {
 
   NSError *error = nil;
   NSString *token = nil;
+  [self resetCallDuration];
   if (![self.client callAddress:address token:&token error:&error]) {
     [self presentError:error];
     return;
@@ -851,6 +1177,7 @@ NSTextField *labelWithString(NSString *value) {
 }
 
 - (void)updateInterface {
+  [self updateCallControls];
   [self updateVideoSettings];
   BOOL busy = self.callState == XMApplicationCallStateStarting ||
               self.callState == XMApplicationCallStateCalling ||
@@ -906,6 +1233,7 @@ NSTextField *labelWithString(NSString *value) {
       self.videoView.accessibilityLabel = message;
     }
   }
+  [self updateVideoSettings];
 }
 
 - (void)cameraCapture:(XMCameraCapture *)capture
@@ -964,6 +1292,7 @@ NSTextField *labelWithString(NSString *value) {
 }
 
 - (void)h323Client:(XMH323Client *)client didReceiveIncomingCall:(XMH323Call *)call {
+  if (client != self.client) return;
   if (self.activeCallToken.length > 0) {
     [client rejectCallWithToken:call.token error:nil];
     return;
@@ -978,6 +1307,7 @@ NSTextField *labelWithString(NSString *value) {
   }
   self.activeCallToken = call.token;
   self.callState = XMApplicationCallStateIncoming;
+  [self resetCallDuration];
   self.statusField.stringValue = [NSString stringWithFormat:@"Incoming call from %@", displayNameForCall(call)];
   [self updateInterface];
   [self.window makeKeyAndOrderFront:nil];
@@ -989,6 +1319,7 @@ NSTextField *labelWithString(NSString *value) {
   [alert addButtonWithTitle:@"Accept"];
   [alert addButtonWithTitle:@"Reject"];
   [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse response) {
+    if (client != self.client || ![self.activeCallToken isEqualToString:call.token]) return;
     NSError *error = nil;
     if (response == NSAlertFirstButtonReturn) {
       if (![self.client answerCallWithToken:call.token error:&error]) {
@@ -1003,16 +1334,17 @@ NSTextField *labelWithString(NSString *value) {
 }
 
 - (void)h323Client:(XMH323Client *)client didEstablishCall:(XMH323Call *)call {
-  (void)client;
+  if (client != self.client) return;
   self.activeCallToken = call.token;
   self.callState = XMApplicationCallStateConnected;
+  [self startCallDuration];
   self.statusField.stringValue = [NSString stringWithFormat:@"Connected to %@", displayNameForCall(call)];
   [self updateInterface];
 }
 
 - (void)h323Client:(XMH323Client *)client
     didReceiveH264NALUnits:(NSArray<NSData *> *)nalUnits {
-  (void)client;
+  if (client != self.client) return;
   if (self.activeCallToken.length == 0) return;
   [self.h264Decoder decodeNALUnits:nalUnits
              presentationTimeStamp:CMClockGetTime(CMClockGetHostTimeClock())];
@@ -1022,11 +1354,15 @@ NSTextField *labelWithString(NSString *value) {
        didEndCall:(XMH323Call *)call
         h323Reason:(NSInteger)h323Reason
          q931Cause:(NSUInteger)q931Cause {
-  (void)client;
+  if (client != self.client) return;
   if (self.activeCallToken.length > 0 && ![self.activeCallToken isEqualToString:call.token]) {
     return;
   }
   BOOL wasConnected = self.callState == XMApplicationCallStateConnected;
+  _callDuration.stop(NSProcessInfo.processInfo.systemUptime);
+  [self.durationTimer invalidate];
+  self.durationTimer = nil;
+  [self updateCallDuration];
   NSString *remote = displayNameForCall(call);
   if ([remote isEqualToString:@"remote endpoint"]) {
     NSString *enteredAddress = trimmedString(self.addressField.stringValue);
@@ -1039,6 +1375,7 @@ NSTextField *labelWithString(NSString *value) {
   // Discard already-dispatched frames from the old decoder after hangup.
   self.h264Decoder = [[XMH264Decoder alloc] initWithDelegate:self];
   [self.videoView clearRemoteVideo];
+  [self.client configureAudioInputDevice:self.audioInputDevice outputDevice:self.audioOutputDevice error:nil];
   [self refreshReadyStatus];
   if (self.callState == XMApplicationCallStateReady) {
     self.callState = callEndReasonIsFailure(h323Reason)
@@ -1050,7 +1387,7 @@ NSTextField *labelWithString(NSString *value) {
 }
 
 - (void)h323Client:(XMH323Client *)client didEncounterError:(NSString *)message {
-  (void)client;
+  if (client != self.client) return;
   self.callState = XMApplicationCallStateError;
   self.statusField.stringValue = message;
   [self updateInterface];

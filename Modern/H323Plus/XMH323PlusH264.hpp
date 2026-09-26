@@ -31,6 +31,10 @@ class H264MediaBridge final {
 
   void setReceiveHandler(ReceiveHandler handler);
   void setErrorHandler(ErrorHandler handler);
+  // Disabling flushes queued camera frames without closing negotiated RTP.
+  // Re-enabling waits for a fresh IDR before sending anything.
+  void setTransmissionEnabled(bool enabled);
+  bool transmissionEnabled() const;
 
   bool isTransmitting() const;
   bool isReceiving() const;

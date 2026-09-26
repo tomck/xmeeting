@@ -417,6 +417,44 @@ CocoaClientImplementation *implementation(XMH323Client *client) {
   return implementation(self)->engine.audioSystemInfo().available;
 }
 
+- (BOOL)fastStartEnabled {
+  return implementation(self)->engine.fastStartEnabled();
+}
+
+- (BOOL)isMicrophoneMuted { return implementation(self)->engine.microphoneMuted(); }
+- (void)setMicrophoneMuted:(BOOL)muted { implementation(self)->engine.setMicrophoneMuted(muted); }
+- (BOOL)videoTransmissionEnabled { return implementation(self)->engine.videoTransmissionEnabled(); }
+- (void)setVideoTransmissionEnabled:(BOOL)enabled {
+  implementation(self)->engine.setVideoTransmissionEnabled(enabled);
+}
+
+- (BOOL)setFastStartEnabled:(BOOL)enabled error:(NSError **)error {
+  if (!implementation(self)->engine.setFastStartEnabled(enabled))
+    return fail(error, XMH323ClientErrorInvalidArgument,
+                @"Stop the H.323 listener before changing Fast Start.");
+  return YES;
+}
+
+- (NSArray<NSString *> *)audioInputDevices {
+  return stringsFromVector(implementation(self)->engine.audioSystemInfo().inputDevices);
+}
+
+- (NSArray<NSString *> *)audioOutputDevices {
+  return stringsFromVector(implementation(self)->engine.audioSystemInfo().outputDevices);
+}
+
+- (BOOL)configureAudioInputDevice:(NSString *)inputDevice
+                    outputDevice:(NSString *)outputDevice error:(NSError **)error {
+  if (self.activeCallTokens.count != 0)
+    return fail(error, XMH323ClientErrorInvalidArgument,
+                @"Hang up before changing audio devices.");
+  if (!implementation(self)->engine.configureAudioDevices(
+          "CoreAudio", stdStringFromString(inputDevice), stdStringFromString(outputDevice)))
+    return fail(error, XMH323ClientErrorAudioUnavailable,
+                @"The selected microphone or speaker is unavailable or has a duplicate name. Check Settings.");
+  return YES;
+}
+
 - (NSString *)audioInputDevice {
   return stringFromStdString(implementation(self)->engine.audioSystemInfo().inputDevice);
 }

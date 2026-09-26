@@ -22,6 +22,18 @@ outbound call thread has actually terminated; upstream 1.28.0 otherwise deletes
 the thread and its connection after a 10-second cleanup timeout while the thread
 can still be running.
 
+A second H323Plus patch preserves the shutdown state when a pending TCP
+connection is cancelled. Previously, the interrupted connect wrote
+`NoConnectionActive` without holding the connection lock, overwriting cleanup's
+`ShuttingDownConnection`. The calling thread then waited for the lock held by
+cleanup, while cleanup waited for that same thread to finish. The patch moves
+the state write after successful lock acquisition. It preserves the existing
+transport lifetime protection rather than freeing a still-running thread.
+`xmeeting-call-cancellation-tests` forces this ordering with a synthetic
+transport (no network or devices), checks timely clearance, and repeats ten
+cancel/redial cycles. BEEHD's separate first-answer failure still requires a
+physical-peer retest; this fix does not establish its cause.
+
 ```sh
 ./Scripts/build-h323plus-universal.sh
 cmake -S Modern -B .build/modern
@@ -110,8 +122,9 @@ is prioritized as follows:
 1. Repeat the verified G.711 interoperability call on physical Apple Silicon,
    then test device-change, permission, echo, failure-reporting, reconnect, and
    subjective audio quality on both architectures.
-2. Add input/output device selection, mute, output level, ringtone, and useful
-   call-duration/end-reason feedback.
+2. Add per-call speaker volume/mute, a conference keypad, and an incoming-call
+   ringtone. Device selection, microphone mute, camera on/off, connected-call
+   duration, and end-reason feedback are implemented; physical-device checks remain.
 3. Add a preferences UI for listener ports, gatekeeper accounts, and the H.460/
    STUN settings needed to work reliably beyond a local network.
 4. Verify the new VGA/720p output settings with physical cameras (the encoder

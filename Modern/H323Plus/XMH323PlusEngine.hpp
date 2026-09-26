@@ -15,6 +15,7 @@ struct CallInfo {
   std::string remoteAddress;
   std::string remoteApplication;
   bool incoming = false;
+  bool fastStart = false; // Negotiated, not merely requested.
 };
 
 struct CallEndedInfo {
@@ -84,6 +85,14 @@ class H323PlusEngine final {
 
   bool start(const std::string& localUserName, std::uint16_t listenPort = 1720);
   void stop();
+  // Configure before starting the listener. New endpoints default to enabled.
+  bool setFastStartEnabled(bool enabled);
+  bool fastStartEnabled() const;
+  // Local privacy controls apply before and during calls and survive redial.
+  void setMicrophoneMuted(bool muted);
+  bool microphoneMuted() const;
+  void setVideoTransmissionEnabled(bool enabled);
+  bool videoTransmissionEnabled() const;
 
   bool call(const std::string& address, std::string* token = nullptr);
   bool answer(const std::string& token);
@@ -100,7 +109,8 @@ class H323PlusEngine final {
   AudioSystemInfo audioSystemInfo() const;
   VideoSystemInfo videoSystemInfo() const;
   // Video is advertised only after the application has confirmed that its
-  // native camera, encoder, decoder, and renderer are ready.
+  // native encoder, decoder, and renderer are ready. Capture may be off;
+  // a camera-free encoded preflight lets video negotiate before camera-on.
   bool enableH264Video(XMVideoResolution resolution = XMVideoResolutionVGA);
   bool submitH264AccessUnit(const H264AccessUnit& accessUnit);
   bool configureAudioDevices(const std::string& driver,

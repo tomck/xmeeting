@@ -20,6 +20,9 @@ NS_ASSUME_NONNULL_BEGIN
     NS_DESIGNATED_INITIALIZER;
 - (instancetype)init;
 - (BOOL)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer;
+// Validates the codec without requesting or starting a camera. The normal
+// delegate receives a black IDR; the application controls whether it is sent.
+- (BOOL)prepareWithBlackFrame;
 - (void)stop;
 
 @end

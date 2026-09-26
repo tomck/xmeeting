@@ -1,0 +1,27 @@
+diff --git a/src/h323.cxx b/src/h323.cxx
+--- a/src/h323.cxx
++++ b/src/h323.cxx
+@@ -2651,7 +2651,6 @@ H323Connection::CallEndReason H323Connection::SendSignalSetup(
+ 
+       // See if transport connect failed, abort if so.
+       if (connectFailed) {
+-        connectionState = NoConnectionActive;
+         switch (signallingChannel->GetErrorNumber()) {
+           case ENETUNREACH :
+             reason = EndedByUnreachable;
+@@ -2671,8 +2670,14 @@ H323Connection::CallEndReason H323Connection::SendSignalSetup(
+   // Lock while checking for shutting down.
+   if (!Lock())
+     return EndedByCallerAbort;
+-  else if (reason != NumCallEndReasons)
++  else if (reason != NumCallEndReasons) {
++    // Connect runs unlocked so cleanup can interrupt it. Do not overwrite
++    // ShuttingDownConnection on that unlocked path: cleanup holds innerMutex
++    // while waiting for this thread, and Lock must see shutdown and return
++    // without trying to acquire that mutex.
++    connectionState = NoConnectionActive;
+     return reason;
++  }
+ 
+   PTRACE(3, "H225\tSending Setup PDU");
+ 

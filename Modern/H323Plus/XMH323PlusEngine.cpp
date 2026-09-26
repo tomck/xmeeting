@@ -8,8 +8,12 @@
 
 #include <h323ep.h>
 #include <transports.h>
+#include <codecs.h>
 
 #include <utility>
+#include <algorithm>
+#include <atomic>
+#include <cstring>
 
 // PTLib's macOS sound implementation is a static plug-in. Referencing its
 // loader explicitly prevents the archive linker from discarding CoreAudio.
@@ -17,6 +21,14 @@ PPLUGIN_STATIC_LOAD(CoreAudio, PSoundChannel);
 
 namespace xmeeting::h323 {
 namespace {
+
+class Connection final : public H323Connection {
+  PCLASSINFO(Connection, H323Connection);
+ public:
+  Connection(H323EndPoint& endpoint, unsigned reference)
+      : H323Connection(endpoint, reference) {}
+  bool usedFastStart() const { return fastStartState == FastStartAcknowledged; }
+};
 
 std::string toStdString(const PString& value) {
   return std::string(static_cast<const char*>(value));
@@ -30,6 +42,8 @@ CallInfo makeCallInfo(H323Connection& connection, bool incoming) {
   info.remoteAddress = toStdString(connection.GetRemotePartyAddress());
   info.remoteApplication = toStdString(connection.GetRemoteApplication());
   info.incoming = incoming;
+  if (const auto* native = dynamic_cast<const Connection*>(&connection))
+    info.fastStart = native->usedFastStart();
   return info;
 }
 
@@ -99,6 +113,7 @@ class H323PlusEngine::Impl final : public H323EndPoint {
  public:
   explicit Impl(EventSink& sink)
       : sink_(sink), h264Bridge_(std::make_shared<H264MediaBridge>()) {
+    DisableFastStart(false);
     // G.711 is built into H323Plus and is the universal interoperability
     // baseline for H.323 audio. Do not advertise video until its modern media
     // path exists.
@@ -127,6 +142,21 @@ class H323PlusEngine::Impl final : public H323EndPoint {
   ~Impl() override {
     stop();
   }
+
+  H323Connection* CreateConnection(unsigned reference) override {
+    return new Connection(*this, reference);
+  }
+
+  bool setFastStartEnabled(bool enabled) {
+    if (started_) return false;
+    DisableFastStart(!enabled);
+    return true;
+  }
+
+  void setMicrophoneMuted(bool muted) { microphoneMuted_ = muted; }
+  bool microphoneMuted() const { return microphoneMuted_.load(); }
+  void setVideoTransmissionEnabled(bool enabled) { h264Bridge_->setTransmissionEnabled(enabled); }
+  bool videoTransmissionEnabled() const { return h264Bridge_->transmissionEnabled(); }
 
   bool start(const std::string& localUserName, std::uint16_t listenPort) {
     if (started_) {
@@ -241,7 +271,9 @@ class H323PlusEngine::Impl final : public H323EndPoint {
     info.available = audioDriver_ == "CoreAudio" && audioPlaybackConfigured_ &&
                      audioRecordingConfigured_ &&
                      isRealAudioDevice(GetSoundChannelRecordDevice()) &&
-                     isRealAudioDevice(GetSoundChannelPlayDevice()) && !info.codecs.empty();
+                     isRealAudioDevice(GetSoundChannelPlayDevice()) && !info.codecs.empty() &&
+                     std::count(info.inputDevices.begin(), info.inputDevices.end(), info.inputDevice) == 1 &&
+                     std::count(info.outputDevices.begin(), info.outputDevices.end(), info.outputDevice) == 1;
     return info;
   }
 
@@ -294,15 +326,31 @@ class H323PlusEngine::Impl final : public H323EndPoint {
   bool configureAudioDevices(const std::string& driver,
                              const std::string& inputDevice,
                              const std::string& outputDevice) {
+    if (!GetAllConnections().IsEmpty()) return false;
+    std::string input = inputDevice, output = outputDevice;
+    if (driver == "CoreAudio") {
+      if (input.empty()) input = toStdString(defaultCoreAudioDevice(PSoundChannel::Recorder));
+      if (output.empty()) output = toStdString(defaultCoreAudioDevice(PSoundChannel::Player));
+      const auto inputs = toStringVector(PSoundChannel::GetDeviceNames("CoreAudio", PSoundChannel::Recorder));
+      const auto outputs = toStringVector(PSoundChannel::GetDeviceNames("CoreAudio", PSoundChannel::Player));
+      // Do not silently use a different device if a saved selection disappears.
+      // PTLib selects by name, so ambiguous duplicate names are unsafe too.
+      if (input.empty() || output.empty() ||
+          std::count(inputs.begin(), inputs.end(), input) != 1 ||
+          std::count(outputs.begin(), outputs.end(), output) != 1) {
+        audioPlaybackConfigured_ = audioRecordingConfigured_ = false;
+        return false;
+      }
+    }
     audioDriver_ = driver;
     audioPlaybackConfigured_ = SetSoundChannelPlayDriver(driver.c_str());
-    if (audioPlaybackConfigured_ && !outputDevice.empty()) {
-      audioPlaybackConfigured_ = SetSoundChannelPlayDevice(outputDevice.c_str());
+    if (audioPlaybackConfigured_ && !output.empty()) {
+      audioPlaybackConfigured_ = SetSoundChannelPlayDevice(output.c_str());
     }
 
     audioRecordingConfigured_ = SetSoundChannelRecordDriver(driver.c_str());
-    if (audioRecordingConfigured_ && !inputDevice.empty()) {
-      audioRecordingConfigured_ = SetSoundChannelRecordDevice(inputDevice.c_str());
+    if (audioRecordingConfigured_ && !input.empty()) {
+      audioRecordingConfigured_ = SetSoundChannelRecordDevice(input.c_str());
     }
     return audioPlaybackConfigured_ && audioRecordingConfigured_;
   }
@@ -354,7 +402,15 @@ class H323PlusEngine::Impl final : public H323EndPoint {
                             PBoolean isEncoding,
                             unsigned bufferSize,
                             H323AudioCodec& codec) override {
-    if (H323EndPoint::OpenAudioChannel(connection, isEncoding, bufferSize, codec)) {
+    if (audioPlaybackConfigured_ && audioRecordingConfigured_ &&
+        (audioDriver_ != "CoreAudio" || audioSystemInfo().available) &&
+        H323EndPoint::OpenAudioChannel(connection, isEncoding, bufferSize, codec)) {
+      if (isEncoding) {
+        // Keep G.711 RTP flowing with encoded silence while muted. Do not
+        // pause the channel or change the system microphone's global gain.
+        codec.SetSilenceDetectionMode(H323AudioCodec::NoSilenceDetection);
+        codec.AddFilter(PCREATE_NOTIFIER(FilterMicrophone));
+      }
       return true;
     }
     sink_.onError(isEncoding ? "Could not open the selected microphone"
@@ -381,6 +437,8 @@ class H323PlusEngine::Impl final : public H323EndPoint {
   }
 
  private:
+  PDECLARE_NOTIFIER(H323Codec::FilterInfo, Impl, FilterMicrophone);
+  std::atomic<bool> microphoneMuted_{false};
   EventSink& sink_;
   bool started_ = false;
   std::string audioDriver_;
@@ -391,10 +449,30 @@ class H323PlusEngine::Impl final : public H323EndPoint {
   XMVideoResolution videoResolution_ = XMVideoResolutionVGA;
 };
 
+void H323PlusEngine::Impl::FilterMicrophone(H323Codec::FilterInfo& info, INT) {
+  // Runs after capture and before encoding on the audio worker, including
+  // the first frame of a Fast Start channel. Captured samples never bypass it.
+  if (microphoneMuted_ && info.buffer != nullptr && info.bufferLength > 0)
+    std::memset(info.buffer, 0, static_cast<std::size_t>(info.bufferLength));
+}
+
 H323PlusEngine::H323PlusEngine(EventSink& sink)
     : impl_(std::make_unique<Impl>(sink)) {}
 
 H323PlusEngine::~H323PlusEngine() = default;
+
+void H323PlusEngine::setMicrophoneMuted(bool muted) { impl_->setMicrophoneMuted(muted); }
+bool H323PlusEngine::microphoneMuted() const { return impl_->microphoneMuted(); }
+void H323PlusEngine::setVideoTransmissionEnabled(bool enabled) { impl_->setVideoTransmissionEnabled(enabled); }
+bool H323PlusEngine::videoTransmissionEnabled() const { return impl_->videoTransmissionEnabled(); }
+
+bool H323PlusEngine::setFastStartEnabled(bool enabled) {
+  return impl_->setFastStartEnabled(enabled);
+}
+
+bool H323PlusEngine::fastStartEnabled() const {
+  return !impl_->IsFastStartDisabled();
+}
 
 bool H323PlusEngine::start(const std::string& localUserName, std::uint16_t listenPort) {
   return impl_->start(localUserName, listenPort);

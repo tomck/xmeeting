@@ -9,6 +9,7 @@
 #include <mediafmt.h>
 
 #include <condition_variable>
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -29,6 +30,40 @@ constexpr unsigned kBitRate = 512000;
 constexpr unsigned kH241BaselineProfile = 64;
 constexpr unsigned kH241Level30 = 64;
 constexpr std::size_t kH323RtpPayloadCapacity = 2000;
+
+bool supportsFrameRateAndSize(const OpalMediaFormat& format,
+                             const XMVideoProfile& profile) {
+  // H.241 level codes are not H.264 level_idc values. Optional custom
+  // limits extend the base level; comparing level codes alone rejects peers
+  // which advertise (for example) Level 2 with sufficient limits for 720p30.
+  struct LevelLimits { unsigned code; std::uint64_t fs; std::uint64_t mbps; };
+  constexpr LevelLimits levels[] = {
+      {15, 99, 1485}, {19, 99, 1485}, {22, 396, 3000},
+      {29, 396, 6000}, {36, 396, 11880}, {43, 396, 11880},
+      {50, 792, 19800}, {57, 1620, 20250}, {64, 1620, 40500},
+      {71, 3600, 108000}, {78, 5120, 216000}, {85, 8192, 245760},
+      {92, 8192, 245760}, {99, 8704, 522240}, {106, 22080, 589824},
+      {113, 36864, 983040}};
+  const auto code = format.GetOptionInteger("Generic Parameter 42");
+  std::uint64_t fs = 0, mbps = 0;
+  for (const auto& level : levels) {
+    if (code == level.code) {
+      fs = level.fs;
+      mbps = level.mbps;
+      break;
+    }
+  }
+  if (fs == 0) return false;  // Unknown or missing mandatory level.
+  const auto customMBPS = format.GetOptionInteger("Generic Parameter 3");
+  const auto customFS = format.GetOptionInteger("Generic Parameter 4");
+  if (customMBPS > 0)
+    mbps = std::max(mbps, std::uint64_t(customMBPS) * 500);
+  if (customFS > 0)
+    fs = std::max(fs, std::uint64_t(customFS) * 256);
+  const std::uint64_t frameMBs = ((profile.width + 15) / 16) *
+                               ((profile.height + 15) / 16);
+  return frameMBs <= fs && frameMBs * profile.framesPerSecond <= mbps;
+}
 
 void addGenericUnsignedOption(OpalMediaFormat& format,
                               unsigned ordinal,
@@ -83,6 +118,11 @@ OpalMediaFormat h264VideoToolboxFormat(XMVideoResolution resolution) {
     addGenericUnsignedOption(format, 42, kH241Level30,
                              OpalMediaOption::MinMerge,
                              OpalMediaOption::H245GenericInfo::UnsignedInt);
+    // Zero means absent and is omitted from our outgoing capabilities.
+    // Register these so H323Plus retains the peer's optional receive limits.
+    for (unsigned ordinal : {3u, 4u})
+      addGenericUnsignedOption(format, ordinal, 0, OpalMediaOption::MinMerge,
+                               OpalMediaOption::H245GenericInfo::UnsignedInt);
     return true;
   }();
   (void)configured;
@@ -124,7 +164,7 @@ class H264MediaBridge::Impl final {
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!transmitting_) {
+    if (!transmitting_ || !transmissionEnabled_) {
       return false;
     }
     // Dropping a predicted frame invalidates subsequent predictions. Keep
@@ -170,6 +210,22 @@ class H264MediaBridge::Impl final {
     std::lock_guard<std::mutex> lock(mutex_);
     receiving_ = receiving;
     reassembler_.reset();
+  }
+
+  void setTransmissionEnabled(bool enabled) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (transmissionEnabled_ == enabled) return;
+    transmissionEnabled_ = enabled;
+    transmitPayloads_.clear();
+    queuedFrames_ = 0;
+    waitingForKeyFrame_ = true;
+    // Keep the transmit worker asleep, not terminated, while camera-off.
+    condition_.notify_all();
+  }
+
+  bool transmissionEnabled() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return transmissionEnabled_;
   }
 
   bool receive(const std::uint8_t* payload, std::size_t size, const RTP_DataFrame& frame) {
@@ -234,6 +290,7 @@ class H264MediaBridge::Impl final {
   ReceiveHandler receiveHandler_;
   ErrorHandler errorHandler_;
   bool transmitting_ = false;
+  bool transmissionEnabled_ = true;
   bool receiving_ = false;
   unsigned queuedFrames_ = 0;
   bool waitingForKeyFrame_ = true;
@@ -263,8 +320,9 @@ class H264VideoCodec final : public H323VideoCodec {
     // with lower limits can still use audio; the user can select VGA and redial.
     if (direction_ == Encoder &&
         ((GetMediaFormat().GetOptionInteger("Generic Parameter 41") & kH241BaselineProfile) == 0 ||
-         GetMediaFormat().GetOptionInteger("Generic Parameter 42") < profile_.h241Level ||
+         !supportsFrameRateAndSize(GetMediaFormat(), profile_) ||
          GetMediaFormat().GetOptionInteger(OpalVideoFormat::MaxBitRateOption) < profile_.bitRate)) {
+      PTRACE(2, "XMeeting\tPeer H.264 profile, frame limits or bitrate cannot support selected output");
       return false;
     }
     if (open_.exchange(true)) {
@@ -356,11 +414,22 @@ class H264VideoToolboxCapability final : public H323GenericVideoCapability {
     return new H264VideoCodec(GetMediaFormat(), direction, bridge_, resolution_);
   }
 
+  H323Channel* CreateChannel(H323Connection& connection, H323Channel::Directions direction,
+                            unsigned sessionID,
+                            const H245_H2250LogicalChannelParameters* parameters) const override {
+    // A Fast Start reverse-channel offer describes what we can RECEIVE, not
+    // the resolution chosen for our camera. The channel clones this capability.
+    H264VideoToolboxCapability channelCapability(*this);
+    channelCapability.receiveOffer_ = direction == H323Channel::IsReceiver && parameters == nullptr;
+    return channelCapability.H323GenericVideoCapability::CreateChannel(
+        connection, direction, sessionID, parameters);
+  }
+
   PBoolean OnSendingPDU(H245_VideoCapability& pdu, CommandType type) const override {
     pdu.SetTag(H245_VideoCapability::e_genericVideoCapability);
     // TCS describes our decoder ceiling, independent of the chosen output.
     // OLC describes our actual encoder, not the remote endpoint's TCS limits.
-    const auto resolution = type == e_TCS ? XMVideoResolution720p : resolution_;
+    const auto resolution = type == e_TCS || receiveOffer_ ? XMVideoResolution720p : resolution_;
     if (!OnSendingGenericPDU(pdu, h264VideoToolboxFormat(resolution), type)) return false;
     H245_GenericCapability& generic = pdu;
     generic.IncludeOptionalField(H245_GenericCapability::e_maxBitRate);
@@ -390,6 +459,7 @@ class H264VideoToolboxCapability final : public H323GenericVideoCapability {
  private:
   std::shared_ptr<H264MediaBridge> bridge_;
   XMVideoResolution resolution_;
+  bool receiveOffer_ = false;
 };
 
 H264MediaBridge::H264MediaBridge() : impl_(std::make_unique<Impl>()) {}
@@ -416,6 +486,9 @@ bool H264MediaBridge::isTransmitting() const {
 bool H264MediaBridge::isReceiving() const {
   return impl_->isReceiving();
 }
+
+void H264MediaBridge::setTransmissionEnabled(bool enabled) { impl_->setTransmissionEnabled(enabled); }
+bool H264MediaBridge::transmissionEnabled() const { return impl_->transmissionEnabled(); }
 
 std::unique_ptr<H323Capability> makeH264VideoToolboxCapability(
     const std::shared_ptr<H264MediaBridge>& bridge, XMVideoResolution resolution) {

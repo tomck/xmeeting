@@ -9,6 +9,7 @@
 @property(nonatomic, strong) AVCaptureVideoDataOutput *videoOutput;
 @property(nonatomic) dispatch_queue_t sessionQueue;
 @property(nonatomic) XMVideoResolution resolution;
+@property(nonatomic, copy) NSString *deviceUniqueID;
 @property(atomic) BOOL stopped;
 
 @end
@@ -25,11 +26,30 @@
 
 - (instancetype)initWithDelegate:(id<XMCameraCaptureDelegate>)delegate
                      resolution:(XMVideoResolution)resolution {
+  return [self initWithDelegate:delegate resolution:resolution deviceUniqueID:@""];
+}
+
++ (NSArray<AVCaptureDevice *> *)availableVideoDevices {
+  NSMutableArray<AVCaptureDeviceType> *types =
+      [NSMutableArray arrayWithObject:AVCaptureDeviceTypeBuiltInWideAngleCamera];
+  if (@available(macOS 14.0, *)) {
+    [types addObjectsFromArray:@[AVCaptureDeviceTypeExternal, AVCaptureDeviceTypeContinuityCamera]];
+  } else {
+    [types addObject:AVCaptureDeviceTypeExternalUnknown];
+  }
+  return [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:types
+      mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionUnspecified].devices;
+}
+
+- (instancetype)initWithDelegate:(id<XMCameraCaptureDelegate>)delegate
+                     resolution:(XMVideoResolution)resolution
+                 deviceUniqueID:(NSString *)deviceUniqueID {
   if (!XMVideoResolutionIsValid(resolution)) return nil;
   self = [super init];
   if (self != nil) {
     _delegate = delegate;
     _resolution = resolution;
+    _deviceUniqueID = [deviceUniqueID copy];
     _session = [[AVCaptureSession alloc] init];
     _previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:_session];
     _previewLayer.videoGravity = AVLayerVideoGravityResizeAspect;
@@ -83,10 +103,16 @@
       return;
     }
 
-    AVCaptureDevice *device =
-        [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    AVCaptureDevice *device = self.deviceUniqueID.length == 0
+        ? [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo] : nil;
+    if (self.deviceUniqueID.length != 0) {
+      for (AVCaptureDevice *candidate in [XMCameraCapture availableVideoDevices]) {
+        if ([candidate.uniqueID isEqualToString:self.deviceUniqueID]) { device = candidate; break; }
+      }
+    }
     if (device == nil) {
-      [self publishAvailability:NO message:@"No camera is available"];
+      [self publishAvailability:NO message:self.deviceUniqueID.length == 0
+          ? @"No camera is available" : @"The selected camera is unavailable. Check Settings."];
       return;
     }
 
