@@ -29,9 +29,12 @@ token's `contents: write` permission. Third-party action references are pinned
 to verified commit IDs. Dependency tags are also checked against pinned commits;
 the SDK cache key includes build scripts, patches, SDK version, and Xcode build.
 
-This workflow lives on the modernization branch. Tag pushes work from that
-branch; the optional Run workflow button requires the workflow on GitHub's
-default branch. Do not change the default branch merely to enable that button.
+This workflow lives on `master`, the default development branch. Pushes to
+`master` build downloadable artifacts; the Run workflow button also supports
+manual builds. Tagged alpha releases still require both native test jobs.
+The original pre-modernization `master` is preserved at `archive/legacy`.
+Build helpers use pinned Node 24-compatible releases; Node is only used on
+the GitHub runners and is not bundled with XMeeting.
 
 ## Distribution caveats
 

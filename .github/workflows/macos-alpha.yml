@@ -2,7 +2,7 @@ name: macOS alpha
 
 on:
   push:
-    branches: [modernize/macos11-h323plus]
+    branches: [master]
     tags: ['v*-alpha.*']
   pull_request:
     paths: ['Modern/**', 'Scripts/**', 'Dependencies/**', 'Resources/**', 'Documentation/**', '.github/**']
@@ -23,7 +23,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (Node 24)
         with:
           persist-credentials: false
       - name: Set alpha version
@@ -45,7 +45,7 @@ jobs:
           echo "numeric=${version%%-alpha.*}" >> "$GITHUB_OUTPUT"
           echo "sdk=$(xcrun --sdk macosx --show-sdk-version)" >> "$GITHUB_OUTPUT"
           echo "xcode=$(xcodebuild -version | tail -1 | tr ' ' '-')" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0 (Node 24)
         id: sdk
         with:
           path: .build/h323plus/macos-universal
@@ -76,19 +76,19 @@ jobs:
             xmeeting-h264-rtp-tests xmeeting-h323plus-h264-tests \
             xmeeting-videotoolbox-tests xmeeting-h264-call-tests h323plus-cocoa-smoke \
             xmeeting-call-duration-tests xmeeting-call-cancellation-tests
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1 (Node 24)
         with:
           name: native-tests
           path: .build/native-tests.tar.gz
           retention-days: 7
           if-no-files-found: error
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1 (Node 24)
         with:
           name: macos-alpha-downloads
           path: .build/dist/*
           retention-days: 14
           if-no-files-found: error
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1 (Node 24)
         if: failure()
         with:
           name: intel-test-log
@@ -100,7 +100,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 10
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1 (Node 24)
         with:
           name: native-tests
       - name: Run all cases from the same universal build
@@ -137,10 +137,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (Node 24)
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1 (Node 24)
         with:
           name: macos-alpha-downloads
           path: dist

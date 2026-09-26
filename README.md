@@ -1,5 +1,8 @@
 # XMeeting
 
+`master` contains the modern macOS application. The original pre-modernization
+source is preserved on [`archive/legacy`](https://github.com/tomck/xmeeting/tree/archive/legacy).
+
 This repository preserves the final SourceForge SVN history of XMeeting and is
 the basis for a new H.323-only macOS application.
 
